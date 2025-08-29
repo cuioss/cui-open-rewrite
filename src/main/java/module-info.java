@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-module de.cuioss.template {
-    exports de.cuioss.template;
+module de.cuioss.rewrite {
+    exports de.cuioss.rewrite;
 
     requires static lombok;
 }
