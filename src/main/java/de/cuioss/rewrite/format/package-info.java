@@ -13,23 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.cuioss.rewrite;
+@NullMarked
+package de.cuioss.rewrite.format;
 
-import lombok.ToString;
-
-/**
- * @author Oliver Wolff
- *
- */
-@ToString
-public class Hello {
-
-    /**
-     * @param name to be greeted
-     * @return the greeted String
-     */
-    public String hello(String name) {
-        return "Hello " + name;
-    }
-
-}
+import org.jspecify.annotations.NullMarked;

@@ -1,0 +1,9 @@
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: de.cuioss.rewrite.format.AnnotationNewlineFormat
+displayName: Format annotations with newlines
+description: Ensures type-level and method-level annotations are on separate lines
+tags:
+  - CUI
+  - format
+  - annotation

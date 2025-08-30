@@ -33,16 +33,76 @@
     </issueManagement>
     <properties>
         <maven.jar.plugin.automatic.module.name>de.cuioss.rewrite</maven.jar.plugin.automatic.module.name>
+        <openrewrite.version>8.40.2</openrewrite.version>
+        <openrewrite.maven.version>5.47.0</openrewrite.maven.version>
     </properties>
     <dependencies>
+        <!-- OpenRewrite Core -->
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
+            <groupId>org.openrewrite</groupId>
+            <artifactId>rewrite-java</artifactId>
+            <version>${openrewrite.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.openrewrite</groupId>
+            <artifactId>rewrite-maven</artifactId>
+            <version>${openrewrite.version}</version>
+        </dependency>
+
+        <!-- Additional OpenRewrite runtime dependencies -->
+        <dependency>
+            <groupId>org.openrewrite</groupId>
+            <artifactId>rewrite-yaml</artifactId>
+            <version>${openrewrite.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openrewrite</groupId>
+            <artifactId>rewrite-properties</artifactId>
+            <version>${openrewrite.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openrewrite</groupId>
+            <artifactId>rewrite-java-11</artifactId>
+            <version>${openrewrite.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- JSpecify for nullability annotations -->
+        <dependency>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <!-- CUI Java Tools for CuiLogger -->
+        <dependency>
+            <groupId>de.cuioss</groupId>
+            <artifactId>cui-java-tools</artifactId>
+        </dependency>
+
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.openrewrite</groupId>
+            <artifactId>rewrite-test</artifactId>
+            <version>${openrewrite.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Unit testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
+        </dependency>
+
+        <!-- Lombok for testing recipe with Lombok annotations -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

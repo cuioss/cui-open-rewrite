@@ -16,7 +16,78 @@ https://cuioss.github.io/cui-java-module-template/about.html[Generated Documenta
 
 == What is it?
 
+Custom OpenRewrite recipes for CUI-OSS projects that enforce specific code formatting standards not available in existing OpenRewrite recipes.
 
+=== Features
+
+==== AnnotationNewlineFormat Recipe
+
+Ensures that Java annotations are formatted on separate lines for better readability.
+
+**Effect:**
+
+* Class-level annotations (e.g., `@UtilityClass`, `@Slf4j`) are placed on separate lines
+* Method-level annotations (e.g., `@Override`, `@Test`) are placed on separate lines  
+* Field-level annotations are placed on separate lines
+* Multiple annotations are each placed on their own line
+
+**Example transformation:**
+[source,java]
+----
+// Before
+@Data @Builder public class Person {
+    @Override public String toString() {
+        return "Person";
+    }
+}
+
+// After
+@Data
+@Builder
+public class Person {
+    @Override
+    public String toString() {
+        return "Person";
+    }
+}
+----
+
+**Known Limitations:**
+
+* Indentation preservation issues in nested classes (see https://github.com/cuioss/cui-open-rewrite/issues/1[Issue #1])
+* Some edge cases with field annotations
+* 6 tests currently disabled pending indentation fixes
+
+=== Usage
+
+==== With OpenRewrite Maven Plugin
+
+[source,xml]
+----
+<plugin>
+    <groupId>org.openrewrite.maven</groupId>
+    <artifactId>rewrite-maven-plugin</artifactId>
+    <configuration>
+        <activeRecipes>
+            <recipe>de.cuioss.rewrite.format.AnnotationNewlineFormat</recipe>
+        </activeRecipes>
+    </configuration>
+    <dependencies>
+        <dependency>
+            <groupId>de.cuioss.rewrite</groupId>
+            <artifactId>cui-open-rewrite</artifactId>
+            <version>${cui-open-rewrite.version}</version>
+        </dependency>
+    </dependencies>
+</plugin>
+----
+
+==== Run the recipe
+
+[source,bash]
+----
+mvn rewrite:run
+----
 
 === Maven Coordinates
 
