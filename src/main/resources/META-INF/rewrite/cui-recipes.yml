@@ -7,3 +7,13 @@ tags:
   - CUI
   - format
   - annotation
+
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: de.cuioss.rewrite.logging.CuiLoggerStandardsRecipe
+displayName: CUI Logger Standards
+description: Enforces CUI-specific logging standards including proper logger naming, string substitution patterns, exception parameter position, parameter validation, and detection of System.out/System.err usage
+tags:
+  - CUI
+  - logging
+  - standards

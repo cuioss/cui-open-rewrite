@@ -35,7 +35,7 @@ See [GitHub Issue #1](https://github.com/cuioss/cui-open-rewrite/issues/1) for d
 
 ## Future Recipes
 
-### CUI Logging Pattern Enforcement (Not Yet Implemented)
+### CUI Logger Standards Recipe (Not Yet Implemented)
 
 #### Requirements and Specifications
 
@@ -51,7 +51,7 @@ This recipe will enforce CUI-specific logging standards with the following stric
 
 3. **String Substitution Pattern**
    - MUST use `%s` for all string substitutions
-   - Flag incorrect patterns: `{}` (SLF4J style) or `%d`, `%f` (printf style)
+   - Replace incorrect patterns: `{}` (SLF4J style) or `%d`, `%f` (printf style)
 
 4. **Exception Parameter Position**
    - Exception parameters MUST always come first in logging method calls
@@ -62,8 +62,17 @@ This recipe will enforce CUI-specific logging standards with the following stric
    - Count actual parameters passed (excluding the exception if present)
    - Emit WARNING if counts don't match
 
-6. **Suppression Mechanism**
-   - Support comment-based suppression markers
+6. **System.out/System.err Detection**
+   - Detect all usages of `System.out.print()`, `System.out.println()`, `System.out.printf()`, and `System.out.format()`
+   - Detect all usages of `System.err.print()`, `System.err.println()`, `System.err.printf()`, and `System.err.format()`
+   - Log a WARNING: `Inappropriate use of System.out/System.err detected. Use proper logging framework instead.`
+   - Include file path, line number, and the specific System stream being used in the warning
+
+7. **Suppression Mechanism**
+   - Use the existing `cui-rewrite:disable` comment-based suppression (already implemented in RecipeSuppressionUtil)
+   - Supports: `// cui-rewrite:disable` - suppresses all recipes for the next element
+   - Supports: `// cui-rewrite:disable RecipeName` - suppresses specific recipe for the next element
+   - Suppression applies to all logging recipe validations including System.out/err detection
 
 ## Benefits
 

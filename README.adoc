@@ -76,6 +76,59 @@ Recipes can be suppressed using comments:
 * Trailing comments (`public class Foo { // cui-rewrite:disable`) not fully supported due to OpenRewrite AST limitations
 * 6 tests currently disabled pending indentation fixes
 
+==== CuiLoggerStandardsRecipe
+
+Enforces CUI-specific logging standards including proper logger naming, string substitution patterns, exception parameter positioning, and detection of System.out/System.err usage.
+
+**Features:**
+
+* **Auto-fixes logger naming** - Renames logger fields to `LOGGER` (uppercase)
+* **Auto-fixes logger modifiers** - Changes visibility to `private static final`
+* **Auto-fixes placeholder patterns** - Replaces `{}` (SLF4J) and `%d`, `%f`, etc. with `%s`
+* **Auto-fixes exception positioning** - Moves exception parameters to first position in error/warn calls
+* **Detects System.out/err usage** - Flags inappropriate console output with warnings
+* **Validates parameter counts** - Warns when placeholder count doesn't match parameter count
+
+**Example transformations:**
+
+[source,java]
+----
+// Before
+public class Example {
+    public static CuiLogger log = new CuiLogger(Example.class);
+    
+    void method(Exception e) {
+        System.out.println("Debug message");
+        log.error("Error {} occurred", "Database", e);
+        log.info("Count: %d", 42);
+    }
+}
+
+// After
+public class Example {
+    private static final CuiLogger LOGGER = new CuiLogger(Example.class);
+    
+    void method(Exception e) {
+        System.out.println("Debug message"); // Warning: Use proper logging
+        LOGGER.error(e, "Error %s occurred", "Database");
+        LOGGER.info("Count: %s", 42);
+    }
+}
+----
+
+**Suppression:**
+
+Uses the same suppression mechanism as other recipes:
+
+[source,java]
+----
+// cui-rewrite:disable
+System.out.println("This won't be flagged");
+
+// cui-rewrite:disable CuiLoggerStandardsRecipe
+public CuiLogger logger = new CuiLogger(Example.class); // Won't be changed
+----
+
 === Usage
 
 ==== With OpenRewrite Maven Plugin
@@ -88,6 +141,7 @@ Recipes can be suppressed using comments:
     <configuration>
         <activeRecipes>
             <recipe>de.cuioss.rewrite.format.AnnotationNewlineFormat</recipe>
+            <recipe>de.cuioss.rewrite.logging.CuiLoggerStandardsRecipe</recipe>
         </activeRecipes>
     </configuration>
     <dependencies>
