@@ -82,36 +82,24 @@ Enforces CUI-specific logging standards including proper logger naming, string s
 
 **Features:**
 
-* **Auto-fixes logger naming** - Renames logger fields to `LOGGER` (uppercase)
-* **Auto-fixes logger modifiers** - Changes visibility to `private static final`
-* **Auto-fixes placeholder patterns** - Replaces `{}` (SLF4J) and `%d`, `%f`, etc. with `%s`
-* **Auto-fixes exception positioning** - Moves exception parameters to first position in error/warn calls
-* **Detects System.out/err usage** - Flags inappropriate console output with warnings
+* **Detects incorrect logger naming** - Flags logger fields not named `LOGGER` (uppercase)
+* **Detects incorrect logger modifiers** - Flags loggers not declared as `private static final`
+* **Detects incorrect placeholder patterns** - Flags `{}` (SLF4J) and `%d`, `%f`, etc. instead of `%s`
+* **Detects wrong exception positioning** - Flags exception parameters not in first position for error/warn calls
+* **Detects System.out/err usage** - Flags inappropriate console output
 * **Validates parameter counts** - Warns when placeholder count doesn't match parameter count
 
-**Example transformations:**
+**Example detections:**
 
 [source,java]
 ----
-// Before
 public class Example {
-    public static CuiLogger log = new CuiLogger(Example.class);
+    public static CuiLogger log = new CuiLogger(Example.class); // ⚠️ Should be 'LOGGER' and 'private static final'
     
     void method(Exception e) {
-        System.out.println("Debug message");
-        log.error("Error {} occurred", "Database", e);
-        log.info("Count: %d", 42);
-    }
-}
-
-// After
-public class Example {
-    private static final CuiLogger LOGGER = new CuiLogger(Example.class);
-    
-    void method(Exception e) {
-        System.out.println("Debug message"); // Warning: Use proper logging
-        LOGGER.error(e, "Error %s occurred", "Database");
-        LOGGER.info("Count: %s", 42);
+        System.out.println("Debug message"); // ⚠️ Use proper logging
+        log.error("Error {} occurred", "Database", e); // ⚠️ Wrong placeholder and exception position
+        log.info("Count: %d", 42); // ⚠️ Should use %s
     }
 }
 ----
@@ -129,6 +117,61 @@ System.out.println("This won't be flagged");
 public CuiLogger logger = new CuiLogger(Example.class); // Won't be changed
 ----
 
+==== CuiLogRecordPatternRecipe
+
+Enforces proper usage of LogRecord pattern according to CUI logging standards:
+* **Mandatory** for INFO/WARN/ERROR/FATAL levels - Direct logging is not allowed
+* **Forbidden** for DEBUG/TRACE levels - Must use direct logging instead
+
+See the https://gitingest.com/github.com/cuioss/cui-llm-rules/tree/main/standards/logging/implementation-guide.adoc[Logging Implementation Guide] for details.
+
+**Features:**
+
+* **Validates LogRecord usage by level** - Ensures LogRecord is used only where appropriate
+* **Detects missing LogRecord** - Flags INFO/WARN/ERROR/FATAL calls without LogRecord
+* **Detects inappropriate LogRecord** - Flags DEBUG/TRACE calls using LogRecord
+* **Supports both invocation and reference** - Works with `.format()` and `::format` patterns
+
+**Example detections:**
+
+[source,java]
+----
+public class Example {
+    private static final CuiLogger LOGGER = new CuiLogger(Example.class);
+    
+    // LogMessage constants
+    static class INFO {
+        static final LogRecord USER_LOGIN = LogRecordModel.builder()
+            .template("User %s logged in")
+            .build();
+    }
+    
+    void goodExamples() {
+        // ✅ Correct: LogRecord for INFO level
+        LOGGER.info(INFO.USER_LOGIN.format(username));
+        
+        // ✅ Correct: Direct logging for DEBUG level
+        LOGGER.debug("Processing file %s", filename);
+    }
+    
+    void badExamples() {
+        // ⚠️ Wrong: Direct logging for INFO level
+        LOGGER.info("User %s logged in", username);
+        
+        // ⚠️ Wrong: LogRecord for DEBUG level  
+        LOGGER.debug(DEBUG.SOME_MESSAGE.format());
+    }
+}
+----
+
+**Suppression:**
+
+[source,java]
+----
+// cui-rewrite:disable CuiLogRecordPatternRecipe
+LOGGER.info("Direct logging suppressed for this call");
+----
+
 === Usage
 
 ==== With OpenRewrite Maven Plugin
@@ -142,6 +185,7 @@ public CuiLogger logger = new CuiLogger(Example.class); // Won't be changed
         <activeRecipes>
             <recipe>de.cuioss.rewrite.format.AnnotationNewlineFormat</recipe>
             <recipe>de.cuioss.rewrite.logging.CuiLoggerStandardsRecipe</recipe>
+            <recipe>de.cuioss.rewrite.logging.CuiLogRecordPatternRecipe</recipe>
         </activeRecipes>
     </configuration>
     <dependencies>

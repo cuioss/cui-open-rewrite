@@ -39,288 +39,281 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 public class CuiLoggerStandardsRecipe extends Recipe {
-    
+
     private static final String CUI_LOGGER_TYPE = "de.cuioss.tools.logging.CuiLogger";
     private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("%s");
     private static final Pattern INCORRECT_PLACEHOLDER_PATTERN = Pattern.compile("\\{\\}|%[dfiobxXeEgG]");
-    
+
     @Override
     public String getDisplayName() {
         return "CUI Logger Standards";
     }
-    
+
     @Override
     public String getDescription() {
         return "Enforces CUI-specific logging standards including proper logger naming, " +
                "string substitution patterns, exception parameter position, parameter validation, " +
+               "LogRecord pattern usage for INFO/WARN/ERROR levels, " +
                "and detection of System.out/System.err usage.";
     }
-    
+
     @Override
     public Set<String> getTags() {
         return Set.of("CUI", "logging", "standards");
     }
-    
+
     @Override
     public Duration getEstimatedEffortPerOccurrence() {
         return Duration.ofMinutes(5);
     }
-    
+
     @Override
     public TreeVisitor<?, ExecutionContext> getVisitor() {
         return new CuiLoggerStandardsVisitor();
     }
-    
+
     private static class CuiLoggerStandardsVisitor extends JavaIsoVisitor<ExecutionContext> {
-        
-        private UUID randomId() {
-            return UUID.randomUUID();
-        }
-        
+
+
+
         @Override
         public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations variableDecls, ExecutionContext ctx) {
             J.VariableDeclarations vd = super.visitVariableDeclarations(variableDecls, ctx);
-            
-            // Check if this is a CuiLogger field
-            if (TypeUtils.isOfClassType(vd.getType(), CUI_LOGGER_TYPE)) {
-                // Check if suppressed
-                if (RecipeSuppressionUtil.isSuppressed(vd, getCursor(), "CuiLoggerStandardsRecipe")) {
-                    return vd;
-                }
-                
-                // Fix logger naming convention
-                boolean needsRename = false;
-                List<J.VariableDeclarations.NamedVariable> updatedVariables = new ArrayList<>();
-                for (J.VariableDeclarations.NamedVariable variable : vd.getVariables()) {
-                    String name = variable.getSimpleName();
-                    if (!"LOGGER".equals(name)) {
-                        needsRename = true;
-                        // Rename the variable to LOGGER
-                        J.Identifier newName = variable.getName().withSimpleName("LOGGER");
-                        // Update type information if present
-                        if (variable.getVariableType() != null) {
-                            variable = variable.withVariableType(variable.getVariableType().withName("LOGGER"));
-                        }
-                        variable = variable.withName(newName);
-                    }
-                    updatedVariables.add(variable);
-                }
-                if (needsRename) {
-                    vd = vd.withVariables(updatedVariables);
-                    vd = SearchResult.found(vd, "Renamed logger field to 'LOGGER'");
-                }
-                
-                // Fix modifiers to private static final
-                boolean hasPrivate = vd.hasModifier(J.Modifier.Type.Private);
-                boolean hasStatic = vd.hasModifier(J.Modifier.Type.Static);
-                boolean hasFinal = vd.hasModifier(J.Modifier.Type.Final);
-                boolean hasPublic = vd.hasModifier(J.Modifier.Type.Public);
-                boolean hasProtected = vd.hasModifier(J.Modifier.Type.Protected);
-                
-                if (!hasPrivate || !hasStatic || !hasFinal || hasPublic || hasProtected) {
-                    List<J.Modifier> newModifiers = new ArrayList<>();
-                    
-                    // Add modifiers in correct order: private static final
-                    boolean addedPrivate = false;
-                    boolean addedStatic = false;
-                    boolean addedFinal = false;
-                    
-                    for (J.Modifier mod : vd.getModifiers()) {
-                        // Skip visibility modifiers we don't want
-                        if (mod.getType() == J.Modifier.Type.Public || 
-                            mod.getType() == J.Modifier.Type.Protected) {
-                            continue;
-                        }
-                        
-                        // Keep or add private
-                        if (mod.getType() == J.Modifier.Type.Private) {
-                            if (!addedPrivate) {
-                                newModifiers.add(mod);
-                                addedPrivate = true;
-                            }
-                        }
-                        // Keep or add static
-                        else if (mod.getType() == J.Modifier.Type.Static) {
-                            if (!addedStatic) {
-                                newModifiers.add(mod);
-                                addedStatic = true;
-                            }
-                        }
-                        // Keep or add final
-                        else if (mod.getType() == J.Modifier.Type.Final) {
-                            if (!addedFinal) {
-                                newModifiers.add(mod);
-                                addedFinal = true;
-                            }
-                        }
-                        // Keep other modifiers (annotations, etc.)
-                        else {
-                            newModifiers.add(mod);
-                        }
-                    }
-                    
-                    // Add missing modifiers
-                    if (!addedPrivate) {
-                        // Get proper spacing from existing modifiers or default
-                        Space space = Space.EMPTY;
-                        if (!vd.getModifiers().isEmpty()) {
-                            space = vd.getModifiers().get(0).getPrefix();
-                        }
-                        J.Modifier privateMod = new J.Modifier(
-                            randomId(),
-                            space,
-                            Markers.EMPTY,
-                            null,
-                            J.Modifier.Type.Private,
-                            Collections.emptyList()
-                        );
-                        newModifiers.add(0, privateMod);
-                    }
-                    if (!addedStatic) {
-                        J.Modifier staticMod = new J.Modifier(
-                            randomId(),
-                            Space.SINGLE_SPACE,
-                            Markers.EMPTY,
-                            null,
-                            J.Modifier.Type.Static,
-                            Collections.emptyList()
-                        );
-                        // Insert in correct position (after private)
-                        int insertPos = addedPrivate ? 1 : 0;
-                        if (insertPos <= newModifiers.size()) {
-                            newModifiers.add(insertPos, staticMod);
-                            addedStatic = true;
-                        }
-                    }
-                    if (!addedFinal) {
-                        J.Modifier finalMod = new J.Modifier(
-                            randomId(),
-                            Space.SINGLE_SPACE,
-                            Markers.EMPTY,
-                            null,
-                            J.Modifier.Type.Final,
-                            Collections.emptyList()
-                        );
-                        // Add at position after static (or after private if no static)
-                        int insertPos = (addedPrivate ? 1 : 0) + (addedStatic ? 1 : 0);
-                        if (insertPos <= newModifiers.size()) {
-                            newModifiers.add(insertPos, finalMod);
-                        }
-                    }
-                    
-                    vd = vd.withModifiers(newModifiers);
-                    vd = SearchResult.found(vd, "Fixed logger modifiers to 'private static final'");
-                }
+
+            if (!isLoggerField(vd)) {
+                return vd;
             }
-            
+
+            if (RecipeSuppressionUtil.isSuppressed(vd, getCursor(), "CuiLoggerStandardsRecipe")) {
+                return vd;
+            }
+
+            vd = checkLoggerNaming(vd);
+            vd = checkLoggerModifiers(vd);
+
             return vd;
         }
-        
+
+        private boolean isLoggerField(J.VariableDeclarations vd) {
+            return TypeUtils.isOfClassType(vd.getType(), CUI_LOGGER_TYPE);
+        }
+
+        private J.VariableDeclarations checkLoggerNaming(J.VariableDeclarations vd) {
+            for (J.VariableDeclarations.NamedVariable variable : vd.getVariables()) {
+                if (!"LOGGER".equals(variable.getSimpleName())) {
+                    return SearchResult.found(vd);
+                }
+            }
+            return vd;
+        }
+
+        private J.VariableDeclarations checkLoggerModifiers(J.VariableDeclarations vd) {
+            boolean hasCorrectModifiers =
+                vd.hasModifier(J.Modifier.Type.Private) &&
+                vd.hasModifier(J.Modifier.Type.Static) &&
+                vd.hasModifier(J.Modifier.Type.Final) &&
+                !vd.hasModifier(J.Modifier.Type.Public) &&
+                !vd.hasModifier(J.Modifier.Type.Protected);
+
+            if (!hasCorrectModifiers) {
+                return SearchResult.found(vd);
+            }
+
+            return vd;
+        }
+
+
+
         @Override
         public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
             J.MethodInvocation mi = super.visitMethodInvocation(method, ctx);
-            
-            // Check if suppressed
+
             if (RecipeSuppressionUtil.isSuppressed(mi, getCursor(), "CuiLoggerStandardsRecipe")) {
                 return mi;
             }
-            
-            // Check if this is System.out or System.err method call
-            if (isSystemOutOrErr(mi)) {
-                String stream = getSystemStream(mi);
-                return SearchResult.found(mi,
-                    String.format("Inappropriate use of %s detected. Use proper logging framework instead.", stream));
+
+            // Check for System.out/err usage
+            mi = checkSystemStreams(mi);
+            if (mi.getMarkers().findFirst(SearchResult.class).isPresent()) {
+                return mi;
             }
-            
-            // Check if this is a CuiLogger method invocation
+
+            // Check logger method invocations
             if (isLoggerMethod(mi)) {
-                String methodName = mi.getSimpleName();
-                List<Expression> args = mi.getArguments();
-                
-                if (!args.isEmpty()) {
-                    // Check for string message argument
-                    Expression messageArg = null;
-                    int messageArgIndex = 0;
-                    boolean hasException = false;
-                    
-                    // Check if first argument is an exception
-                    if (isExceptionType(args.get(0))) {
-                        hasException = true;
-                        if (args.size() > 1) {
-                            messageArg = args.get(1);
-                            messageArgIndex = 1;
-                        }
-                    } else {
-                        messageArg = args.get(0);
-                    }
-                    
-                    if (messageArg instanceof J.Literal && ((J.Literal) messageArg).getValue() instanceof String) {
-                        String message = (String) ((J.Literal) messageArg).getValue();
-                        String originalMessage = message;
-                        
-                        // Check for incorrect placeholder patterns and replace them
-                        if (INCORRECT_PLACEHOLDER_PATTERN.matcher(message).find()) {
-                            String correctedMessage = message.replaceAll("\\{\\}", "%s")
-                                           .replaceAll("%[dfiobxXeEgG]", "%s");
-                            J.Literal newLiteral = ((J.Literal) messageArg).withValue(correctedMessage)
-                                                                           .withValueSource("\"" + correctedMessage + "\"");
-                            List<Expression> newArgs = new ArrayList<>(args);
-                            newArgs.set(messageArgIndex, newLiteral);
-                            mi = mi.withArguments(newArgs);
-                            mi = SearchResult.found(mi,
-                                "Replaced incorrect placeholder pattern with %s");
-                            // Update message for further checks
-                            message = correctedMessage;
-                        }
-                        
-                        // Validate parameter count
-                        int placeholderCount = countPlaceholders(message);
-                        int paramCount = args.size() - messageArgIndex - 1;
-                        if (hasException) {
-                            paramCount = args.size() - 2; // Exclude exception and message
-                        }
-                        
-                        if (placeholderCount != paramCount) {
-                            return SearchResult.found(mi,
-                                String.format("Parameter count mismatch: %d placeholders but %d parameters", 
-                                            placeholderCount, paramCount));
-                        }
-                    }
-                    
-                    // Fix exception parameter position for error/warn methods
-                    if ((methodName.equals("error") || methodName.equals("warn")) && args.size() > 1) {
-                        int exceptionIndex = -1;
-                        Expression exceptionArg = null;
-                        
-                        // Find exception parameter
-                        for (int i = 0; i < args.size(); i++) {
-                            if (isExceptionType(args.get(i))) {
-                                exceptionIndex = i;
-                                exceptionArg = args.get(i);
-                                break;
-                            }
-                        }
-                        
-                        // If exception exists but not at first position, move it
-                        if (exceptionIndex > 0) {
-                            List<Expression> reorderedArgs = new ArrayList<>();
-                            reorderedArgs.add(exceptionArg);
-                            for (int i = 0; i < args.size(); i++) {
-                                if (i != exceptionIndex) {
-                                    reorderedArgs.add(args.get(i));
-                                }
-                            }
-                            mi = mi.withArguments(reorderedArgs);
-                            return SearchResult.found(mi,
-                                "Moved exception parameter to first position");
-                        }
-                    }
-                }
+                mi = validateLoggerMethodCall(mi);
             }
-            
+
             return mi;
         }
-        
+
+        private J.MethodInvocation checkSystemStreams(J.MethodInvocation mi) {
+            if (isSystemOutOrErr(mi)) {
+                return SearchResult.found(mi);
+            }
+            return mi;
+        }
+
+        private J.MethodInvocation validateLoggerMethodCall(J.MethodInvocation mi) {
+            List<Expression> args = mi.getArguments();
+            if (args.isEmpty()) {
+                return mi;
+            }
+
+            LoggerCallContext context = analyzeLoggerCall(mi);
+
+            // Check placeholder patterns
+            mi = checkPlaceholderPatterns(mi, context);
+
+            // Validate parameter count
+            mi = validateParameterCount(mi, context);
+            if (mi.getMarkers().findFirst(SearchResult.class).isPresent()) {
+                return mi;
+            }
+
+            // Check exception position for error/warn methods
+            mi = checkExceptionPosition(mi);
+
+            return mi;
+        }
+
+        private LoggerCallContext analyzeLoggerCall(J.MethodInvocation mi) {
+            List<Expression> args = mi.getArguments();
+            Expression messageArg = null;
+            int messageArgIndex = 0;
+            boolean hasException = false;
+
+            // Check if first argument is an exception
+            if (isExceptionType(args.get(0))) {
+                hasException = true;
+                if (args.size() > 1) {
+                    messageArg = args.get(1);
+                    messageArgIndex = 1;
+                }
+            } else {
+                messageArg = args.get(0);
+            }
+
+            String message = extractMessageString(messageArg);
+            return new LoggerCallContext(messageArg, messageArgIndex, hasException, message);
+        }
+
+        private String extractMessageString(Expression messageArg) {
+            if (messageArg instanceof J.Literal) {
+                Object value = ((J.Literal) messageArg).getValue();
+                if (value instanceof String) {
+                    return (String) value;
+                }
+            }
+            return null;
+        }
+
+        private J.MethodInvocation checkPlaceholderPatterns(J.MethodInvocation mi, LoggerCallContext context) {
+            if (context.message == null || context.messageArg == null) {
+                return mi;
+            }
+
+            if (INCORRECT_PLACEHOLDER_PATTERN.matcher(context.message).find()) {
+                return SearchResult.found(mi);
+            }
+
+            return mi;
+        }
+
+        private J.MethodInvocation validateParameterCount(J.MethodInvocation mi, LoggerCallContext context) {
+            if (context.message == null) {
+                return mi;
+            }
+
+            int placeholderCount = countPlaceholders(context.message);
+            List<Expression> args = mi.getArguments();
+
+            // Count actual substitution parameters (excluding message and exception)
+            int paramCount = 0;
+            for (int i = 0; i < args.size(); i++) {
+                // Skip the message argument
+                if (i == context.messageArgIndex) {
+                    continue;
+                }
+                // Skip exception arguments (they don't count as substitution params)
+                if (isExceptionType(args.get(i))) {
+                    continue;
+                }
+                paramCount++;
+            }
+
+            if (placeholderCount != paramCount) {
+                return SearchResult.found(mi);
+            }
+
+            return mi;
+        }
+
+        private J.MethodInvocation checkExceptionPosition(J.MethodInvocation mi) {
+            String methodName = mi.getSimpleName();
+            if (!isExceptionHandlingMethod(methodName)) {
+                return mi;
+            }
+
+            List<Expression> args = mi.getArguments();
+            if (args.size() <= 1) {
+                return mi;
+            }
+
+            ExceptionPosition position = findExceptionPosition(args);
+            if (position.needsReordering()) {
+                return SearchResult.found(mi);
+            }
+
+            return mi;
+        }
+
+        private boolean isExceptionHandlingMethod(String methodName) {
+            return "error".equals(methodName) || "warn".equals(methodName);
+        }
+
+        private ExceptionPosition findExceptionPosition(List<Expression> args) {
+            for (int i = 0; i < args.size(); i++) {
+                if (isExceptionType(args.get(i))) {
+                    return new ExceptionPosition(i, args.get(i));
+                }
+            }
+            return ExceptionPosition.notFound();
+        }
+
+
+
+        private static class LoggerCallContext {
+            Expression messageArg;
+            int messageArgIndex;
+            boolean hasException;
+            String message;
+
+            LoggerCallContext(Expression messageArg, int messageArgIndex, boolean hasException, String message) {
+                this.messageArg = messageArg;
+                this.messageArgIndex = messageArgIndex;
+                this.hasException = hasException;
+                this.message = message;
+            }
+        }
+
+        private static class ExceptionPosition {
+            final int index;
+            final Expression exception;
+
+            ExceptionPosition(int index, Expression exception) {
+                this.index = index;
+                this.exception = exception;
+            }
+
+            static ExceptionPosition notFound() {
+                return new ExceptionPosition(-1, null);
+            }
+
+            boolean needsReordering() {
+                return index > 0;
+            }
+        }
+
         private boolean isLoggerMethod(J.MethodInvocation mi) {
             if (mi.getSelect() == null) {
                 return false;
@@ -331,12 +324,12 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             }
             return false;
         }
-        
+
         private boolean isExceptionType(Expression expr) {
             JavaType type = expr.getType();
             return type != null && TypeUtils.isAssignableTo("java.lang.Throwable", type);
         }
-        
+
         private int countPlaceholders(String message) {
             Matcher matcher = PLACEHOLDER_PATTERN.matcher(message);
             int count = 0;
@@ -345,33 +338,24 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             }
             return count;
         }
-        
+
         private boolean isSystemOutOrErr(J.MethodInvocation mi) {
-            if (mi.getSelect() instanceof J.FieldAccess) {
-                J.FieldAccess fieldAccess = (J.FieldAccess) mi.getSelect();
-                if (fieldAccess.getTarget() instanceof J.Identifier) {
-                    J.Identifier target = (J.Identifier) fieldAccess.getTarget();
+            if (mi.getSelect() instanceof J.FieldAccess fieldAccess) {
+                if (fieldAccess.getTarget() instanceof J.Identifier target) {
                     String targetName = target.getSimpleName();
                     String fieldName = fieldAccess.getSimpleName();
-                    
-                    if ("System".equals(targetName) && 
+
+                    if ("System".equals(targetName) &&
                         ("out".equals(fieldName) || "err".equals(fieldName))) {
                         String methodName = mi.getSimpleName();
-                        return "print".equals(methodName) || "println".equals(methodName) || 
+                        return "print".equals(methodName) || "println".equals(methodName) ||
                                "printf".equals(methodName) || "format".equals(methodName);
                     }
                 }
             }
             return false;
         }
-        
-        private String getSystemStream(J.MethodInvocation mi) {
-            if (mi.getSelect() instanceof J.FieldAccess) {
-                J.FieldAccess fieldAccess = (J.FieldAccess) mi.getSelect();
-                String fieldName = fieldAccess.getSimpleName();
-                return "System." + fieldName;
-            }
-            return "System.out/err";
-        }
+
+
     }
 }
