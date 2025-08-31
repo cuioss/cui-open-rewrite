@@ -83,7 +83,6 @@
             <artifactId>cui-java-tools</artifactId>
         </dependency>
 
-
         <!-- Testing -->
         <dependency>
             <groupId>org.openrewrite</groupId>
@@ -102,6 +101,14 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- CUI Test Juli Logger for testing log output -->
+        <dependency>
+            <groupId>de.cuioss.test</groupId>
+            <artifactId>cui-test-juli-logger</artifactId>
+            <version>2.1.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

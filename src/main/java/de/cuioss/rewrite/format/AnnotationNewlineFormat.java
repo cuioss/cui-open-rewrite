@@ -15,6 +15,7 @@
  */
 package de.cuioss.rewrite.format;
 
+import de.cuioss.rewrite.util.RecipeSuppressionUtil;
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
@@ -59,60 +60,76 @@ public class AnnotationNewlineFormat extends Recipe {
 
         @Override
         public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
-            J.ClassDeclaration cd = super.visitClassDeclaration(classDecl, ctx);
             
+            // Check for suppression comments
+            if (RecipeSuppressionUtil.isSuppressed(classDecl, getCursor(), "AnnotationNewlineFormat")) {
+                return classDecl;
+            }
+
+            J.ClassDeclaration cd = super.visitClassDeclaration(classDecl, ctx);
+
             // Only process if there are annotations and changes are needed
             if (cd.getLeadingAnnotations().isEmpty() || !needsFormatting(cd)) {
                 return cd;
             }
-            
+
             // Format annotations - ensure each on separate line
             cd = cd.withLeadingAnnotations(formatAnnotationList(cd.getLeadingAnnotations()));
-            
+
             // Ensure newline after last annotation with proper indentation
             cd = ensureProperSpacingAfterAnnotations(cd);
-            
+
             return cd;
         }
 
         @Override
         public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
-            J.MethodDeclaration md = super.visitMethodDeclaration(method, ctx);
+            // Check for suppression comments
+            if (RecipeSuppressionUtil.isSuppressed(method, getCursor(), "AnnotationNewlineFormat")) {
+                return method;
+            }
             
+            J.MethodDeclaration md = super.visitMethodDeclaration(method, ctx);
+
             // Only process if there are annotations and changes are needed
             if (md.getLeadingAnnotations().isEmpty() || !needsMethodFormatting(md)) {
                 return md;
             }
-            
+
             // Format annotations - ensure each on separate line
             md = md.withLeadingAnnotations(formatAnnotationList(md.getLeadingAnnotations()));
-            
+
             // Ensure newline after last annotation with proper indentation
             md = ensureProperMethodSpacing(md);
-            
+
             return md;
         }
 
         @Override
         public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations multiVariable, ExecutionContext ctx) {
-            J.VariableDeclarations vd = super.visitVariableDeclarations(multiVariable, ctx);
+            // Check for suppression only on fields
+            if (isFieldDeclaration() && RecipeSuppressionUtil.isSuppressed(multiVariable, getCursor(), "AnnotationNewlineFormat")) {
+                return multiVariable;
+            }
             
+            J.VariableDeclarations vd = super.visitVariableDeclarations(multiVariable, ctx);
+
             // Only process field declarations (not local variables)
             if (!isFieldDeclaration() || vd.getLeadingAnnotations().isEmpty()) {
                 return vd;
             }
-            
+
             // Check if formatting is needed
             if (!needsFieldFormatting(vd)) {
                 return vd;
             }
-            
+
             // Format annotations - ensure each on separate line
             vd = vd.withLeadingAnnotations(formatAnnotationList(vd.getLeadingAnnotations()));
-            
-            // Ensure newline after last annotation with proper indentation  
+
+            // Ensure newline after last annotation with proper indentation
             vd = ensureProperFieldSpacing(vd);
-            
+
             return vd;
         }
 
@@ -125,12 +142,12 @@ public class AnnotationNewlineFormat extends Recipe {
                     }
                 }
             }
-            
+
             // Check if there needs to be a newline after annotations
             if (!cd.getModifiers().isEmpty()) {
                 return !cd.getModifiers().getFirst().getPrefix().getWhitespace().contains("\n");
             }
-            
+
             return false;
         }
 
@@ -143,7 +160,7 @@ public class AnnotationNewlineFormat extends Recipe {
                     }
                 }
             }
-            
+
             // Check if there needs to be a newline after annotations
             if (!md.getModifiers().isEmpty()) {
                 return !md.getModifiers().getFirst().getPrefix().getWhitespace().contains("\n");
@@ -162,7 +179,7 @@ public class AnnotationNewlineFormat extends Recipe {
                     }
                 }
             }
-            
+
             // Check if there needs to be a newline after annotations
             if (!vd.getModifiers().isEmpty()) {
                 return !vd.getModifiers().getFirst().getPrefix().getWhitespace().contains("\n");
@@ -176,18 +193,18 @@ public class AnnotationNewlineFormat extends Recipe {
             if (annotations.size() <= 1) {
                 return annotations;
             }
-            
+
             List<J.Annotation> result = new ArrayList<>();
             result.add(annotations.getFirst()); // Keep first annotation as-is
-            
+
             // Get base indentation from first annotation
             String baseIndent = getIndentationFromPrefix(annotations.getFirst().getPrefix());
-            
+
             // Format subsequent annotations
             for (int i = 1; i < annotations.size(); i++) {
                 J.Annotation annotation = annotations.get(i);
                 String currentWhitespace = annotation.getPrefix().getWhitespace();
-                
+
                 // Only change if not already on new line
                 if (!currentWhitespace.contains("\n")) {
                     annotation = annotation.withPrefix(
@@ -196,7 +213,7 @@ public class AnnotationNewlineFormat extends Recipe {
                 }
                 result.add(annotation);
             }
-            
+
             return result;
         }
 
@@ -204,11 +221,11 @@ public class AnnotationNewlineFormat extends Recipe {
             if (!cd.getModifiers().isEmpty()) {
                 J.Modifier firstMod = cd.getModifiers().getFirst();
                 String currentWhitespace = firstMod.getPrefix().getWhitespace();
-                
+
                 if (!currentWhitespace.contains("\n")) {
                     // Get indentation from annotations
                     String indent = getIndentationFromPrefix(cd.getLeadingAnnotations().getFirst().getPrefix());
-                    
+
                     List<J.Modifier> newModifiers = new ArrayList<>(cd.getModifiers());
                     newModifiers.set(0, firstMod.withPrefix(Space.format("\n" + indent)));
                     cd = cd.withModifiers(newModifiers);
@@ -222,7 +239,7 @@ public class AnnotationNewlineFormat extends Recipe {
                 J.Modifier firstMod = md.getModifiers().getFirst();
                 if (needsNewline(firstMod.getPrefix())) {
                     md = md.withModifiers(
-                        updateFirstModifierSpacing(md.getModifiers(), 
+                        updateFirstModifierSpacing(md.getModifiers(),
                             getIndentationFromPrefix(md.getLeadingAnnotations().getFirst().getPrefix()))
                     );
                 }
@@ -231,7 +248,7 @@ public class AnnotationNewlineFormat extends Recipe {
                 var returnType = md.getReturnTypeExpression();
                 if (returnType != null) {
                     String currentWhitespace = returnType.getPrefix().getWhitespace();
-                    
+
                     if (!currentWhitespace.contains("\n")) {
                         String indent = getIndentationFromPrefix(md.getLeadingAnnotations().getFirst().getPrefix());
                         md = md.withReturnTypeExpression(
@@ -248,7 +265,7 @@ public class AnnotationNewlineFormat extends Recipe {
                 J.Modifier firstMod = vd.getModifiers().getFirst();
                 if (needsNewline(firstMod.getPrefix())) {
                     vd = vd.withModifiers(
-                        updateFirstModifierSpacing(vd.getModifiers(), 
+                        updateFirstModifierSpacing(vd.getModifiers(),
                             getIndentationFromPrefix(vd.getLeadingAnnotations().getFirst().getPrefix()))
                     );
                 }
@@ -257,7 +274,7 @@ public class AnnotationNewlineFormat extends Recipe {
                 var typeExpr = vd.getTypeExpression();
                 if (typeExpr != null) {
                     String currentWhitespace = typeExpr.getPrefix().getWhitespace();
-                    
+
                     if (!currentWhitespace.contains("\n")) {
                         String indent = getIndentationFromPrefix(vd.getLeadingAnnotations().getFirst().getPrefix());
                         vd = vd.withTypeExpression(
@@ -277,16 +294,16 @@ public class AnnotationNewlineFormat extends Recipe {
             if (modifiers.isEmpty()) {
                 return modifiers;
             }
-            
+
             J.Modifier firstMod = modifiers.getFirst();
             String currentWhitespace = firstMod.getPrefix().getWhitespace();
-            
+
             if (!currentWhitespace.contains("\n")) {
                 List<J.Modifier> newModifiers = new ArrayList<>(modifiers);
                 newModifiers.set(0, firstMod.withPrefix(Space.format("\n" + indent)));
                 return newModifiers;
             }
-            
+
             return modifiers;
         }
 
@@ -311,5 +328,6 @@ public class AnnotationNewlineFormat extends Recipe {
             }
             return parent instanceof J.ClassDeclaration;
         }
+
     }
 }

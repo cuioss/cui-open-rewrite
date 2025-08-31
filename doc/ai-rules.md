@@ -102,7 +102,7 @@ Common Maven commands for CUI projects:
 - Build Single Module: `./mvnw clean install -pl <module-name>`
 - Run tests: `./mvnw test`
 - Run single test: `./mvnw test -Dtest=ClassName#methodName`
-- Clean-Up Code: `./mvnw -Ppre-commit clean install` -> Check the console after running the command and fix all errors and warnings, verify until they are all corrected
+- Clean-Up Code: `./mvnw -Ppre-commit clean installComply to ` -> Check the console after running the command and fix all errors and warnings, verify until they are all corrected
 
 ## Standards Overview
 **Base Reference**: `{STANDARDS_BASE_URL}/standards`

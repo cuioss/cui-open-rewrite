@@ -52,10 +52,28 @@ public class Person {
 }
 ----
 
+**Suppression:**
+
+Recipes can be suppressed using comments:
+
+* `// cui-rewrite:disable` - Suppresses all recipes for the next element
+* `// cui-rewrite:disable RecipeName` - Suppresses specific recipe only
+
+[source,java]
+----
+// cui-rewrite:disable
+@Data @Builder public class Person {  // Will not be formatted
+    
+    // cui-rewrite:disable AnnotationNewlineFormat  
+    @Override @Test public void test() {}  // Only AnnotationNewlineFormat is suppressed
+}
+----
+
 **Known Limitations:**
 
 * Indentation preservation issues in nested classes (see https://github.com/cuioss/cui-open-rewrite/issues/1[Issue #1])
 * Some edge cases with field annotations
+* Trailing comments (`public class Foo { // cui-rewrite:disable`) not fully supported due to OpenRewrite AST limitations
 * 6 tests currently disabled pending indentation fixes
 
 === Usage
@@ -97,5 +115,24 @@ mvn rewrite:run
         <groupId>de.cuioss.rewrite</groupId>
         <artifactId>cui-open-rewrite</artifactId>
     </dependency>
+----
+
+=== For Recipe Developers
+
+==== Using RecipeSuppressionUtil
+
+All recipes should support suppression. Use the provided utility:
+
+[source,java]
+----
+import de.cuioss.rewrite.util.RecipeSuppressionUtil;
+
+@Override
+public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
+    if (RecipeSuppressionUtil.isSuppressed(classDecl, getCursor(), "YourRecipeName")) {
+        return classDecl; // Skip processing
+    }
+    // Recipe logic here
+}
 ----
 
