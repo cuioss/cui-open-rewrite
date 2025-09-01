@@ -19,7 +19,6 @@ import de.cuioss.test.juli.LogAsserts;
 import de.cuioss.test.juli.TestLogLevel;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
 import org.jspecify.annotations.Nullable;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.InMemoryExecutionContext;
@@ -72,41 +71,6 @@ class RecipeSuppressionUtilTest {
         assertTrue(visitor.methodWasSuppressed);
         LogAsserts.assertLogMessagePresentContaining(TestLogLevel.INFO,
             "Skipping method 'testMethod' due to cui-rewrite:disable comment");
-    }
-
-    @Test
-    @Disabled("Known issue: Field detection in test visitor has limitations. " +
-        "Field suppression works correctly in actual recipes - see RecipeFieldSuppressionTest")
-    void shouldDetectFieldSuppressionWithGeneralComment() {
-        // This test is disabled due to a known issue with how the test visitor
-        // traverses the AST. The field context is not properly established when
-        // visitVariableDeclarations is called in this simple test setup.
-        //
-        // The actual field suppression functionality works correctly in real recipes,
-        // as demonstrated by:
-        // - RecipeFieldSuppressionTest (integration test)
-        // - AnnotationSuppressionTest#suppressSingleLineForField
-        // - FieldSuppressionDebugTest
-        //
-        // The issue is specific to this test's visitor implementation where the
-        // isFieldDeclaration() check might be called before the cursor is properly
-        // positioned in the AST tree.
-
-        String source = """
-            public class TestClass {
-                // cui-rewrite:disable
-                private String field;
-            }
-            """;
-
-        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
-
-        TestVisitor visitor = new TestVisitor();
-        visitor.visit(cu, ctx);
-
-        assertTrue(visitor.fieldWasSuppressed);
-        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.INFO,
-            "Skipping field 'field' due to cui-rewrite:disable comment");
     }
 
     @Test

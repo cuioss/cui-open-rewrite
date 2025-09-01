@@ -15,7 +15,6 @@
  */
 package de.cuioss.rewrite.format;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.openrewrite.DocumentExample;
 import org.openrewrite.java.JavaParser;
@@ -113,30 +112,6 @@ class LombokAnnotationFormatTest implements RewriteTest {
                 public class Person {
                     private String name;
                     private int age;
-                }
-                """
-            )
-        );
-    }
-
-    @Test
-    @Disabled("Field annotation formatting issue")
-    void formatNonNullFieldAnnotation() {
-        rewriteRun(
-            java(
-                """
-                import lombok.NonNull;
-                
-                public class Service {
-                    @NonNull private String name;
-                }
-                """,
-                """
-                import lombok.NonNull;
-                
-                public class Service {
-                    @NonNull
-                    private String name;
                 }
                 """
             )

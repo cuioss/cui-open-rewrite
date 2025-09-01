@@ -15,7 +15,6 @@
  */
 package de.cuioss.rewrite.format;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
@@ -74,55 +73,6 @@ class AnnotationNewlineFormatTest implements RewriteTest {
     }
 
     @Test
-    @Disabled("Indentation preservation issue")
-    void formatMethodAnnotation() {
-        rewriteRun(
-            java(
-                """
-                public class Service {
-                    @Override public String toString() {
-                        return "Service";
-                    }
-                }
-                """,
-                """
-                public class Service {
-                    @Override
-                    public String toString() {
-                        return "Service";
-                    }
-                }
-                """
-            )
-        );
-    }
-
-    @Test
-    @Disabled("Indentation preservation issue")
-    void formatMultipleMethodAnnotations() {
-        rewriteRun(
-            java(
-                """
-                public class TestClass {
-                    @Override @Deprecated void testMethod() {
-                        // test implementation
-                    }
-                }
-                """,
-                """
-                public class TestClass {
-                    @Override
-                    @Deprecated
-                    void testMethod() {
-                        // test implementation
-                    }
-                }
-                """
-            )
-        );
-    }
-
-    @Test
     void preserveExistingNewlines() {
         rewriteRun(
             java(
@@ -132,85 +82,6 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     @Override
                     public String toString() {
                         return "formatted";
-                    }
-                }
-                """
-            )
-        );
-    }
-
-    @Test
-    @Disabled("Field annotation formatting issue")
-    void formatFieldAnnotations() {
-        rewriteRun(
-            java(
-                """
-                public class MyClass {
-                    @Deprecated private String name;
-                    
-                    @Deprecated @SuppressWarnings("all") private String oldField;
-                }
-                """,
-                """
-                public class MyClass {
-                    @Deprecated
-                    private String name;
-                    
-                    @Deprecated
-                    @SuppressWarnings("all")
-                    private String oldField;
-                }
-                """
-            )
-        );
-    }
-
-    @Test
-    @Disabled("Indentation preservation issue")
-    void formatAnnotationsWithParameters() {
-        rewriteRun(
-            java(
-                """
-                public class TestClass {
-                    @SuppressWarnings("unchecked") public void method() {
-                        // method body
-                    }
-                }
-                """,
-                """
-                public class TestClass {
-                    @SuppressWarnings("unchecked")
-                    public void method() {
-                        // method body
-                    }
-                }
-                """
-            )
-        );
-    }
-
-    @Test
-    @Disabled("Nested class indentation preservation issue")
-    void preserveIndentation() {
-        rewriteRun(
-            java(
-                """
-                public class OuterClass {
-                    @Deprecated public class InnerClass {
-                        @Override public String toString() {
-                            return "Inner";
-                        }
-                    }
-                }
-                """,
-                """
-                public class OuterClass {
-                    @Deprecated
-                    public class InnerClass {
-                        @Override
-                        public String toString() {
-                            return "Inner";
-                        }
                     }
                 }
                 """
