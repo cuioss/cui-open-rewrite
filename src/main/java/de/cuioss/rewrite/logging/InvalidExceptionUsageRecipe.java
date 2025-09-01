@@ -30,19 +30,21 @@ import java.util.Set;
 
 /**
  * Recipe to detect and flag invalid usage of generic exception types.
- * 
+ *
  * <p>This recipe identifies and flags the following bad practices:</p>
  * <ul>
  *   <li>Catching raw {@code Exception}, {@code RuntimeException}, or {@code Throwable}</li>
  *   <li>Throwing raw {@code Exception}, {@code RuntimeException}, or {@code Throwable}</li>
  * </ul>
- * 
+ *
  * <p>Note: This recipe only flags issues and does not provide auto-fixes, as the appropriate
  * specific exception type depends on the context and business logic.</p>
- * 
+ *
  * <p>Suppression is supported via {@code // cui-rewrite:disable InvalidExceptionUsageRecipe}</p>
  */
 public class InvalidExceptionUsageRecipe extends Recipe {
+
+    private static final String RECIPE_NAME = "InvalidExceptionUsageRecipe";
 
     private static final Set<String> GENERIC_EXCEPTION_TYPES = Set.of(
         "java.lang.Exception",
@@ -52,7 +54,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
     @Override
     public String getDisplayName() {
-        return "Invalid Exception Usage";
+        return "Invalid exception usage";
     }
 
     @Override
@@ -79,25 +81,26 @@ public class InvalidExceptionUsageRecipe extends Recipe {
     private static class InvalidExceptionUsageVisitor extends JavaIsoVisitor<ExecutionContext> {
 
         @Override
-        public J.Try.Catch visitCatch(J.Try.Catch catch_, ExecutionContext ctx) {
-            J.Try.Catch c = super.visitCatch(catch_, ctx);
+        public J.Try.Catch visitCatch(J.Try.Catch catchBlock, ExecutionContext ctx) {
+            J.Try.Catch c = super.visitCatch(catchBlock, ctx);
 
             // Check if suppressed
-            if (RecipeSuppressionUtil.isSuppressed(c, getCursor(), "InvalidExceptionUsageRecipe")) {
+            if (RecipeSuppressionUtil.isSuppressed(c, getCursor(), RECIPE_NAME)) {
                 return c;
             }
 
             // Check the caught exception type
             J.ControlParentheses<J.VariableDeclarations> parameterParens = c.getParameter();
-            if (parameterParens != null && parameterParens.getTree() != null) {
-                J.VariableDeclarations parameter = parameterParens.getTree();
-                if (parameter.getType() != null) {
-                    JavaType type = parameter.getType();
-                    JavaType.FullyQualified fqType = TypeUtils.asFullyQualified(type);
+            J.VariableDeclarations parameter = parameterParens.getTree();
+            if (parameter.getType() != null) {
+                JavaType type = parameter.getType();
+                JavaType.FullyQualified fqType = TypeUtils.asFullyQualified(type);
 
-                    if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
-                        return SearchResult.found(c);
-                    }
+                if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
+                    // SearchResult.found() never returns null for non-null input
+                    J.Try.Catch marked = SearchResult.found(c);
+                    assert marked != null;
+                    return marked;
                 }
             }
 
@@ -109,7 +112,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             J.Throw t = super.visitThrow(thrown, ctx);
 
             // Check if suppressed
-            if (RecipeSuppressionUtil.isSuppressed(t, getCursor(), "InvalidExceptionUsageRecipe")) {
+            if (RecipeSuppressionUtil.isSuppressed(t, getCursor(), RECIPE_NAME)) {
                 return t;
             }
 
@@ -119,7 +122,10 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                 JavaType.FullyQualified fqType = TypeUtils.asFullyQualified(type);
 
                 if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
-                    return SearchResult.found(t);
+                    // SearchResult.found() never returns null for non-null input
+                    J.Throw marked = SearchResult.found(t);
+                    assert marked != null;
+                    return marked;
                 }
             }
 
@@ -137,7 +143,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             }
 
             // Check if suppressed
-            if (RecipeSuppressionUtil.isSuppressed(nc, getCursor(), "InvalidExceptionUsageRecipe")) {
+            if (RecipeSuppressionUtil.isSuppressed(nc, getCursor(), RECIPE_NAME)) {
                 return nc;
             }
 
@@ -145,7 +151,10 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             JavaType.FullyQualified fqType = TypeUtils.asFullyQualified(type);
 
             if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
-                return SearchResult.found(nc);
+                // SearchResult.found() never returns null for non-null input
+                J.NewClass marked = SearchResult.found(nc);
+                assert marked != null;
+                return marked;
             }
 
             return nc;
