@@ -43,7 +43,6 @@ tags:
 type: specs.openrewrite.org/v1beta/category
 name: de.cuioss.rewrite.CUI
 packageName: de.cuioss.rewrite
-displayName: CUI OpenRewrite Recipes
 description: Collection of OpenRewrite recipes for CUI OpenSource Software projects
 tags:
   - CUI
