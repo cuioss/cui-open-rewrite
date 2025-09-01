@@ -23,6 +23,7 @@ import org.openrewrite.test.TypeValidation;
 
 import static org.openrewrite.java.Assertions.java;
 
+@SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class CuiLoggerStandardsRecipeTest implements RewriteTest {
 
     @Override
@@ -56,14 +57,14 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger log = new CuiLogger(Test.class);
                 }
                 """,
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                 }
@@ -78,14 +79,14 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     public static CuiLogger LOGGER = new CuiLogger(Test.class);
                 }
                 """,
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                 }
@@ -100,10 +101,10 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method() {
                         String value = "test";
                         LOGGER.info("Message with {} placeholder", value);
@@ -113,10 +114,10 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                 """,
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method() {
                         String value = "test";
                         LOGGER.info("Message with %s placeholder", value);
@@ -134,10 +135,10 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method() {
                         String value1 = "test";
                         LOGGER.info("Message with %s and %s", value1);
@@ -146,10 +147,10 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                 """,
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method() {
                         String value1 = "test";
                         /*~~>*/LOGGER.info("Message with %s and %s", value1);
@@ -166,10 +167,10 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method(Exception e) {
                         LOGGER.error("Error occurred", e);
                     }
@@ -177,10 +178,10 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                 """,
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method(Exception e) {
                         LOGGER.error(e, "Error occurred");
                     }
@@ -220,11 +221,11 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     // cui-rewrite:disable
                     private static final CuiLogger log = new CuiLogger(Test.class);
-                    
+
                     void method() {
                         // cui-rewrite:disable
                         System.out.println("This is suppressed");
@@ -241,10 +242,10 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method(Exception e) {
                         String value = "test";
                         LOGGER.info("Correct message with %s", value);

@@ -22,6 +22,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.java.Assertions.java;
 
+@SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class InvalidExceptionUsageRecipeTest implements RewriteTest {
 
     @Override
@@ -43,7 +44,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                             e.printStackTrace();
                         }
                     }
-                    
+
                     void doSomething() throws Exception {
                         throw new Exception("test");
                     }
@@ -58,7 +59,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                             e.printStackTrace();
                         }
                     }
-                    
+
                     void doSomething() throws Exception {
                         /*~~>*/throw new Exception("test");
                     }
@@ -81,7 +82,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                             e.printStackTrace();
                         }
                     }
-                    
+
                     void doSomething() {
                         // Something that might throw RuntimeException
                     }
@@ -96,7 +97,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                             e.printStackTrace();
                         }
                     }
-                    
+
                     void doSomething() {
                         // Something that might throw RuntimeException
                     }
@@ -119,7 +120,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                             t.printStackTrace();
                         }
                     }
-                    
+
                     void doSomething() {
                         // Something that might throw
                     }
@@ -134,7 +135,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                             t.printStackTrace();
                         }
                     }
-                    
+
                     void doSomething() {
                         // Something that might throw
                     }
@@ -218,7 +219,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
             java(
                 """
                 import java.io.IOException;
-                
+
                 class Test {
                     void test() {
                         try {
@@ -227,7 +228,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                             e.printStackTrace();
                         }
                     }
-                    
+
                     void doSomething() throws IOException {
                         throw new IOException("Specific exception is OK");
                     }
@@ -243,7 +244,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
             java(
                 """
                 import java.io.IOException;
-                
+
                 class Test {
                     void test() {
                         try {
@@ -254,7 +255,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                             // Generic catch as fallback
                         }
                     }
-                    
+
                     void doSomething() throws IOException {
                         // Something
                     }
@@ -262,7 +263,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                 """,
                 """
                 import java.io.IOException;
-                
+
                 class Test {
                     void test() {
                         try {
@@ -273,7 +274,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                             // Generic catch as fallback
                         }
                     }
-                    
+
                     void doSomething() throws IOException {
                         // Something
                     }
@@ -292,13 +293,13 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } 
+                        }
                         // cui-rewrite:disable InvalidExceptionUsageRecipe
                         catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
-                    
+
                     void doSomething() throws Exception {
                         // cui-rewrite:disable InvalidExceptionUsageRecipe
                         throw new Exception("Suppressed");
@@ -318,13 +319,13 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } 
+                        }
                         // cui-rewrite:disable
                         catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
-                    
+
                     void doSomething() throws Exception {
                         // cui-rewrite:disable
                         throw new Exception("Suppressed");
@@ -352,7 +353,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                             e.printStackTrace();
                         }
                     }
-                    
+
                     void doSomething() {
                         // Something
                     }
@@ -371,7 +372,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                             e.printStackTrace();
                         }
                     }
-                    
+
                     void doSomething() {
                         // Something
                     }
@@ -387,7 +388,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
             java(
                 """
                 import java.util.function.Supplier;
-                
+
                 class Test {
                     void test() {
                         Supplier<String> supplier = () -> {
@@ -398,7 +399,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                             }
                         };
                     }
-                    
+
                     String doSomething() throws Exception {
                         return "test";
                     }
@@ -406,7 +407,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                 """,
                 """
                 import java.util.function.Supplier;
-                
+
                 class Test {
                     void test() {
                         Supplier<String> supplier = () -> {
@@ -417,7 +418,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                             }
                         };
                     }
-                    
+
                     String doSomething() throws Exception {
                         return "test";
                     }
@@ -437,7 +438,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                         super(message);
                     }
                 }
-                
+
                 class Test {
                     void test() throws CustomException {
                         try {
@@ -446,7 +447,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                             throw new CustomException("Rethrowing custom");
                         }
                     }
-                    
+
                     void doSomething() throws CustomException {
                         throw new CustomException("Custom is OK");
                     }

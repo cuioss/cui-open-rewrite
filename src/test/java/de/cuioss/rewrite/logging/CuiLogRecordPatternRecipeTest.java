@@ -22,6 +22,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.java.Assertions.java;
 
+@SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class CuiLogRecordPatternRecipeTest implements RewriteTest {
 
     @Override
@@ -453,13 +454,13 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 import de.cuioss.tools.logging.LogRecord;
                 import de.cuioss.tools.logging.LogRecordModel;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                     private static final LogRecord INFO_MESSAGE = LogRecordModel.builder()
                         .template("Simple info message")
                         .build();
-                    
+
                     void method() {
                         LOGGER.info(INFO_MESSAGE.format());
                     }
@@ -469,13 +470,13 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 import de.cuioss.tools.logging.LogRecord;
                 import de.cuioss.tools.logging.LogRecordModel;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                     private static final LogRecord INFO_MESSAGE = LogRecordModel.builder()
                         .template("Simple info message")
                         .build();
-                    
+
                     void method() {
                         /*~~(Converted zero-parameter format() call to method reference)~~>*/LOGGER.info(INFO_MESSAGE::format);
                     }
@@ -493,16 +494,16 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 import de.cuioss.tools.logging.LogRecord;
                 import de.cuioss.tools.logging.LogRecordModel;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     static class ERROR {
                         static final LogRecord DATABASE_ERROR = LogRecordModel.builder()
                             .template("Database connection failed")
                             .build();
                     }
-                    
+
                     void method(Exception e) {
                         LOGGER.error(e, ERROR.DATABASE_ERROR.format());
                     }
@@ -512,16 +513,16 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 import de.cuioss.tools.logging.LogRecord;
                 import de.cuioss.tools.logging.LogRecordModel;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     static class ERROR {
                         static final LogRecord DATABASE_ERROR = LogRecordModel.builder()
                             .template("Database connection failed")
                             .build();
                     }
-                    
+
                     void method(Exception e) {
                         /*~~(Converted zero-parameter format() call to method reference)~~>*/LOGGER.error(e, ERROR.DATABASE_ERROR::format);
                     }
@@ -539,16 +540,16 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 import de.cuioss.tools.logging.LogRecord;
                 import de.cuioss.tools.logging.LogRecordModel;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     static class INFO {
                         static final LogRecord USER_LOGIN = LogRecordModel.builder()
                             .template("User %s logged in")
                             .build();
                     }
-                    
+
                     void method() {
                         String username = "john";
                         LOGGER.info(INFO.USER_LOGIN.format(username));
@@ -567,13 +568,13 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 import de.cuioss.tools.logging.LogRecord;
                 import de.cuioss.tools.logging.LogRecordModel;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                     private static final LogRecord INFO_MESSAGE = LogRecordModel.builder()
                         .template("Application started")
                         .build();
-                    
+
                     void method() {
                         LOGGER.info(INFO_MESSAGE::format);
                     }

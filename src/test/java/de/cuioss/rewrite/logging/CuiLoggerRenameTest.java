@@ -22,6 +22,7 @@ import org.openrewrite.test.TypeValidation;
 
 import static org.openrewrite.java.Assertions.java;
 
+@SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class CuiLoggerRenameTest implements RewriteTest {
 
     @Override
@@ -36,14 +37,14 @@ class CuiLoggerRenameTest implements RewriteTest {
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger log = new CuiLogger(Test.class);
                 }
                 """,
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                 }
@@ -58,7 +59,7 @@ class CuiLoggerRenameTest implements RewriteTest {
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                 }

@@ -18,6 +18,7 @@ package de.cuioss.rewrite.util;
 import de.cuioss.test.juli.LogAsserts;
 import de.cuioss.test.juli.TestLogLevel;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.openrewrite.ExecutionContext;
@@ -157,7 +158,7 @@ class RecipeSuppressionUtilTest {
         assertTrue(visitor.classWasSuppressed);
     }
 
-    private static class TestVisitor extends JavaIsoVisitor<ExecutionContext> {
+    private static class TestVisitor extends JavaIsoVisitor<@NonNull ExecutionContext> {
         boolean classWasSuppressed;
         boolean methodWasSuppressed;
         boolean fieldWasSuppressed;
@@ -172,7 +173,7 @@ class RecipeSuppressionUtilTest {
         }
 
         @Override
-        public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
+        public J.@NonNull ClassDeclaration visitClassDeclaration(J.@NonNull ClassDeclaration classDecl, @NonNull ExecutionContext ctx) {
             if (RecipeSuppressionUtil.isSuppressed(classDecl, getCursor(), recipeName)) {
                 classWasSuppressed = true;
                 return classDecl;
@@ -181,7 +182,7 @@ class RecipeSuppressionUtilTest {
         }
 
         @Override
-        public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
+        public J.@NonNull MethodDeclaration visitMethodDeclaration(J.@NonNull MethodDeclaration method, @NonNull ExecutionContext ctx) {
             if (RecipeSuppressionUtil.isSuppressed(method, getCursor(), recipeName)) {
                 methodWasSuppressed = true;
                 return method;
@@ -190,7 +191,7 @@ class RecipeSuppressionUtilTest {
         }
 
         @Override
-        public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations multiVariable, ExecutionContext ctx) {
+        public J.@NonNull VariableDeclarations visitVariableDeclarations(J.@NonNull VariableDeclarations multiVariable, @NonNull ExecutionContext ctx) {
             if (isFieldDeclaration() && RecipeSuppressionUtil.isSuppressed(multiVariable, getCursor(), recipeName)) {
                 fieldWasSuppressed = true;
                 return multiVariable;

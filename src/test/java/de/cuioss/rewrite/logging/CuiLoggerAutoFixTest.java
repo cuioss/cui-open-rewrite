@@ -23,6 +23,7 @@ import org.openrewrite.test.TypeValidation;
 
 import static org.openrewrite.java.Assertions.java;
 
+@SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class CuiLoggerAutoFixTest implements RewriteTest {
 
     @Override
@@ -56,14 +57,14 @@ class CuiLoggerAutoFixTest implements RewriteTest {
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     public static CuiLogger LOGGER = new CuiLogger(Test.class);
                 }
                 """,
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                 }
@@ -78,14 +79,14 @@ class CuiLoggerAutoFixTest implements RewriteTest {
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     protected final CuiLogger LOGGER = new CuiLogger(Test.class);
                 }
                 """,
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                 }
@@ -100,10 +101,10 @@ class CuiLoggerAutoFixTest implements RewriteTest {
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method() {
                         LOGGER.info("Message with {} placeholder", value);
                         LOGGER.debug("Multiple {} placeholders {}", value1, value2);
@@ -112,10 +113,10 @@ class CuiLoggerAutoFixTest implements RewriteTest {
                 """,
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method() {
                         LOGGER.info("Message with %s placeholder", value);
                         LOGGER.debug("Multiple %s placeholders %s", value1, value2);
@@ -132,10 +133,10 @@ class CuiLoggerAutoFixTest implements RewriteTest {
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method() {
                         LOGGER.info("Integer %d, Float %f, Hex %x", intVal, floatVal, hexVal);
                         LOGGER.debug("String %s is correct", strVal);
@@ -144,10 +145,10 @@ class CuiLoggerAutoFixTest implements RewriteTest {
                 """,
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method() {
                         LOGGER.info("Integer %s, Float %s, Hex %s", intVal, floatVal, hexVal);
                         LOGGER.debug("String %s is correct", strVal);
@@ -164,10 +165,10 @@ class CuiLoggerAutoFixTest implements RewriteTest {
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method(Exception e) {
                         LOGGER.error("Error occurred with %s", value, e);
                         LOGGER.warn("Warning message", e);
@@ -176,10 +177,10 @@ class CuiLoggerAutoFixTest implements RewriteTest {
                 """,
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method(Exception e) {
                         LOGGER.error(e, "Error occurred with %s", value);
                         LOGGER.warn(e, "Warning message");
@@ -196,10 +197,10 @@ class CuiLoggerAutoFixTest implements RewriteTest {
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     public CuiLogger log = new CuiLogger(Test.class);
-                    
+
                     void method(Exception e) {
                         log.error("Error {} with number %d", "message", 42, e);
                     }
@@ -207,10 +208,10 @@ class CuiLoggerAutoFixTest implements RewriteTest {
                 """,
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method(Exception e) {
                         LOGGER.error(e, "Error %s with number %s", "message", 42);
                     }
@@ -226,10 +227,10 @@ class CuiLoggerAutoFixTest implements RewriteTest {
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method(Exception e) {
                         LOGGER.info("Correct message with %s", value);
                         LOGGER.error(e, "Error with %s", value);
