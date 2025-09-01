@@ -225,7 +225,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
         private J.MethodInvocation checkSystemStreams(J.MethodInvocation mi) {
             if (isSystemOutOrErr(mi)) {
-                return SearchResult.found(mi);
+                J.MethodInvocation result = SearchResult.found(mi);
+                return result != null ? result : mi;
             }
             return mi;
         }
@@ -332,7 +333,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             }
 
             if (placeholderCount != paramCount) {
-                return SearchResult.found(mi);
+                J.MethodInvocation result = SearchResult.found(mi);
+                return result != null ? result : mi;
             }
 
             return mi;
@@ -350,36 +352,47 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             }
 
             ExceptionPosition position = findExceptionPosition(args);
-            if (position.needsReordering()) {
-                // Move exception to first position with proper spacing
-                List<Expression> reorderedArgs = new ArrayList<>();
-
-                // Add the exception as the first argument, removing any leading space
-                Expression exceptionArg = position.exception;
-                if (exceptionArg != null) {
-                    if (exceptionArg.getPrefix().getWhitespace().startsWith(" ")) {
-                        exceptionArg = exceptionArg.withPrefix(Space.EMPTY);
-                    }
-                    reorderedArgs.add(exceptionArg);
-                }
-
-                // Add remaining arguments with proper spacing
-                for (int i = 0; i < args.size(); i++) {
-                    if (i != position.index) {
-                        Expression arg = args.get(i);
-                        // Ensure there's a space after the comma
-                        if (!arg.getPrefix().getWhitespace().startsWith(" ")) {
-                            arg = arg.withPrefix(Space.SINGLE_SPACE);
-                        }
-                        reorderedArgs.add(arg);
-                    }
-                }
-                mi = mi.withArguments(reorderedArgs);
-                // Auto-fixed, don't mark it
+            if (!position.needsReordering()) {
                 return mi;
             }
 
-            return mi;
+            List<Expression> reorderedArgs = reorderArgumentsWithExceptionFirst(args, position);
+            return mi.withArguments(reorderedArgs);
+        }
+
+        private List<Expression> reorderArgumentsWithExceptionFirst(List<Expression> args, ExceptionPosition position) {
+            List<Expression> reorderedArgs = new ArrayList<>();
+
+            // Add the exception as the first argument
+            Expression exceptionArg = position.exception;
+            if (exceptionArg != null) {
+                exceptionArg = removeLeadingSpace(exceptionArg);
+                reorderedArgs.add(exceptionArg);
+            }
+
+            // Add remaining arguments with proper spacing
+            for (int i = 0; i < args.size(); i++) {
+                if (i != position.index) {
+                    Expression arg = ensureSpaceAfterComma(args.get(i));
+                    reorderedArgs.add(arg);
+                }
+            }
+
+            return reorderedArgs;
+        }
+
+        private Expression removeLeadingSpace(Expression expr) {
+            if (expr.getPrefix().getWhitespace().startsWith(" ")) {
+                return expr.withPrefix(Space.EMPTY);
+            }
+            return expr;
+        }
+
+        private Expression ensureSpaceAfterComma(Expression expr) {
+            if (!expr.getPrefix().getWhitespace().startsWith(" ")) {
+                return expr.withPrefix(Space.SINGLE_SPACE);
+            }
+            return expr;
         }
 
         private boolean isExceptionHandlingMethod(String methodName) {
