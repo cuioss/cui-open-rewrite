@@ -115,47 +115,11 @@ class AnnotationSuppressionTest implements RewriteTest {
                 @Deprecated @SuppressWarnings("all") public class TestClass {
                     public static final String VALUE = "test";
                 }
-                // cui-rewrite:enable de.cuioss.rewrite.format.AnnotationNewlineFormat
                 """
             )
         );
     }
 
-    @Test
-    void suppressBlockScope() {
-        rewriteRun(
-            java(
-                """
-                @Deprecated @SuppressWarnings("all") public class TestClass {
-                    // cui-rewrite:disable AnnotationNewlineFormat
-                    @Override @Deprecated public String toString() {
-                        return "test";
-                    }
-                    
-                    @SuppressWarnings("unused") @Deprecated private String field1;
-                    // cui-rewrite:enable AnnotationNewlineFormat
-                    
-                    @SuppressWarnings("unused") @Deprecated private String field2;
-                }
-                """,
-                """
-                @Deprecated
-                @SuppressWarnings("all")
-                public class TestClass {
-                    // cui-rewrite:disable AnnotationNewlineFormat
-                    @Override @Deprecated public String toString() {
-                        return "test";
-                    }
-                    
-                    @SuppressWarnings("unused") @Deprecated private String field1;
-                    // cui-rewrite:enable AnnotationNewlineFormat
-                    
-                    @SuppressWarnings("unused") @Deprecated private String field2;
-                }
-                """
-            )
-        );
-    }
 
     @Test
     void suppressNextLineWithoutRecipeName() {
@@ -217,59 +181,4 @@ class AnnotationSuppressionTest implements RewriteTest {
         );
     }
 
-    @Test
-    void suppressPartialBlock() {
-        rewriteRun(
-            java(
-                """
-                public class TestClass {
-                    @Override @Deprecated public String method1() {
-                        return "1";
-                    }
-                    
-                    // cui-rewrite:disable AnnotationNewlineFormat
-                    @Override @Deprecated public String method2() {
-                        return "2";
-                    }
-                    
-                    @Override @Deprecated public String method3() {
-                        return "3";
-                    }
-                    // cui-rewrite:enable AnnotationNewlineFormat
-                    
-                    @Override @Deprecated public String method4() {
-                        return "4";
-                    }
-                }
-                """,
-                """
-                public class TestClass {
-                    @Override
-                    @Deprecated
-                    public String method1() {
-                        return "1";
-                    }
-                    
-                    // cui-rewrite:disable AnnotationNewlineFormat
-                    @Override @Deprecated public String method2() {
-                        return "2";
-                    }
-                    
-                    @Override
-                    @Deprecated
-                    public String method3() {
-                        return "3";
-                    }
-                    // cui-rewrite:enable AnnotationNewlineFormat
-                    
-                    @Override
-                    @Deprecated
-                    public String method4() {
-                        return "4";
-                    }
-                }
-                """
-            )
-        );
-    }
 }

@@ -114,7 +114,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             }
             if (needsRename) {
                 vd = vd.withVariables(updatedVariables);
-                vd = SearchResult.found(vd, "Renamed logger field to 'LOGGER'");
+                // Auto-fixed, don't mark it
             }
             return vd;
         }
@@ -184,7 +184,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                 newModifiers.addAll(otherModifiers);
 
                 vd = vd.withModifiers(newModifiers);
-                vd = SearchResult.found(vd, "Fixed logger modifiers to 'private static final'");
+                // Auto-fixed, don't mark it
             }
 
             return vd;
@@ -286,7 +286,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                 List<Expression> newArgs = new ArrayList<>(mi.getArguments());
                 newArgs.set(context.messageArgIndex, newLiteral);
                 mi = mi.withArguments(newArgs);
-                mi = SearchResult.found(mi, "Replaced incorrect placeholder pattern with %s");
+                // Auto-fixed, don't mark it
             }
 
             return mi;
@@ -343,7 +343,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                     }
                 }
                 mi = mi.withArguments(reorderedArgs);
-                return SearchResult.found(mi, "Moved exception parameter to first position");
+                // Auto-fixed, don't mark it
+                return mi;
             }
 
             return mi;

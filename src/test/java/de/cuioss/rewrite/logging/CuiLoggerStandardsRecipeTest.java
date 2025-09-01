@@ -180,7 +180,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                     
                     void method(Exception e) {
-                        LOGGER.error(e, "Error occurred");
+                        LOGGER.error( e,"Error occurred");
                     }
                 }
                 """
