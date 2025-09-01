@@ -40,7 +40,7 @@ public final class PlaceholderValidationUtil {
      * - %d, %f, %i, %o, %b, %x, %X, %e, %E, %g, %G from printf
      */
     public static final Pattern INCORRECT_PLACEHOLDER_PATTERN =
-        Pattern.compile("\\{\\}|%[dfiobxXeEgG]");
+        Pattern.compile("\\{}|%[dfiobxXeEgG]");
 
     private PlaceholderValidationUtil() {
         // Utility class
@@ -69,7 +69,7 @@ public final class PlaceholderValidationUtil {
         if (message == null) {
             return null;
         }
-        return message.replaceAll("\\{\\}", "%s")
+        return message.replace("{}", "%s")
             .replaceAll("%[dfiobxXeEgG]", "%s");
     }
 
@@ -91,46 +91,5 @@ public final class PlaceholderValidationUtil {
         return count;
     }
 
-    /**
-     * Validates that the number of placeholders matches the number of parameters.
-     *
-     * @param message the message with placeholders
-     * @param paramCount the number of parameters provided
-     * @return true if counts match, false otherwise
-     */
-    public static boolean validateParameterCount(String message, int paramCount) {
-        return countPlaceholders(message) == paramCount;
-    }
 
-    /**
-     * Result of placeholder validation
-     */
-    public static class ValidationResult {
-        private final boolean hasIncorrectPlaceholders;
-        private final int placeholderCount;
-        private final String correctedMessage;
-
-        public ValidationResult(String message) {
-            this.hasIncorrectPlaceholders = PlaceholderValidationUtil.hasIncorrectPlaceholders(message);
-            this.correctedMessage = this.hasIncorrectPlaceholders ?
-                PlaceholderValidationUtil.correctPlaceholders(message) : message;
-            this.placeholderCount = PlaceholderValidationUtil.countPlaceholders(this.correctedMessage);
-        }
-
-        public boolean hasIncorrectPlaceholders() {
-            return hasIncorrectPlaceholders;
-        }
-
-        public int getPlaceholderCount() {
-            return placeholderCount;
-        }
-
-        public String getCorrectedMessage() {
-            return correctedMessage;
-        }
-
-        public boolean isParameterCountValid(int paramCount) {
-            return placeholderCount == paramCount;
-        }
-    }
 }
