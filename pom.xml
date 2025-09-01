@@ -33,8 +33,8 @@
     </issueManagement>
     <properties>
         <maven.jar.plugin.automatic.module.name>de.cuioss.rewrite</maven.jar.plugin.automatic.module.name>
-        <openrewrite.version>8.40.2</openrewrite.version>
-        <openrewrite.maven.version>5.47.0</openrewrite.maven.version>
+        <openrewrite.version>8.61.2</openrewrite.version>
+        <openrewrite.maven.version>6.17.0</openrewrite.maven.version>
     </properties>
     <dependencies>
         <!-- OpenRewrite Core -->
@@ -74,7 +74,6 @@
         <dependency>
             <groupId>org.jspecify</groupId>
             <artifactId>jspecify</artifactId>
-            <version>1.0.0</version>
         </dependency>
 
         <!-- CUI Java Tools for CuiLogger -->
@@ -108,7 +107,6 @@
         <dependency>
             <groupId>de.cuioss.test</groupId>
             <artifactId>cui-test-juli-logger</artifactId>
-            <version>2.1.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
