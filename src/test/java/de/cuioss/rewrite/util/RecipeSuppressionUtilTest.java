@@ -158,6 +158,97 @@ class RecipeSuppressionUtilTest {
         assertTrue(visitor.classWasSuppressed);
     }
 
+    @Test
+    void shouldHandleRecipeNameWithoutPackage() {
+        String source = """
+            // cui-rewrite:disable SimpleRecipe
+            public class TestClass {}
+            """;
+
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+
+        TestVisitor visitor = new TestVisitor("SimpleRecipe");
+        visitor.visit(cu, ctx);
+
+        assertTrue(visitor.classWasSuppressed);
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.INFO,
+            "Skipping class 'TestClass' for recipe 'SimpleRecipe'");
+    }
+
+    @Test
+    void shouldMatchSimpleNameFromFullyQualifiedRecipe() {
+        String source = """
+            // cui-rewrite:disable TestRecipe
+            public class TestClass {}
+            """;
+
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+
+        TestVisitor visitor = new TestVisitor("com.example.TestRecipe");
+        visitor.visit(cu, ctx);
+
+        assertTrue(visitor.classWasSuppressed);
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.INFO,
+            "Skipping class 'TestClass' for recipe 'com.example.TestRecipe'");
+    }
+
+    @Test
+    void shouldNotSuppressWhenRecipeNameMismatch() {
+        String source = """
+            // cui-rewrite:disable SimpleRecipe
+            public class TestClass {}
+            """;
+
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+
+        TestVisitor visitor = new TestVisitor("DifferentRecipe");
+        visitor.visit(cu, ctx);
+
+        assertFalse(visitor.classWasSuppressed);
+    }
+
+    @Test
+    void shouldHandleMultipleSuppressionComments() {
+        String source = """
+            public class TestClass {
+                // cui-rewrite:disable
+                public void method1() {}
+                
+                // cui-rewrite:disable TestRecipe
+                public void method2() {}
+                
+                public void method3() {}
+            }
+            """;
+
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+
+        TestVisitor visitor = new TestVisitor("TestRecipe");
+        visitor.visit(cu, ctx);
+
+        // method1 should be suppressed for all recipes
+        // method2 should be suppressed for TestRecipe
+        // method3 should not be suppressed
+        assertTrue(visitor.methodWasSuppressed);
+    }
+
+    @Test
+    void shouldSuppressWithTrailingComment() {
+        String source = """
+            public class TestClass {
+                // cui-rewrite:disable   
+                public void method() {}
+            }
+            """;
+
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+
+        TestVisitor visitor = new TestVisitor();
+        visitor.visit(cu, ctx);
+
+        assertTrue(visitor.methodWasSuppressed);
+    }
+
     private static class TestVisitor extends JavaIsoVisitor<@NonNull ExecutionContext> {
         boolean classWasSuppressed;
         boolean methodWasSuppressed;

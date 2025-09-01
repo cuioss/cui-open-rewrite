@@ -126,4 +126,193 @@ class AnnotationNewlineFormatTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void formatPackagePrivateMethodWithAnnotation() {
+        rewriteRun(
+            java(
+                """
+                class TestClass {
+                    @Override String toString() {
+                        return "test";
+                    }
+                }
+                """,
+                """
+                class TestClass {
+                    @Override
+                String toString() {
+                        return "test";
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void formatPackagePrivateFieldWithAnnotation() {
+        rewriteRun(
+            java(
+                """
+                class TestClass {
+                    @Deprecated String field;
+                }
+                """,
+                """
+                class TestClass {
+                    @Deprecated
+                String field;
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void formatMultiplePackagePrivateFieldsWithAnnotations() {
+        rewriteRun(
+            java(
+                """
+                class TestClass {
+                    @Deprecated String field1;
+                    @Deprecated @SuppressWarnings("all") Object field2;
+                }
+                """,
+                """
+                class TestClass {
+                    @Deprecated
+                String field1;
+                    @Deprecated
+                @SuppressWarnings("all")
+                Object field2;
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void formatPackagePrivateClassWithAnnotation() {
+        // This test expects no change since package-private classes at top level
+        // already have the correct formatting
+        rewriteRun(
+            java(
+                """
+                @Deprecated
+                class PackagePrivateClass {
+                    void method() {}
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void formatMethodWithoutModifiersButWithReturnType() {
+        rewriteRun(
+            java(
+                """
+                class TestClass {
+                    @Deprecated @SuppressWarnings("all") String getName() {
+                        return "name";
+                    }
+                }
+                """,
+                """
+                class TestClass {
+                    @Deprecated
+                @SuppressWarnings("all")
+                String getName() {
+                        return "name";
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void formatFieldWithoutModifiersButWithType() {
+        rewriteRun(
+            java(
+                """
+                class TestClass {
+                    @Deprecated @SuppressWarnings("all") String[] items;
+                }
+                """,
+                """
+                class TestClass {
+                    @Deprecated
+                @SuppressWarnings("all")
+                String[] items;
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void preserveFormattingWhenNoAnnotations() {
+        rewriteRun(
+            java(
+                """
+                public class TestClass {
+                    private String field;
+                    
+                    public void method() {
+                        // method body
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void formatNestedClassAnnotations() {
+        rewriteRun(
+            java(
+                """
+                public class Outer {
+                    @Deprecated public class Inner {
+                        @Override public String toString() {
+                            return "inner";
+                        }
+                    }
+                }
+                """,
+                """
+                public class Outer {
+                    @Deprecated
+                public class Inner {
+                        @Override
+                public String toString() {
+                            return "inner";
+                        }
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void formatAnnotationWithArrayValues() {
+        rewriteRun(
+            java(
+                """
+                @SuppressWarnings({"unchecked", "rawtypes"}) public class TestClass {
+                    private Object field;
+                }
+                """,
+                """
+                @SuppressWarnings({"unchecked", "rawtypes"})
+                public class TestClass {
+                    private Object field;
+                }
+                """
+            )
+        );
+    }
 }
