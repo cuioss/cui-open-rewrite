@@ -31,6 +31,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                 .dependsOn(
                     """
                     package de.cuioss.tools.logging;
+                    import java.util.function.Supplier;
                     public class CuiLogger {
                         public CuiLogger(Class<?> clazz) {}
                         public void trace(String message, Object... args) {}
@@ -45,6 +46,18 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                         public void warn(Throwable t, String message, Object... args) {}
                         public void error(Throwable t, String message, Object... args) {}
                         public void fatal(Throwable t, String message, Object... args) {}
+                        public void trace(Supplier<String> message) {}
+                        public void debug(Supplier<String> message) {}
+                        public void info(Supplier<String> message) {}
+                        public void warn(Supplier<String> message) {}
+                        public void error(Supplier<String> message) {}
+                        public void fatal(Supplier<String> message) {}
+                        public void trace(Throwable t, Supplier<String> message) {}
+                        public void debug(Throwable t, Supplier<String> message) {}
+                        public void info(Throwable t, Supplier<String> message) {}
+                        public void warn(Throwable t, Supplier<String> message) {}
+                        public void error(Throwable t, Supplier<String> message) {}
+                        public void fatal(Throwable t, Supplier<String> message) {}
                     }
                     """,
                     """
@@ -291,6 +304,25 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                         LOGGER.error(e, ERROR.DATABASE_ERROR.format());
                     }
                 }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+                import de.cuioss.tools.logging.LogRecordModel;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+
+                    static class ERROR {
+                        static final LogRecord DATABASE_ERROR = LogRecordModel.builder()
+                            .template("Database error occurred")
+                            .build();
+                    }
+
+                    void method(Exception e) {
+                        /*~~(Converted zero-parameter format() call to method reference)~~>*/LOGGER.error(e, ERROR.DATABASE_ERROR::format);
+                    }
+                }
                 """
             )
         );
@@ -406,6 +438,144 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                             .prefix("TEST")
                             .identifier(1)
                             .build();
+                    }
+                }
+                """
+            )
+        );
+    }
+    
+    @Test
+    void convertZeroParamFormatToMethodReference() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+                import de.cuioss.tools.logging.LogRecordModel;
+                
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                    private static final LogRecord INFO_MESSAGE = LogRecordModel.builder()
+                        .template("Simple info message")
+                        .build();
+                    
+                    void method() {
+                        LOGGER.info(INFO_MESSAGE.format());
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+                import de.cuioss.tools.logging.LogRecordModel;
+                
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                    private static final LogRecord INFO_MESSAGE = LogRecordModel.builder()
+                        .template("Simple info message")
+                        .build();
+                    
+                    void method() {
+                        /*~~(Converted zero-parameter format() call to method reference)~~>*/LOGGER.info(INFO_MESSAGE::format);
+                    }
+                }
+                """
+            )
+        );
+    }
+    
+    @Test
+    void convertZeroParamFormatWithExceptionToMethodReference() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+                import de.cuioss.tools.logging.LogRecordModel;
+                
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                    
+                    static class ERROR {
+                        static final LogRecord DATABASE_ERROR = LogRecordModel.builder()
+                            .template("Database connection failed")
+                            .build();
+                    }
+                    
+                    void method(Exception e) {
+                        LOGGER.error(e, ERROR.DATABASE_ERROR.format());
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+                import de.cuioss.tools.logging.LogRecordModel;
+                
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                    
+                    static class ERROR {
+                        static final LogRecord DATABASE_ERROR = LogRecordModel.builder()
+                            .template("Database connection failed")
+                            .build();
+                    }
+                    
+                    void method(Exception e) {
+                        /*~~(Converted zero-parameter format() call to method reference)~~>*/LOGGER.error(e, ERROR.DATABASE_ERROR::format);
+                    }
+                }
+                """
+            )
+        );
+    }
+    
+    @Test
+    void doNotConvertFormatWithParameters() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+                import de.cuioss.tools.logging.LogRecordModel;
+                
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                    
+                    static class INFO {
+                        static final LogRecord USER_LOGIN = LogRecordModel.builder()
+                            .template("User %s logged in")
+                            .build();
+                    }
+                    
+                    void method() {
+                        String username = "john";
+                        LOGGER.info(INFO.USER_LOGIN.format(username));
+                    }
+                }
+                """
+            )
+        );
+    }
+    
+    @Test
+    void acceptExistingMethodReference() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+                import de.cuioss.tools.logging.LogRecordModel;
+                
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                    private static final LogRecord INFO_MESSAGE = LogRecordModel.builder()
+                        .template("Application started")
+                        .build();
+                    
+                    void method() {
+                        LOGGER.info(INFO_MESSAGE::format);
                     }
                 }
                 """

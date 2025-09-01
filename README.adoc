@@ -131,6 +131,7 @@ See the https://gitingest.com/github.com/cuioss/cui-llm-rules/tree/main/standard
 **Auto-fixes:**
 
 * **LogRecord template placeholders** - Replaces incorrect placeholders (`{}`, `%d`, `%f`, etc.) with `%s` in LogRecord templates
+* **Zero-parameter format() to method reference** - Converts `LogRecord.format()` calls with no parameters to method references (`LogRecord::format`)
 
 **Detects only:**
 
@@ -156,6 +157,9 @@ public class Example {
         // ✅ Correct: LogRecord for INFO level
         LOGGER.info(INFO.USER_LOGIN.format(username));
         
+        // ✅ Correct: Method reference for zero-parameter format
+        LOGGER.info(INFO.APPLICATION_STARTED::format);
+        
         // ✅ Correct: Direct logging for DEBUG level
         LOGGER.debug("Processing file %s", filename);
     }
@@ -166,6 +170,9 @@ public class Example {
         
         // ⚠️ Wrong: LogRecord for DEBUG level  
         LOGGER.debug(DEBUG.SOME_MESSAGE.format());
+        
+        // 🔧 Auto-fixed: Zero-parameter format() converted to method reference
+        LOGGER.info(INFO.SIMPLE_MESSAGE.format()); // → INFO.SIMPLE_MESSAGE::format
     }
 }
 ----
