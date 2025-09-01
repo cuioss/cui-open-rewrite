@@ -25,14 +25,14 @@ import java.util.List;
 /**
  * Utility class for checking if OpenRewrite recipes should be suppressed
  * based on special comments in the source code.
- * 
+ *
  * <p>Supports the following suppression patterns:</p>
  * <ul>
  *   <li>{@code // cui-rewrite:disable} - Suppresses all recipes for the next element</li>
  *   <li>{@code // cui-rewrite:disable RecipeName} - Suppresses specific recipe</li>
  * </ul>
- * 
- * <p>Note: Trailing comments on the same line are not fully supported due to 
+ *
+ * <p>Note: Trailing comments on the same line are not fully supported due to
  * OpenRewrite AST limitations where comments may be attached to unexpected parts of the AST.</p>
  */
 public final class RecipeSuppressionUtil {
@@ -50,9 +50,9 @@ public final class RecipeSuppressionUtil {
 
     /**
      * Checks if the given element should be suppressed for a specific recipe.
-     * 
+     *
      * @param element The AST element to check
-     * @param cursor The current cursor position  
+     * @param cursor The current cursor position
      * @param recipeName The simple or fully qualified name of the recipe to check (null for any recipe)
      * @return true if the element should be suppressed
      */
@@ -126,31 +126,50 @@ public final class RecipeSuppressionUtil {
         }
 
         for (Comment comment : comments) {
-            String text = comment.printComment(cursor);
-            if (text.contains(SUPPRESSION_MARKER)) {
-                // Check if it's a general suppression or recipe-specific
-                if (recipeName == null) {
-                    return true; // General suppression
-                }
-
-                // Check for recipe-specific suppression
-                String afterMarker = text.substring(text.indexOf(SUPPRESSION_MARKER) + SUPPRESSION_MARKER.length()).trim();
-                if (afterMarker.isEmpty()) {
-                    return true; // No recipe specified means suppress all
-                }
-
-                // Check if the recipe name matches (simple or fully qualified)
-                String simpleRecipeName = recipeName.contains(".") ?
-                    recipeName.substring(recipeName.lastIndexOf('.') + 1) : recipeName;
-                String simpleAfterMarker = afterMarker.contains(".") ?
-                    afterMarker.substring(afterMarker.lastIndexOf('.') + 1) : afterMarker;
-
-                return afterMarker.equals(recipeName) || afterMarker.equals(simpleRecipeName) ||
-                    simpleAfterMarker.equals(simpleRecipeName);
+            if (checkCommentForSuppression(comment, cursor, recipeName)) {
+                return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * Checks a single comment for suppression directive.
+     */
+    private static boolean checkCommentForSuppression(Comment comment, Cursor cursor, String recipeName) {
+        String text = comment.printComment(cursor);
+        if (!text.contains(SUPPRESSION_MARKER)) {
+            return false;
+        }
+
+        // Check if it's a general suppression or recipe-specific
+        if (recipeName == null) {
+            return true; // General suppression
+        }
+
+        // Check for recipe-specific suppression
+        String afterMarker = text.substring(text.indexOf(SUPPRESSION_MARKER) + SUPPRESSION_MARKER.length()).trim();
+        if (afterMarker.isEmpty()) {
+            return true; // No recipe specified means suppress all
+        }
+
+        return isRecipeNameMatch(recipeName, afterMarker);
+    }
+
+    /**
+     * Checks if recipe name matches the suppression pattern.
+     */
+    private static boolean isRecipeNameMatch(String recipeName, String suppressionPattern) {
+        // Check if the recipe name matches (simple or fully qualified)
+        String simpleRecipeName = recipeName.contains(".") ?
+            recipeName.substring(recipeName.lastIndexOf('.') + 1) : recipeName;
+        String simplePattern = suppressionPattern.contains(".") ?
+            suppressionPattern.substring(suppressionPattern.lastIndexOf('.') + 1) : suppressionPattern;
+
+        return suppressionPattern.equals(recipeName) ||
+            suppressionPattern.equals(simpleRecipeName) ||
+            simplePattern.equals(simpleRecipeName);
     }
 
     /**
