@@ -142,8 +142,11 @@ public final class RecipeSuppressionUtil {
                 // Check if the recipe name matches (simple or fully qualified)
                 String simpleRecipeName = recipeName.contains(".") ?
                     recipeName.substring(recipeName.lastIndexOf('.') + 1) : recipeName;
+                String simpleAfterMarker = afterMarker.contains(".") ?
+                    afterMarker.substring(afterMarker.lastIndexOf('.') + 1) : afterMarker;
 
-                return afterMarker.equals(recipeName) || afterMarker.equals(simpleRecipeName);
+                return afterMarker.equals(recipeName) || afterMarker.equals(simpleRecipeName) ||
+                    simpleAfterMarker.equals(simpleRecipeName);
             }
         }
 

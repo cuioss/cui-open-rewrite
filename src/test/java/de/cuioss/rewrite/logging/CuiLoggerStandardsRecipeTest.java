@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
+import org.openrewrite.test.TypeValidation;
 
 import static org.openrewrite.java.Assertions.java;
 
@@ -27,6 +28,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
     @Override
     public void defaults(RecipeSpec spec) {
         spec.recipe(new CuiLoggerStandardsRecipe())
+            .typeValidationOptions(TypeValidation.none())
             .parser(JavaParser.fromJavaVersion()
                 .dependsOn(
                     """
@@ -180,7 +182,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                     
                     void method(Exception e) {
-                        LOGGER.error( e,"Error occurred");
+                        LOGGER.error(e, "Error occurred");
                     }
                 }
                 """

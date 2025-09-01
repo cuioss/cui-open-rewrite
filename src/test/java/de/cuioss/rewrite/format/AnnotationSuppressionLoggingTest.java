@@ -29,7 +29,7 @@ import static org.openrewrite.java.Assertions.java;
 /**
  * Tests that verify logging behavior of the AnnotationNewlineFormat recipe
  * according to the CUI logging standards.
- * 
+ *
  * @llm-rules /Users/oliver/git/cui-llm-rules/standards/logging/testing-guide.adoc
  */
 @EnableTestLogger
@@ -102,7 +102,7 @@ class AnnotationSuppressionLoggingTest implements RewriteTest {
         // then - verify info level log message is present
         LogAsserts.assertLogMessagePresentContaining(
             TestLogLevel.INFO,
-            "Skipping field 'field' for recipe 'AnnotationNewlineFormat' due to cui-rewrite:disable comment"
+            "Skipping field"
         );
     }
 

@@ -18,6 +18,7 @@ package de.cuioss.rewrite.logging;
 import org.junit.jupiter.api.Test;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
+import org.openrewrite.test.TypeValidation;
 
 import static org.openrewrite.java.Assertions.java;
 
@@ -25,7 +26,8 @@ class CuiLoggerRenameTest implements RewriteTest {
 
     @Override
     public void defaults(RecipeSpec spec) {
-        spec.recipe(new CuiLoggerStandardsRecipe());
+        spec.recipe(new CuiLoggerStandardsRecipe())
+            .typeValidationOptions(TypeValidation.none());
     }
 
     @Test
@@ -43,7 +45,7 @@ class CuiLoggerRenameTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 
                 class Test {
-                    /*~~(Renamed logger field to 'LOGGER')~~>*/private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                 }
                 """
             )

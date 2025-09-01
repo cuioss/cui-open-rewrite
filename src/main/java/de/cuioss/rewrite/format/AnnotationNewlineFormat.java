@@ -16,7 +16,9 @@
 package de.cuioss.rewrite.format;
 
 import de.cuioss.rewrite.util.RecipeSuppressionUtil;
+import de.cuioss.tools.logging.CuiLogger;
 import org.jspecify.annotations.Nullable;
+import org.openrewrite.Cursor;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
@@ -58,9 +60,10 @@ public class AnnotationNewlineFormat extends Recipe {
 
     private static class AnnotationNewlineFormatVisitor extends JavaIsoVisitor<ExecutionContext> {
 
+        private static final CuiLogger LOG = new CuiLogger(AnnotationNewlineFormatVisitor.class);
+
         @Override
         public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
-
             // Check for suppression comments
             if (RecipeSuppressionUtil.isSuppressed(classDecl, getCursor(), "AnnotationNewlineFormat")) {
                 return classDecl;
@@ -321,12 +324,19 @@ public class AnnotationNewlineFormat extends Recipe {
         }
 
         private boolean isFieldDeclaration() {
-            Object parent = getCursor().getParentOrThrow().getValue();
-            if (parent instanceof J.Block) {
-                Object grandParent = getCursor().getParentOrThrow().getParentOrThrow().getValue();
-                return grandParent instanceof J.ClassDeclaration;
+            // Navigate up the cursor tree to find the actual parent element
+            Cursor cursor = getCursor();
+            while (cursor != null) {
+                Object value = cursor.getValue();
+
+                if (value instanceof J.MethodDeclaration) {
+                    return false;
+                } else if (value instanceof J.ClassDeclaration) {
+                    return true;
+                }
+                cursor = cursor.getParent();
             }
-            return parent instanceof J.ClassDeclaration;
+            return false;
         }
 
     }

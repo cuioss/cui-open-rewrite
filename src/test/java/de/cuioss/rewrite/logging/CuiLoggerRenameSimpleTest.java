@@ -49,10 +49,10 @@ class CuiLoggerRenameSimpleTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 
                 class Test {
-                    /*~~(Renamed logger field to 'LOGGER')~~>*/private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                     
                     void method() {
-                        log.info("test");
+                        LOGGER.info("test");
                     }
                 }
                 """

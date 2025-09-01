@@ -16,6 +16,7 @@
 package de.cuioss.rewrite.logging;
 
 import org.junit.jupiter.api.Test;
+import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 import org.openrewrite.test.TypeValidation;
@@ -27,7 +28,26 @@ class CuiLoggerAutoFixTest implements RewriteTest {
     @Override
     public void defaults(RecipeSpec spec) {
         spec.recipe(new CuiLoggerStandardsRecipe())
-            .typeValidationOptions(TypeValidation.none());
+            .typeValidationOptions(TypeValidation.none())
+            .parser(JavaParser.fromJavaVersion()
+                .dependsOn(
+                    """
+                    package de.cuioss.tools.logging;
+                    public class CuiLogger {
+                        public CuiLogger(Class<?> clazz) {}
+                        public void trace(String message, Object... args) {}
+                        public void debug(String message, Object... args) {}
+                        public void info(String message, Object... args) {}
+                        public void warn(String message, Object... args) {}
+                        public void error(String message, Object... args) {}
+                        public void trace(Throwable t, String message, Object... args) {}
+                        public void debug(Throwable t, String message, Object... args) {}
+                        public void info(Throwable t, String message, Object... args) {}
+                        public void warn(Throwable t, String message, Object... args) {}
+                        public void error(Throwable t, String message, Object... args) {}
+                    }
+                    """
+                ));
     }
 
     @Test
@@ -45,7 +65,7 @@ class CuiLoggerAutoFixTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 
                 class Test {
-                    /*~~(Fixed logger modifiers to 'private static final')~~>*/private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                 }
                 """
             )
@@ -67,7 +87,7 @@ class CuiLoggerAutoFixTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 
                 class Test {
-                    /*~~(Fixed logger modifiers to 'private static final')~~>*/private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                 }
                 """
             )
@@ -97,8 +117,8 @@ class CuiLoggerAutoFixTest implements RewriteTest {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                     
                     void method() {
-                        /*~~(Replaced incorrect placeholder pattern with %s)~~>*/LOGGER.info("Message with %s placeholder", value);
-                        /*~~(Replaced incorrect placeholder pattern with %s)~~>*/LOGGER.debug("Multiple %s placeholders %s", value1, value2);
+                        LOGGER.info("Message with %s placeholder", value);
+                        LOGGER.debug("Multiple %s placeholders %s", value1, value2);
                     }
                 }
                 """
@@ -129,7 +149,7 @@ class CuiLoggerAutoFixTest implements RewriteTest {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                     
                     void method() {
-                        /*~~(Replaced incorrect placeholder pattern with %s)~~>*/LOGGER.info("Integer %s, Float %s, Hex %s", intVal, floatVal, hexVal);
+                        LOGGER.info("Integer %s, Float %s, Hex %s", intVal, floatVal, hexVal);
                         LOGGER.debug("String %s is correct", strVal);
                     }
                 }
@@ -161,8 +181,8 @@ class CuiLoggerAutoFixTest implements RewriteTest {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                     
                     void method(Exception e) {
-                        /*~~(Moved exception parameter to first position)~~>*/LOGGER.error(e, "Error occurred with %s", value);
-                        /*~~(Moved exception parameter to first position)~~>*/LOGGER.warn(e, "Warning message");
+                        LOGGER.error(e, "Error occurred with %s", value);
+                        LOGGER.warn(e, "Warning message");
                     }
                 }
                 """
@@ -189,10 +209,10 @@ class CuiLoggerAutoFixTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 
                 class Test {
-                    /*~~(Renamed logger field to 'LOGGER')~~>*//*~~(Fixed logger modifiers to 'private static final')~~>*/private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                     
                     void method(Exception e) {
-                        /*~~(Replaced incorrect placeholder pattern with %s)~~>*//*~~(Moved exception parameter to first position)~~>*/log.error(e, "Error %s with number %s", "message", 42);
+                        LOGGER.error(e, "Error %s with number %s", "message", 42);
                     }
                 }
                 """

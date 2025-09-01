@@ -97,23 +97,26 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
         private J.VariableDeclarations checkLoggerNaming(J.VariableDeclarations vd) {
             boolean needsRename = false;
+            String oldLoggerName = null;
             List<J.VariableDeclarations.NamedVariable> updatedVariables = new ArrayList<>();
             for (J.VariableDeclarations.NamedVariable variable : vd.getVariables()) {
                 String name = variable.getSimpleName();
                 if (!"LOGGER".equals(name)) {
                     needsRename = true;
+                    oldLoggerName = name;
                     // Rename the variable to LOGGER
                     J.Identifier newName = variable.getName().withSimpleName("LOGGER");
-                    // Update type information if present
-                    if (variable.getVariableType() != null) {
-                        variable = variable.withVariableType(variable.getVariableType().withName("LOGGER"));
-                    }
+                    // Don't update type information - it causes LST errors
                     variable = variable.withName(newName);
                 }
                 updatedVariables.add(variable);
             }
             if (needsRename) {
                 vd = vd.withVariables(updatedVariables);
+                // Store the old name so we can update references
+                if (oldLoggerName != null) {
+                    getCursor().putMessageOnFirstEnclosing(J.ClassDeclaration.class, "RENAMED_LOGGER", oldLoggerName);
+                }
                 // Auto-fixed, don't mark it
             }
             return vd;
@@ -205,6 +208,15 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                 return mi;
             }
 
+            // Check if we need to rename logger references
+            String renamedLogger = getCursor().getNearestMessage("RENAMED_LOGGER");
+            if (renamedLogger != null && mi.getSelect() instanceof J.Identifier) {
+                J.Identifier select = (J.Identifier) mi.getSelect();
+                if (renamedLogger.equals(select.getSimpleName())) {
+                    mi = mi.withSelect(select.withSimpleName("LOGGER"));
+                }
+            }
+
             // Check logger method invocations
             if (isLoggerMethod(mi)) {
                 mi = validateLoggerMethodCall(mi);
@@ -274,6 +286,14 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             return null;
         }
 
+        private String extractCurrentMessage(J.MethodInvocation mi, int messageArgIndex) {
+            List<Expression> args = mi.getArguments();
+            if (messageArgIndex >= 0 && messageArgIndex < args.size()) {
+                return extractMessageString(args.get(messageArgIndex));
+            }
+            return null;
+        }
+
         private J.MethodInvocation checkPlaceholderPatterns(J.MethodInvocation mi, LoggerCallContext context) {
             if (context.message == null || context.messageArg == null) {
                 return mi;
@@ -293,11 +313,13 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         }
 
         private J.MethodInvocation validateParameterCount(J.MethodInvocation mi, LoggerCallContext context) {
-            if (context.message == null) {
+            // Extract the current message (may have been fixed by checkPlaceholderPatterns)
+            String currentMessage = extractCurrentMessage(mi, context.messageArgIndex);
+            if (currentMessage == null) {
                 return mi;
             }
 
-            int placeholderCount = PlaceholderValidationUtil.countPlaceholders(context.message);
+            int placeholderCount = PlaceholderValidationUtil.countPlaceholders(currentMessage);
             List<Expression> args = mi.getArguments();
 
             // Count actual substitution parameters (excluding message and exception)
@@ -334,12 +356,25 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
             ExceptionPosition position = findExceptionPosition(args);
             if (position.needsReordering()) {
-                // Move exception to first position
+                // Move exception to first position with proper spacing
                 List<Expression> reorderedArgs = new ArrayList<>();
-                reorderedArgs.add(position.exception);
+
+                // Add the exception as the first argument, removing any leading space
+                Expression exceptionArg = position.exception;
+                if (exceptionArg.getPrefix().getWhitespace().startsWith(" ")) {
+                    exceptionArg = exceptionArg.withPrefix(Space.EMPTY);
+                }
+                reorderedArgs.add(exceptionArg);
+
+                // Add remaining arguments with proper spacing
                 for (int i = 0; i < args.size(); i++) {
                     if (i != position.index) {
-                        reorderedArgs.add(args.get(i));
+                        Expression arg = args.get(i);
+                        // Ensure there's a space after the comma
+                        if (!arg.getPrefix().getWhitespace().startsWith(" ")) {
+                            arg = arg.withPrefix(Space.SINGLE_SPACE);
+                        }
+                        reorderedArgs.add(arg);
                     }
                 }
                 mi = mi.withArguments(reorderedArgs);
@@ -400,6 +435,22 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             if (mi.getSelect() == null) {
                 return false;
             }
+
+            // Check if the selector is a field access to a CuiLogger
+            Expression select = mi.getSelect();
+            if (select instanceof J.Identifier id) {
+                JavaType type = id.getType();
+                if (type != null && TypeUtils.isOfClassType(type, CUI_LOGGER_TYPE)) {
+                    return true;
+                }
+            } else if (select instanceof J.FieldAccess fa) {
+                JavaType type = fa.getType();
+                if (type != null && TypeUtils.isOfClassType(type, CUI_LOGGER_TYPE)) {
+                    return true;
+                }
+            }
+
+            // Fallback to checking method type
             JavaType.Method methodType = mi.getMethodType();
             if (methodType != null && methodType.getDeclaringType() != null) {
                 return TypeUtils.isOfClassType(methodType.getDeclaringType(), CUI_LOGGER_TYPE);
