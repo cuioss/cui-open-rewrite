@@ -210,8 +210,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
             // Check if we need to rename logger references
             String renamedLogger = getCursor().getNearestMessage("RENAMED_LOGGER");
-            if (renamedLogger != null && mi.getSelect() instanceof J.Identifier) {
-                J.Identifier select = (J.Identifier) mi.getSelect();
+            if (renamedLogger != null && mi.getSelect() instanceof J.Identifier select) {
                 if (renamedLogger.equals(select.getSimpleName())) {
                     mi = mi.withSelect(select.withSimpleName("LOGGER"));
                 }
@@ -413,14 +412,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             }
         }
 
-        private static class ExceptionPosition {
-            final int index;
-            final Expression exception;
-
-            ExceptionPosition(int index, Expression exception) {
-                this.index = index;
-                this.exception = exception;
-            }
+        private record ExceptionPosition(int index, Expression exception) {
 
             static ExceptionPosition notFound() {
                 return new ExceptionPosition(-1, null);
@@ -440,12 +432,12 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             Expression select = mi.getSelect();
             if (select instanceof J.Identifier id) {
                 JavaType type = id.getType();
-                if (type != null && TypeUtils.isOfClassType(type, CUI_LOGGER_TYPE)) {
+                if (TypeUtils.isOfClassType(type, CUI_LOGGER_TYPE)) {
                     return true;
                 }
             } else if (select instanceof J.FieldAccess fa) {
                 JavaType type = fa.getType();
-                if (type != null && TypeUtils.isOfClassType(type, CUI_LOGGER_TYPE)) {
+                if (TypeUtils.isOfClassType(type, CUI_LOGGER_TYPE)) {
                     return true;
                 }
             }
