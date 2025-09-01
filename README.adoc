@@ -18,6 +18,50 @@ https://cuioss.github.io/cui-java-module-template/about.html[Generated Documenta
 
 Custom OpenRewrite recipes for CUI-OSS projects that enforce specific code formatting standards not available in existing OpenRewrite recipes.
 
+=== Maven Coordinates
+
+[source,xml]
+----
+<dependency>
+    <groupId>de.cuioss.rewrite</groupId>
+    <artifactId>cui-open-rewrite</artifactId>
+</dependency>
+----
+
+=== Usage
+
+==== With OpenRewrite Maven Plugin
+
+[source,xml]
+----
+<plugin>
+    <groupId>org.openrewrite.maven</groupId>
+    <artifactId>rewrite-maven-plugin</artifactId>
+    <configuration>
+        <activeRecipes>
+            <recipe>de.cuioss.rewrite.format.AnnotationNewlineFormat</recipe>
+            <recipe>de.cuioss.rewrite.logging.CuiLoggerStandardsRecipe</recipe>
+            <recipe>de.cuioss.rewrite.logging.CuiLogRecordPatternRecipe</recipe>
+            <recipe>de.cuioss.rewrite.logging.InvalidExceptionUsageRecipe</recipe>
+        </activeRecipes>
+    </configuration>
+    <dependencies>
+        <dependency>
+            <groupId>de.cuioss.rewrite</groupId>
+            <artifactId>cui-open-rewrite</artifactId>
+            <version>${cui-open-rewrite.version}</version>
+        </dependency>
+    </dependencies>
+</plugin>
+----
+
+==== Run the recipe
+
+[source,bash]
+----
+mvn rewrite:run
+----
+
 === Features
 
 ==== AnnotationNewlineFormat Recipe
@@ -185,47 +229,68 @@ public class Example {
 LOGGER.info("Direct logging suppressed for this call");
 ----
 
-=== Usage
+==== InvalidExceptionUsageRecipe
 
-==== With OpenRewrite Maven Plugin
+Flags inappropriate usage of generic exception types that should be replaced with specific exceptions for better error handling and debugging.
 
-[source,xml]
+**Detects (no auto-fix):**
+
+* **Catching generic exceptions** - Flags catch blocks using `Exception`, `RuntimeException`, or `Throwable`
+* **Throwing generic exceptions** - Flags throw statements with `new Exception()`, `new RuntimeException()`, or `new Throwable()`
+* **Creating generic exceptions** - Flags instantiation of generic exception types even when not immediately thrown
+
+**Why no auto-fix?**
+
+The appropriate specific exception type depends on the context and business logic. Manual review is required to choose the correct exception type.
+
+**Example detections:**
+
+[source,java]
 ----
-<plugin>
-    <groupId>org.openrewrite.maven</groupId>
-    <artifactId>rewrite-maven-plugin</artifactId>
-    <configuration>
-        <activeRecipes>
-            <recipe>de.cuioss.rewrite.format.AnnotationNewlineFormat</recipe>
-            <recipe>de.cuioss.rewrite.logging.CuiLoggerStandardsRecipe</recipe>
-            <recipe>de.cuioss.rewrite.logging.CuiLogRecordPatternRecipe</recipe>
-        </activeRecipes>
-    </configuration>
-    <dependencies>
-        <dependency>
-            <groupId>de.cuioss.rewrite</groupId>
-            <artifactId>cui-open-rewrite</artifactId>
-            <version>${cui-open-rewrite.version}</version>
-        </dependency>
-    </dependencies>
-</plugin>
+public class Example {
+    void badExamples() {
+        try {
+            doSomething();
+        } catch (Exception e) {  // ⚠️ Too generic - use specific exception
+            log.error("Error occurred", e);
+        }
+        
+        try {
+            riskyOperation();
+        } catch (RuntimeException e) {  // ⚠️ Too generic
+            throw new Exception("Wrapped", e);  // ⚠️ Throwing generic exception
+        }
+        
+        try {
+            doIO();
+        } catch (Throwable t) {  // ⚠️ Never catch Throwable
+            // Handle
+        }
+    }
+    
+    void goodExamples() throws IOException {
+        try {
+            doSomething();
+        } catch (IOException e) {  // ✅ Specific exception type
+            log.error("IO error", e);
+        } catch (IllegalArgumentException e) {  // ✅ Specific runtime exception
+            throw new ValidationException("Invalid input", e);  // ✅ Domain-specific exception
+        }
+    }
+}
 ----
 
-==== Run the recipe
+**Suppression:**
 
-[source,bash]
+[source,java]
 ----
-mvn rewrite:run
-----
+// cui-rewrite:disable InvalidExceptionUsageRecipe
+catch (Exception e) {  // Suppressed for this specific case
+    // Legacy code that needs generic catch
+}
 
-=== Maven Coordinates
-
-[source,xml]
-----
-    <dependency>
-        <groupId>de.cuioss.rewrite</groupId>
-        <artifactId>cui-open-rewrite</artifactId>
-    </dependency>
+// cui-rewrite:disable
+throw new RuntimeException("Suppressed generic exception");
 ----
 
 === For Recipe Developers
