@@ -80,14 +80,17 @@ Recipes can be suppressed using comments:
 
 Enforces CUI-specific logging standards including proper logger naming, string substitution patterns, exception parameter positioning, and detection of System.out/System.err usage.
 
-**Features:**
+**Auto-fixes:**
 
-* **Detects incorrect logger naming** - Flags logger fields not named `LOGGER` (uppercase)
-* **Detects incorrect logger modifiers** - Flags loggers not declared as `private static final`
-* **Detects incorrect placeholder patterns** - Flags `{}` (SLF4J) and `%d`, `%f`, etc. instead of `%s`
-* **Detects wrong exception positioning** - Flags exception parameters not in first position for error/warn calls
-* **Detects System.out/err usage** - Flags inappropriate console output
-* **Validates parameter counts** - Warns when placeholder count doesn't match parameter count
+* **Logger naming** - Renames logger fields to `LOGGER` (uppercase)
+* **Logger modifiers** - Fixes loggers to be `private static final`
+* **Placeholder patterns** - Replaces `{}` (SLF4J) and `%d`, `%f`, etc. with `%s`
+* **Exception positioning** - Moves exception parameters to first position for error/warn calls
+
+**Detects only:**
+
+* **System.out/err usage** - Flags inappropriate console output
+* **Parameter count mismatch** - Warns when placeholder count doesn't match parameter count
 
 **Example detections:**
 
@@ -125,11 +128,14 @@ Enforces proper usage of LogRecord pattern according to CUI logging standards:
 
 See the https://gitingest.com/github.com/cuioss/cui-llm-rules/tree/main/standards/logging/implementation-guide.adoc[Logging Implementation Guide] for details.
 
-**Features:**
+**Auto-fixes:**
 
-* **Validates LogRecord usage by level** - Ensures LogRecord is used only where appropriate
-* **Detects missing LogRecord** - Flags INFO/WARN/ERROR/FATAL calls without LogRecord
-* **Detects inappropriate LogRecord** - Flags DEBUG/TRACE calls using LogRecord
+* **LogRecord template placeholders** - Replaces incorrect placeholders (`{}`, `%d`, `%f`, etc.) with `%s` in LogRecord templates
+
+**Detects only:**
+
+* **Missing LogRecord** - Flags INFO/WARN/ERROR/FATAL calls without LogRecord
+* **Inappropriate LogRecord** - Flags DEBUG/TRACE calls using LogRecord
 * **Supports both invocation and reference** - Works with `.format()` and `::format` patterns
 
 **Example detections:**

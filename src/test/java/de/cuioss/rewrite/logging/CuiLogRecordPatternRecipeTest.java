@@ -23,7 +23,7 @@ import org.openrewrite.test.RewriteTest;
 import static org.openrewrite.java.Assertions.java;
 
 class CuiLogRecordPatternRecipeTest implements RewriteTest {
-    
+
     @Override
     public void defaults(RecipeSpec spec) {
         spec.recipe(new CuiLogRecordPatternRecipe())
@@ -68,17 +68,17 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                     """
                 ));
     }
-    
+
     @Test
     void detectMissingLogRecordForInfo() {
         rewriteRun(
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method() {
                         String username = "john";
                         LOGGER.info("User %s logged in", username);
@@ -87,10 +87,10 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                 """,
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method() {
                         String username = "john";
                         /*~~>*/LOGGER.info("User %s logged in", username);
@@ -100,17 +100,17 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void detectMissingLogRecordForError() {
         rewriteRun(
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method(Exception e) {
                         LOGGER.error(e, "Error occurred: %s", e.getMessage());
                     }
@@ -118,10 +118,10 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                 """,
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method(Exception e) {
                         /*~~>*/LOGGER.error(e, "Error occurred: %s", e.getMessage());
                     }
@@ -130,17 +130,17 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void detectMissingLogRecordForWarn() {
         rewriteRun(
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method() {
                         LOGGER.warn("Something is wrong");
                     }
@@ -148,10 +148,10 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                 """,
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method() {
                         /*~~>*/LOGGER.warn("Something is wrong");
                     }
@@ -160,7 +160,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void detectLogRecordUsageInDebug() {
         rewriteRun(
@@ -169,13 +169,13 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 import de.cuioss.tools.logging.LogRecord;
                 import de.cuioss.tools.logging.LogRecordModel;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                     private static final LogRecord DEBUG_MESSAGE = LogRecordModel.builder()
                         .template("Debug: %s")
                         .build();
-                    
+
                     void method() {
                         LOGGER.debug(DEBUG_MESSAGE.format("value"));
                     }
@@ -185,13 +185,13 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 import de.cuioss.tools.logging.LogRecord;
                 import de.cuioss.tools.logging.LogRecordModel;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                     private static final LogRecord DEBUG_MESSAGE = LogRecordModel.builder()
                         .template("Debug: %s")
                         .build();
-                    
+
                     void method() {
                         /*~~>*/LOGGER.debug(DEBUG_MESSAGE.format("value"));
                     }
@@ -200,7 +200,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void detectLogRecordUsageInTrace() {
         rewriteRun(
@@ -209,13 +209,13 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 import de.cuioss.tools.logging.LogRecord;
                 import de.cuioss.tools.logging.LogRecordModel;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                     private static final LogRecord TRACE_MESSAGE = LogRecordModel.builder()
                         .template("Trace: %s")
                         .build();
-                    
+
                     void method() {
                         LOGGER.trace(TRACE_MESSAGE.format());
                     }
@@ -225,13 +225,13 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 import de.cuioss.tools.logging.LogRecord;
                 import de.cuioss.tools.logging.LogRecordModel;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                     private static final LogRecord TRACE_MESSAGE = LogRecordModel.builder()
                         .template("Trace: %s")
                         .build();
-                    
+
                     void method() {
                         /*~~>*/LOGGER.trace(TRACE_MESSAGE.format());
                     }
@@ -240,7 +240,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void acceptCorrectLogRecordUsageForInfo() {
         rewriteRun(
@@ -249,16 +249,16 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 import de.cuioss.tools.logging.LogRecord;
                 import de.cuioss.tools.logging.LogRecordModel;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     static class INFO {
                         static final LogRecord USER_LOGIN = LogRecordModel.builder()
                             .template("User %s logged in")
                             .build();
                     }
-                    
+
                     void method() {
                         String username = "john";
                         LOGGER.info(INFO.USER_LOGIN.format(username));
@@ -268,7 +268,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void acceptCorrectLogRecordUsageForError() {
         rewriteRun(
@@ -277,16 +277,16 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 import de.cuioss.tools.logging.LogRecord;
                 import de.cuioss.tools.logging.LogRecordModel;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     static class ERROR {
                         static final LogRecord DATABASE_ERROR = LogRecordModel.builder()
                             .template("Database error occurred")
                             .build();
                     }
-                    
+
                     void method(Exception e) {
                         LOGGER.error(e, ERROR.DATABASE_ERROR.format());
                     }
@@ -295,17 +295,17 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void acceptCorrectDebugWithoutLogRecord() {
         rewriteRun(
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method() {
                         String value = "test";
                         LOGGER.debug("Processing value: %s", value);
@@ -315,17 +315,17 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void acceptCorrectTraceWithoutLogRecord() {
         rewriteRun(
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method(Exception e) {
                         LOGGER.trace(e, "Detailed trace: %s", e.getMessage());
                     }
@@ -334,20 +334,78 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void suppressionWorks() {
         rewriteRun(
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    
+
                     void method() {
                         // cui-rewrite:disable
                         LOGGER.info("Direct logging is suppressed");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void detectIncorrectPlaceholderInLogRecordTemplate() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.LogRecord;
+                import de.cuioss.tools.logging.LogRecordModel;
+
+                class Test {
+                    static class INFO {
+                        static final LogRecord USER_LOGIN = LogRecordModel.builder()
+                            .template("User {} logged in with ID: %d")
+                            .prefix("TEST")
+                            .identifier(1)
+                            .build();
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.LogRecord;
+                import de.cuioss.tools.logging.LogRecordModel;
+
+                class Test {
+                    static class INFO {
+                        static final LogRecord USER_LOGIN = /*~~(Fixed incorrect placeholder pattern in LogRecord template)~~>*/LogRecordModel.builder()
+                            .template("User %s logged in with ID: %s")
+                            .prefix("TEST")
+                            .identifier(1)
+                            .build();
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void acceptCorrectPlaceholderInLogRecordTemplate() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.LogRecord;
+                import de.cuioss.tools.logging.LogRecordModel;
+
+                class Test {
+                    static class INFO {
+                        static final LogRecord USER_LOGIN = LogRecordModel.builder()
+                            .template("User %s logged in with ID: %s")
+                            .prefix("TEST")
+                            .identifier(1)
+                            .build();
                     }
                 }
                 """

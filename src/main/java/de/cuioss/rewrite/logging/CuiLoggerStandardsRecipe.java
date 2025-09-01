@@ -35,14 +35,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.UUID;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-
 public class CuiLoggerStandardsRecipe extends Recipe {
 
     private static final String CUI_LOGGER_TYPE = "de.cuioss.tools.logging.CuiLogger";
-    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("%s");
-    private static final Pattern INCORRECT_PLACEHOLDER_PATTERN = Pattern.compile("\\{\\}|%[dfiobxXeEgG]");
 
     @Override
     public String getDisplayName() {
@@ -73,8 +68,10 @@ public class CuiLoggerStandardsRecipe extends Recipe {
     }
 
     private static class CuiLoggerStandardsVisitor extends JavaIsoVisitor<ExecutionContext> {
-
-
+        
+        private UUID randomId() {
+            return UUID.randomUUID();
+        }
 
         @Override
         public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations variableDecls, ExecutionContext ctx) {
@@ -99,26 +96,97 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         }
 
         private J.VariableDeclarations checkLoggerNaming(J.VariableDeclarations vd) {
+            boolean needsRename = false;
+            List<J.VariableDeclarations.NamedVariable> updatedVariables = new ArrayList<>();
             for (J.VariableDeclarations.NamedVariable variable : vd.getVariables()) {
-                if (!"LOGGER".equals(variable.getSimpleName())) {
-                    return SearchResult.found(vd);
+                String name = variable.getSimpleName();
+                if (!"LOGGER".equals(name)) {
+                    needsRename = true;
+                    // Rename the variable to LOGGER
+                    J.Identifier newName = variable.getName().withSimpleName("LOGGER");
+                    // Update type information if present
+                    if (variable.getVariableType() != null) {
+                        variable = variable.withVariableType(variable.getVariableType().withName("LOGGER"));
+                    }
+                    variable = variable.withName(newName);
                 }
+                updatedVariables.add(variable);
+            }
+            if (needsRename) {
+                vd = vd.withVariables(updatedVariables);
+                vd = SearchResult.found(vd, "Renamed logger field to 'LOGGER'");
             }
             return vd;
         }
 
         private J.VariableDeclarations checkLoggerModifiers(J.VariableDeclarations vd) {
-            boolean hasCorrectModifiers =
-                vd.hasModifier(J.Modifier.Type.Private) &&
-                vd.hasModifier(J.Modifier.Type.Static) &&
-                vd.hasModifier(J.Modifier.Type.Final) &&
-                !vd.hasModifier(J.Modifier.Type.Public) &&
-                !vd.hasModifier(J.Modifier.Type.Protected);
-
-            if (!hasCorrectModifiers) {
-                return SearchResult.found(vd);
+            boolean hasPrivate = vd.hasModifier(J.Modifier.Type.Private);
+            boolean hasStatic = vd.hasModifier(J.Modifier.Type.Static);
+            boolean hasFinal = vd.hasModifier(J.Modifier.Type.Final);
+            boolean hasPublic = vd.hasModifier(J.Modifier.Type.Public);
+            boolean hasProtected = vd.hasModifier(J.Modifier.Type.Protected);
+            
+            if (!hasPrivate || !hasStatic || !hasFinal || hasPublic || hasProtected) {
+                List<J.Modifier> newModifiers = new ArrayList<>();
+                List<J.Modifier> otherModifiers = new ArrayList<>();
+                
+                // Collect non-visibility/static/final modifiers (like annotations)
+                for (J.Modifier mod : vd.getModifiers()) {
+                    if (mod.getType() != J.Modifier.Type.Public && 
+                        mod.getType() != J.Modifier.Type.Protected &&
+                        mod.getType() != J.Modifier.Type.Private &&
+                        mod.getType() != J.Modifier.Type.Static &&
+                        mod.getType() != J.Modifier.Type.Final) {
+                        otherModifiers.add(mod);
+                    }
+                }
+                
+                // Add modifiers in correct order: private static final
+                Space firstSpace = Space.EMPTY;
+                if (!vd.getModifiers().isEmpty()) {
+                    firstSpace = vd.getModifiers().get(0).getPrefix();
+                }
+                
+                // Always add private
+                J.Modifier privateMod = new J.Modifier(
+                    randomId(),
+                    firstSpace,
+                    Markers.EMPTY,
+                    null,
+                    J.Modifier.Type.Private,
+                    Collections.emptyList()
+                );
+                newModifiers.add(privateMod);
+                
+                // Always add static
+                J.Modifier staticMod = new J.Modifier(
+                    randomId(),
+                    Space.SINGLE_SPACE,
+                    Markers.EMPTY,
+                    null,
+                    J.Modifier.Type.Static,
+                    Collections.emptyList()
+                );
+                newModifiers.add(staticMod);
+                
+                // Always add final
+                J.Modifier finalMod = new J.Modifier(
+                    randomId(),
+                    Space.SINGLE_SPACE,
+                    Markers.EMPTY,
+                    null,
+                    J.Modifier.Type.Final,
+                    Collections.emptyList()
+                );
+                newModifiers.add(finalMod);
+                
+                // Add back other modifiers (annotations, etc.)
+                newModifiers.addAll(otherModifiers);
+                
+                vd = vd.withModifiers(newModifiers);
+                vd = SearchResult.found(vd, "Fixed logger modifiers to 'private static final'");
             }
-
+            
             return vd;
         }
 
@@ -212,8 +280,14 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                 return mi;
             }
 
-            if (INCORRECT_PLACEHOLDER_PATTERN.matcher(context.message).find()) {
-                return SearchResult.found(mi);
+            if (PlaceholderValidationUtil.hasIncorrectPlaceholders(context.message)) {
+                String correctedMessage = PlaceholderValidationUtil.correctPlaceholders(context.message);
+                J.Literal newLiteral = ((J.Literal) context.messageArg).withValue(correctedMessage)
+                                                                       .withValueSource("\"" + correctedMessage + "\"");
+                List<Expression> newArgs = new ArrayList<>(mi.getArguments());
+                newArgs.set(context.messageArgIndex, newLiteral);
+                mi = mi.withArguments(newArgs);
+                mi = SearchResult.found(mi, "Replaced incorrect placeholder pattern with %s");
             }
 
             return mi;
@@ -224,7 +298,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                 return mi;
             }
 
-            int placeholderCount = countPlaceholders(context.message);
+            int placeholderCount = PlaceholderValidationUtil.countPlaceholders(context.message);
             List<Expression> args = mi.getArguments();
 
             // Count actual substitution parameters (excluding message and exception)
@@ -261,7 +335,16 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
             ExceptionPosition position = findExceptionPosition(args);
             if (position.needsReordering()) {
-                return SearchResult.found(mi);
+                // Move exception to first position
+                List<Expression> reorderedArgs = new ArrayList<>();
+                reorderedArgs.add(position.exception);
+                for (int i = 0; i < args.size(); i++) {
+                    if (i != position.index) {
+                        reorderedArgs.add(args.get(i));
+                    }
+                }
+                mi = mi.withArguments(reorderedArgs);
+                return SearchResult.found(mi, "Moved exception parameter to first position");
             }
 
             return mi;
@@ -330,14 +413,6 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             return type != null && TypeUtils.isAssignableTo("java.lang.Throwable", type);
         }
 
-        private int countPlaceholders(String message) {
-            Matcher matcher = PLACEHOLDER_PATTERN.matcher(message);
-            int count = 0;
-            while (matcher.find()) {
-                count++;
-            }
-            return count;
-        }
 
         private boolean isSystemOutOrErr(J.MethodInvocation mi) {
             if (mi.getSelect() instanceof J.FieldAccess fieldAccess) {

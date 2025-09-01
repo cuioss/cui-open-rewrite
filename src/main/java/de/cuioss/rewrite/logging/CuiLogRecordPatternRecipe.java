@@ -29,12 +29,13 @@ import org.openrewrite.marker.SearchResult;
 import java.time.Duration;
 import java.util.Set;
 import java.util.List;
+import java.util.ArrayList;
 
 public class CuiLogRecordPatternRecipe extends Recipe {
 
     private static final String CUI_LOGGER_TYPE = "de.cuioss.tools.logging.CuiLogger";
     private static final String LOG_RECORD_TYPE = "de.cuioss.tools.logging.LogRecord";
-    private static final String PATTERN_DOC_URL = 
+    private static final String PATTERN_DOC_URL =
         "https://gitingest.com/github.com/cuioss/cui-llm-rules/tree/main/standards/logging/implementation-guide.adoc";
 
     @Override
@@ -76,6 +77,12 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                 return mi;
             }
 
+            // Check if this is a LogRecordModel.builder().template(...) call
+            J.MethodInvocation templateCheck = validateLogRecordTemplate(mi);
+            if (templateCheck != mi) {
+                return templateCheck;
+            }
+
             // Check if this is a CuiLogger method invocation
             if (!isLoggerMethod(mi)) {
                 return mi;
@@ -83,7 +90,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
             String methodName = mi.getSimpleName();
             LogLevel level = LogLevel.fromMethodName(methodName);
-            
+
             if (level == null) {
                 return mi;
             }
@@ -100,7 +107,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                         return SearchResult.found(mi);
                     }
                     break;
-                    
+
                 case DEBUG:
                 case TRACE:
                     if (usesLogRecord) {
@@ -110,6 +117,55 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             }
 
             return mi;
+        }
+
+        private J.MethodInvocation validateLogRecordTemplate(J.MethodInvocation mi) {
+            // Check if this is a .template("...") method call
+            if (!"template".equals(mi.getSimpleName())) {
+                return mi;
+            }
+
+            // Check if it's called on a LogRecordModel.Builder
+            Expression select = mi.getSelect();
+            if (select == null || !isLogRecordBuilderType(select)) {
+                return mi;
+            }
+
+            // Get the template string argument
+            List<Expression> args = mi.getArguments();
+            if (args.size() != 1) {
+                return mi;
+            }
+
+            Expression templateArg = args.get(0);
+            if (templateArg instanceof J.Literal) {
+                Object value = ((J.Literal) templateArg).getValue();
+                if (value instanceof String) {
+                    String template = (String) value;
+                    // Check for incorrect placeholders and auto-fix them
+                    if (PlaceholderValidationUtil.hasIncorrectPlaceholders(template)) {
+                        String correctedTemplate = PlaceholderValidationUtil.correctPlaceholders(template);
+                        J.Literal newLiteral = ((J.Literal) templateArg).withValue(correctedTemplate)
+                                                                       .withValueSource("\"" + correctedTemplate + "\"");
+                        List<Expression> newArgs = new ArrayList<>(args);
+                        newArgs.set(0, newLiteral);
+                        mi = mi.withArguments(newArgs);
+                        return SearchResult.found(mi, "Fixed incorrect placeholder pattern in LogRecord template");
+                    }
+                }
+            }
+
+            return mi;
+        }
+
+        private boolean isLogRecordBuilderType(Expression expr) {
+            JavaType type = expr.getType();
+            if (type == null) {
+                return false;
+            }
+            // Check if it's LogRecordModel.Builder type
+            return TypeUtils.isOfClassType(type, "de.cuioss.tools.logging.LogRecordModel$Builder") ||
+                   TypeUtils.isOfClassType(type, "de.cuioss.tools.logging.LogRecordModel.Builder");
         }
 
         private boolean isLoggerMethod(J.MethodInvocation mi) {
@@ -130,7 +186,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             }
 
             Expression firstArg = args.get(0);
-            
+
             // Check for method reference like INFO.SOME_MESSAGE::format
             if (firstArg instanceof J.MemberReference) {
                 J.MemberReference memberRef = (J.MemberReference) firstArg;
@@ -138,7 +194,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                     return isLogRecordExpression(memberRef.getContaining());
                 }
             }
-            
+
             // Check for method invocation like INFO.SOME_MESSAGE.format(...)
             if (firstArg instanceof J.MethodInvocation) {
                 J.MethodInvocation formatCall = (J.MethodInvocation) firstArg;
@@ -153,7 +209,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             // Check if first argument is an exception (could be followed by LogRecord)
             if (isExceptionType(firstArg) && args.size() > 1) {
                 Expression secondArg = args.get(1);
-                
+
                 // Check for method reference
                 if (secondArg instanceof J.MemberReference) {
                     J.MemberReference memberRef = (J.MemberReference) secondArg;
@@ -161,7 +217,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                         return isLogRecordExpression(memberRef.getContaining());
                     }
                 }
-                
+
                 // Check for method invocation
                 if (secondArg instanceof J.MethodInvocation) {
                     J.MethodInvocation formatCall = (J.MethodInvocation) secondArg;
@@ -186,7 +242,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                     return TypeUtils.isAssignableTo(LOG_RECORD_TYPE, type);
                 }
             }
-            
+
             // For identifier access (when imported statically)
             if (expr instanceof J.Identifier) {
                 JavaType type = expr.getType();
@@ -194,7 +250,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                     return TypeUtils.isAssignableTo(LOG_RECORD_TYPE, type);
                 }
             }
-            
+
             return false;
         }
 
