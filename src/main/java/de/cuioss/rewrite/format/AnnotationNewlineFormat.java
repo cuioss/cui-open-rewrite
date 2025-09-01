@@ -33,6 +33,8 @@ import java.util.Set;
 
 public class AnnotationNewlineFormat extends Recipe {
 
+    public static final String RECIPE_NAME = "AnnotationNewlineFormat";
+
     @Override
     public String getDisplayName() {
         return "Format annotations with newlines";
@@ -60,12 +62,13 @@ public class AnnotationNewlineFormat extends Recipe {
 
     private static class AnnotationNewlineFormatVisitor extends JavaIsoVisitor<ExecutionContext> {
 
-        private static final CuiLogger LOG = new CuiLogger(AnnotationNewlineFormatVisitor.class);
+        private static final CuiLogger LOGGER = new CuiLogger(AnnotationNewlineFormatVisitor.class);
 
         @Override
         public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
             // Check for suppression comments
-            if (RecipeSuppressionUtil.isSuppressed(classDecl, getCursor(), "AnnotationNewlineFormat")) {
+            if (RecipeSuppressionUtil.isSuppressed(classDecl, getCursor(), RECIPE_NAME)) {
+                LOGGER.debug("Skipping class {} due to suppression", classDecl.getSimpleName());
                 return classDecl;
             }
 
@@ -76,6 +79,7 @@ public class AnnotationNewlineFormat extends Recipe {
                 return cd;
             }
 
+            LOGGER.debug("Formatting annotations for class: {}", cd.getSimpleName());
             // Format annotations - ensure each on separate line
             cd = cd.withLeadingAnnotations(formatAnnotationList(cd.getLeadingAnnotations()));
 
@@ -88,7 +92,8 @@ public class AnnotationNewlineFormat extends Recipe {
         @Override
         public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
             // Check for suppression comments
-            if (RecipeSuppressionUtil.isSuppressed(method, getCursor(), "AnnotationNewlineFormat")) {
+            if (RecipeSuppressionUtil.isSuppressed(method, getCursor(), RECIPE_NAME)) {
+                LOGGER.debug("Skipping method {} due to suppression", method.getSimpleName());
                 return method;
             }
 
@@ -99,6 +104,7 @@ public class AnnotationNewlineFormat extends Recipe {
                 return md;
             }
 
+            LOGGER.debug("Formatting annotations for method: {}", md.getSimpleName());
             // Format annotations - ensure each on separate line
             md = md.withLeadingAnnotations(formatAnnotationList(md.getLeadingAnnotations()));
 
@@ -111,7 +117,7 @@ public class AnnotationNewlineFormat extends Recipe {
         @Override
         public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations multiVariable, ExecutionContext ctx) {
             // Check for suppression only on fields
-            if (isFieldDeclaration() && RecipeSuppressionUtil.isSuppressed(multiVariable, getCursor(), "AnnotationNewlineFormat")) {
+            if (isFieldDeclaration() && RecipeSuppressionUtil.isSuppressed(multiVariable, getCursor(), RECIPE_NAME)) {
                 return multiVariable;
             }
 
@@ -197,6 +203,7 @@ public class AnnotationNewlineFormat extends Recipe {
                 return annotations;
             }
 
+            LOGGER.debug("Formatting {} annotations to ensure each is on a separate line", annotations.size());
             List<J.Annotation> result = new ArrayList<>();
             result.add(annotations.getFirst()); // Keep first annotation as-is
 
