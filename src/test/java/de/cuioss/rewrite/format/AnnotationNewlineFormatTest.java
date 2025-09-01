@@ -28,8 +28,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
 
     @Override
     public void defaults(RecipeSpec spec) {
-        spec.recipe( new AnnotationNewlineFormat() )
-            .parser( JavaParser.fromJavaVersion() );
+        spec.recipe(new AnnotationNewlineFormat())
+            .parser(JavaParser.fromJavaVersion());
     }
 
     @Test

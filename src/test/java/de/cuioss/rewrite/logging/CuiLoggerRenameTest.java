@@ -22,12 +22,12 @@ import org.openrewrite.test.RewriteTest;
 import static org.openrewrite.java.Assertions.java;
 
 class CuiLoggerRenameTest implements RewriteTest {
-    
+
     @Override
     public void defaults(RecipeSpec spec) {
         spec.recipe(new CuiLoggerStandardsRecipe());
     }
-    
+
     @Test
     void renamesLoggerToUppercase() {
         rewriteRun(
@@ -49,7 +49,7 @@ class CuiLoggerRenameTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void doesNotRenameCorrectLoggerName() {
         rewriteRun(

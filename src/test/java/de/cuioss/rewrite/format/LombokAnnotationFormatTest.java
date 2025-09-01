@@ -30,10 +30,10 @@ class LombokAnnotationFormatTest implements RewriteTest {
 
     @Override
     public void defaults(RecipeSpec spec) {
-        spec.recipe( new AnnotationNewlineFormat() )
-            .parser( JavaParser.fromJavaVersion()
-                .logCompilationWarningsAndErrors( true ) )
-            .typeValidationOptions( TypeValidation.none() );
+        spec.recipe(new AnnotationNewlineFormat())
+            .parser(JavaParser.fromJavaVersion()
+                .logCompilationWarningsAndErrors(true))
+            .typeValidationOptions(TypeValidation.none());
     }
 
     @DocumentExample

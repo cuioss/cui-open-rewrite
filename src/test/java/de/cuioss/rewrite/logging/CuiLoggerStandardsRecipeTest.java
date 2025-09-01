@@ -23,7 +23,7 @@ import org.openrewrite.test.RewriteTest;
 import static org.openrewrite.java.Assertions.java;
 
 class CuiLoggerStandardsRecipeTest implements RewriteTest {
-    
+
     @Override
     public void defaults(RecipeSpec spec) {
         spec.recipe(new CuiLoggerStandardsRecipe())
@@ -47,7 +47,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                     """
                 ));
     }
-    
+
     @Test
     void detectIncorrectLoggerName() {
         rewriteRun(
@@ -69,7 +69,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void detectIncorrectLoggerModifiers() {
         rewriteRun(
@@ -91,7 +91,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void detectIncorrectPlaceholderPatterns() {
         rewriteRun(
@@ -125,7 +125,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void detectParameterCountMismatch() {
         rewriteRun(
@@ -157,7 +157,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void detectWrongExceptionPosition() {
         rewriteRun(
@@ -187,7 +187,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void detectSystemOutUsage() {
         rewriteRun(
@@ -211,7 +211,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void suppressionWorks() {
         rewriteRun(
@@ -232,7 +232,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void correctLoggerUsageNotFlagged() {
         rewriteRun(

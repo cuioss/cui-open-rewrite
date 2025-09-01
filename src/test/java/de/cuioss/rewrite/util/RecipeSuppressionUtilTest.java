@@ -19,19 +19,18 @@ import de.cuioss.test.juli.LogAsserts;
 import de.cuioss.test.juli.TestLogLevel;
 import de.cuioss.test.juli.junit5.EnableTestLogger;
 import org.jspecify.annotations.Nullable;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.InMemoryExecutionContext;
-import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.JavaIsoVisitor;
+import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.tree.J;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@EnableTestLogger
-@SuppressWarnings("java:S2699") // Tests use assertions via LogAsserts
+@EnableTestLogger @SuppressWarnings("java:S2699") // Tests use assertions via LogAsserts
 class RecipeSuppressionUtilTest {
 
     private final JavaParser parser = JavaParser.fromJavaVersion().build();
@@ -77,7 +76,7 @@ class RecipeSuppressionUtilTest {
 
     @Test
     @Disabled("Known issue: Field detection in test visitor has limitations. " +
-              "Field suppression works correctly in actual recipes - see RecipeFieldSuppressionTest")
+        "Field suppression works correctly in actual recipes - see RecipeFieldSuppressionTest")
     void shouldDetectFieldSuppressionWithGeneralComment() {
         // This test is disabled due to a known issue with how the test visitor
         // traverses the AST. The field context is not properly established when

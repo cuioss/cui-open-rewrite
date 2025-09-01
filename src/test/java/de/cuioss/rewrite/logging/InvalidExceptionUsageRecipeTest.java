@@ -23,13 +23,13 @@ import org.openrewrite.test.RewriteTest;
 import static org.openrewrite.java.Assertions.java;
 
 class InvalidExceptionUsageRecipeTest implements RewriteTest {
-    
+
     @Override
     public void defaults(RecipeSpec spec) {
         spec.recipe(new InvalidExceptionUsageRecipe())
             .parser(JavaParser.fromJavaVersion());
     }
-    
+
     @Test
     void detectCatchingException() {
         rewriteRun(
@@ -67,7 +67,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void detectCatchingRuntimeException() {
         rewriteRun(
@@ -105,7 +105,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void detectCatchingThrowable() {
         rewriteRun(
@@ -143,7 +143,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void detectThrowingException() {
         rewriteRun(
@@ -165,7 +165,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void detectThrowingRuntimeException() {
         rewriteRun(
@@ -187,7 +187,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void detectCreatingGenericException() {
         rewriteRun(
@@ -211,7 +211,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void allowSpecificExceptions() {
         rewriteRun(
@@ -236,7 +236,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void allowMultipleCatchWithSpecificFirst() {
         rewriteRun(
@@ -282,7 +282,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void respectSuppressionComment() {
         rewriteRun(
@@ -308,7 +308,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void respectGeneralSuppressionComment() {
         rewriteRun(
@@ -334,7 +334,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void detectNestedExceptionUsage() {
         rewriteRun(
@@ -380,7 +380,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void detectExceptionInLambda() {
         rewriteRun(
@@ -426,7 +426,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void allowCustomExceptionExtendingGeneric() {
         rewriteRun(

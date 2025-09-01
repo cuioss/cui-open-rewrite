@@ -20,21 +20,21 @@ import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.JavaIsoVisitor;
+import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
-import org.openrewrite.java.tree.Expression;
-import org.openrewrite.java.tree.TypeUtils;
 import org.openrewrite.java.tree.Space;
-import org.openrewrite.java.ChangeType;
-import org.openrewrite.marker.SearchResult;
+import org.openrewrite.java.tree.TypeUtils;
 import org.openrewrite.marker.Markers;
+import org.openrewrite.marker.SearchResult;
 
 import java.time.Duration;
-import java.util.Set;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+
 public class CuiLoggerStandardsRecipe extends Recipe {
 
     private static final String CUI_LOGGER_TYPE = "de.cuioss.tools.logging.CuiLogger";
@@ -47,9 +47,9 @@ public class CuiLoggerStandardsRecipe extends Recipe {
     @Override
     public String getDescription() {
         return "Enforces CUI-specific logging standards including proper logger naming, " +
-               "string substitution patterns, exception parameter position, parameter validation, " +
-               "LogRecord pattern usage for INFO/WARN/ERROR levels, " +
-               "and detection of System.out/System.err usage.";
+            "string substitution patterns, exception parameter position, parameter validation, " +
+            "LogRecord pattern usage for INFO/WARN/ERROR levels, " +
+            "and detection of System.out/System.err usage.";
     }
 
     @Override
@@ -68,7 +68,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
     }
 
     private static class CuiLoggerStandardsVisitor extends JavaIsoVisitor<ExecutionContext> {
-        
+
         private UUID randomId() {
             return UUID.randomUUID();
         }
@@ -125,14 +125,14 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             boolean hasFinal = vd.hasModifier(J.Modifier.Type.Final);
             boolean hasPublic = vd.hasModifier(J.Modifier.Type.Public);
             boolean hasProtected = vd.hasModifier(J.Modifier.Type.Protected);
-            
+
             if (!hasPrivate || !hasStatic || !hasFinal || hasPublic || hasProtected) {
                 List<J.Modifier> newModifiers = new ArrayList<>();
                 List<J.Modifier> otherModifiers = new ArrayList<>();
-                
+
                 // Collect non-visibility/static/final modifiers (like annotations)
                 for (J.Modifier mod : vd.getModifiers()) {
-                    if (mod.getType() != J.Modifier.Type.Public && 
+                    if (mod.getType() != J.Modifier.Type.Public &&
                         mod.getType() != J.Modifier.Type.Protected &&
                         mod.getType() != J.Modifier.Type.Private &&
                         mod.getType() != J.Modifier.Type.Static &&
@@ -140,13 +140,13 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                         otherModifiers.add(mod);
                     }
                 }
-                
+
                 // Add modifiers in correct order: private static final
                 Space firstSpace = Space.EMPTY;
                 if (!vd.getModifiers().isEmpty()) {
-                    firstSpace = vd.getModifiers().get(0).getPrefix();
+                    firstSpace = vd.getModifiers().getFirst().getPrefix();
                 }
-                
+
                 // Always add private
                 J.Modifier privateMod = new J.Modifier(
                     randomId(),
@@ -157,7 +157,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                     Collections.emptyList()
                 );
                 newModifiers.add(privateMod);
-                
+
                 // Always add static
                 J.Modifier staticMod = new J.Modifier(
                     randomId(),
@@ -168,7 +168,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                     Collections.emptyList()
                 );
                 newModifiers.add(staticMod);
-                
+
                 // Always add final
                 J.Modifier finalMod = new J.Modifier(
                     randomId(),
@@ -179,17 +179,16 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                     Collections.emptyList()
                 );
                 newModifiers.add(finalMod);
-                
+
                 // Add back other modifiers (annotations, etc.)
                 newModifiers.addAll(otherModifiers);
-                
+
                 vd = vd.withModifiers(newModifiers);
                 vd = SearchResult.found(vd, "Fixed logger modifiers to 'private static final'");
             }
-            
+
             return vd;
         }
-
 
 
         @Override
@@ -251,14 +250,14 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             boolean hasException = false;
 
             // Check if first argument is an exception
-            if (isExceptionType(args.get(0))) {
+            if (isExceptionType(args.getFirst())) {
                 hasException = true;
                 if (args.size() > 1) {
                     messageArg = args.get(1);
                     messageArgIndex = 1;
                 }
             } else {
-                messageArg = args.get(0);
+                messageArg = args.getFirst();
             }
 
             String message = extractMessageString(messageArg);
@@ -266,10 +265,10 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         }
 
         private String extractMessageString(Expression messageArg) {
-            if (messageArg instanceof J.Literal) {
-                Object value = ((J.Literal) messageArg).getValue();
-                if (value instanceof String) {
-                    return (String) value;
+            if (messageArg instanceof J.Literal literal) {
+                Object value = literal.getValue();
+                if (value instanceof String string) {
+                    return string;
                 }
             }
             return null;
@@ -283,7 +282,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             if (PlaceholderValidationUtil.hasIncorrectPlaceholders(context.message)) {
                 String correctedMessage = PlaceholderValidationUtil.correctPlaceholders(context.message);
                 J.Literal newLiteral = ((J.Literal) context.messageArg).withValue(correctedMessage)
-                                                                       .withValueSource("\"" + correctedMessage + "\"");
+                    .withValueSource("\"" + correctedMessage + "\"");
                 List<Expression> newArgs = new ArrayList<>(mi.getArguments());
                 newArgs.set(context.messageArgIndex, newLiteral);
                 mi = mi.withArguments(newArgs);
@@ -364,7 +363,6 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         }
 
 
-
         private static class LoggerCallContext {
             Expression messageArg;
             int messageArgIndex;
@@ -424,7 +422,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                         ("out".equals(fieldName) || "err".equals(fieldName))) {
                         String methodName = mi.getSimpleName();
                         return "print".equals(methodName) || "println".equals(methodName) ||
-                               "printf".equals(methodName) || "format".equals(methodName);
+                            "printf".equals(methodName) || "format".equals(methodName);
                     }
                 }
             }

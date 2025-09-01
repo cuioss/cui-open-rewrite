@@ -23,13 +23,13 @@ import org.openrewrite.test.TypeValidation;
 import static org.openrewrite.java.Assertions.java;
 
 class CuiLoggerAutoFixTest implements RewriteTest {
-    
+
     @Override
     public void defaults(RecipeSpec spec) {
         spec.recipe(new CuiLoggerStandardsRecipe())
             .typeValidationOptions(TypeValidation.none());
     }
-    
+
     @Test
     void fixesPublicModifierToPrivateStaticFinal() {
         rewriteRun(
@@ -51,7 +51,7 @@ class CuiLoggerAutoFixTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void fixesProtectedModifierToPrivateStaticFinal() {
         rewriteRun(
@@ -73,7 +73,7 @@ class CuiLoggerAutoFixTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void replacesSLF4JPlaceholders() {
         rewriteRun(
@@ -105,7 +105,7 @@ class CuiLoggerAutoFixTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void replacesPrintfStylePlaceholders() {
         rewriteRun(
@@ -137,7 +137,7 @@ class CuiLoggerAutoFixTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void movesExceptionToFirstPosition() {
         rewriteRun(
@@ -169,7 +169,7 @@ class CuiLoggerAutoFixTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void combinedFixes() {
         rewriteRun(
@@ -199,7 +199,7 @@ class CuiLoggerAutoFixTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void doesNotChangeCorrectCode() {
         rewriteRun(

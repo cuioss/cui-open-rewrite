@@ -15,8 +15,8 @@
  */
 package de.cuioss.rewrite.logging;
 
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utility class for validating and correcting placeholder patterns in logging messages.
@@ -70,7 +70,7 @@ public final class PlaceholderValidationUtil {
             return null;
         }
         return message.replaceAll("\\{\\}", "%s")
-                     .replaceAll("%[dfiobxXeEgG]", "%s");
+            .replaceAll("%[dfiobxXeEgG]", "%s");
     }
 
     /**

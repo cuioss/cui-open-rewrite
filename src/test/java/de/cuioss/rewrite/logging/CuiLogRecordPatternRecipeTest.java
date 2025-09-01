@@ -444,7 +444,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void convertZeroParamFormatToMethodReference() {
         rewriteRun(
@@ -484,7 +484,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void convertZeroParamFormatWithExceptionToMethodReference() {
         rewriteRun(
@@ -530,7 +530,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void doNotConvertFormatWithParameters() {
         rewriteRun(
@@ -558,7 +558,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
             )
         );
     }
-    
+
     @Test
     void acceptExistingMethodReference() {
         rewriteRun(

@@ -46,7 +46,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
     private static final Set<String> GENERIC_EXCEPTION_TYPES = Set.of(
         "java.lang.Exception",
-        "java.lang.RuntimeException", 
+        "java.lang.RuntimeException",
         "java.lang.Throwable"
     );
 
@@ -58,7 +58,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
     @Override
     public String getDescription() {
         return "Flags usage of generic exception types (Exception, RuntimeException, Throwable) " +
-               "in catch blocks and throw statements. Code should use specific exception types instead.";
+            "in catch blocks and throw statements. Code should use specific exception types instead.";
     }
 
     @Override
@@ -94,7 +94,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                 if (parameter.getType() != null) {
                     JavaType type = parameter.getType();
                     JavaType.FullyQualified fqType = TypeUtils.asFullyQualified(type);
-                    
+
                     if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
                         return SearchResult.found(c);
                     }
@@ -117,7 +117,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             if (t.getException() instanceof J.NewClass newClass) {
                 JavaType type = newClass.getType();
                 JavaType.FullyQualified fqType = TypeUtils.asFullyQualified(type);
-                
+
                 if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
                     return SearchResult.found(t);
                 }
@@ -143,7 +143,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
             JavaType type = nc.getType();
             JavaType.FullyQualified fqType = TypeUtils.asFullyQualified(type);
-            
+
             if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
                 return SearchResult.found(nc);
             }

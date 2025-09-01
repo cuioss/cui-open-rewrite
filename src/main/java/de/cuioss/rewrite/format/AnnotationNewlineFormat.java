@@ -60,7 +60,7 @@ public class AnnotationNewlineFormat extends Recipe {
 
         @Override
         public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
-            
+
             // Check for suppression comments
             if (RecipeSuppressionUtil.isSuppressed(classDecl, getCursor(), "AnnotationNewlineFormat")) {
                 return classDecl;
@@ -88,7 +88,7 @@ public class AnnotationNewlineFormat extends Recipe {
             if (RecipeSuppressionUtil.isSuppressed(method, getCursor(), "AnnotationNewlineFormat")) {
                 return method;
             }
-            
+
             J.MethodDeclaration md = super.visitMethodDeclaration(method, ctx);
 
             // Only process if there are annotations and changes are needed
@@ -111,7 +111,7 @@ public class AnnotationNewlineFormat extends Recipe {
             if (isFieldDeclaration() && RecipeSuppressionUtil.isSuppressed(multiVariable, getCursor(), "AnnotationNewlineFormat")) {
                 return multiVariable;
             }
-            
+
             J.VariableDeclarations vd = super.visitVariableDeclarations(multiVariable, ctx);
 
             // Only process field declarations (not local variables)

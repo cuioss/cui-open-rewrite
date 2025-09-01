@@ -17,8 +17,8 @@ package de.cuioss.rewrite.util;
 
 import de.cuioss.tools.logging.CuiLogger;
 import org.openrewrite.Cursor;
-import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Comment;
+import org.openrewrite.java.tree.J;
 
 import java.util.List;
 
@@ -36,18 +36,18 @@ import java.util.List;
  * OpenRewrite AST limitations where comments may be attached to unexpected parts of the AST.</p>
  */
 public final class RecipeSuppressionUtil {
-    
+
     private static final CuiLogger LOG = new CuiLogger(RecipeSuppressionUtil.class);
     private static final String SUPPRESSION_MARKER = "cui-rewrite:disable";
-    
+
     /**
      * Private constructor to prevent instantiation of utility class.
      */
     private RecipeSuppressionUtil() {
         throw new UnsupportedOperationException("Utility class");
     }
-    
-    
+
+
     /**
      * Checks if the given element should be suppressed for a specific recipe.
      * 
@@ -62,11 +62,11 @@ public final class RecipeSuppressionUtil {
             logSuppression(element, recipeName);
             return true;
         }
-        
+
         // Check annotations and element-specific locations
         return checkElementSpecificSuppression(element, cursor, recipeName);
     }
-    
+
     /**
      * Checks element-specific suppression locations based on the element type.
      */
@@ -80,43 +80,43 @@ public final class RecipeSuppressionUtil {
         }
         return false;
     }
-    
+
     private static boolean checkClassSuppression(J.ClassDeclaration cd, J element, Cursor cursor, String recipeName) {
         // Check first annotation's comments
-        if (!cd.getLeadingAnnotations().isEmpty() && 
+        if (!cd.getLeadingAnnotations().isEmpty() &&
             hasSuppression(cd.getLeadingAnnotations().getFirst().getPrefix().getComments(), cursor, recipeName)) {
             logSuppression(element, recipeName);
             return true;
         }
-        
+
         // Check for trailing comments on class declaration (attached to body)
         // cd.getBody() is always non-null for class declarations
         if (hasSuppression(cd.getBody().getPrefix().getComments(), cursor, recipeName)) {
             logSuppression(element, recipeName);
             return true;
         }
-        
+
         return false;
     }
-    
+
     private static boolean checkMethodSuppression(J.MethodDeclaration md, J element, Cursor cursor, String recipeName) {
-        if (!md.getLeadingAnnotations().isEmpty() && 
+        if (!md.getLeadingAnnotations().isEmpty() &&
             hasSuppression(md.getLeadingAnnotations().getFirst().getPrefix().getComments(), cursor, recipeName)) {
             logSuppression(element, recipeName);
             return true;
         }
         return false;
     }
-    
+
     private static boolean checkVariableSuppression(J.VariableDeclarations vd, J element, Cursor cursor, String recipeName) {
-        if (!vd.getLeadingAnnotations().isEmpty() && 
+        if (!vd.getLeadingAnnotations().isEmpty() &&
             hasSuppression(vd.getLeadingAnnotations().getFirst().getPrefix().getComments(), cursor, recipeName)) {
             logSuppression(element, recipeName);
             return true;
         }
         return false;
     }
-    
+
     /**
      * Checks if the given list of comments contains a suppression directive.
      */
@@ -124,7 +124,7 @@ public final class RecipeSuppressionUtil {
         if (comments == null || comments.isEmpty()) {
             return false;
         }
-        
+
         for (Comment comment : comments) {
             String text = comment.printComment(cursor);
             if (text.contains(SUPPRESSION_MARKER)) {
@@ -132,40 +132,40 @@ public final class RecipeSuppressionUtil {
                 if (recipeName == null) {
                     return true; // General suppression
                 }
-                
+
                 // Check for recipe-specific suppression
                 String afterMarker = text.substring(text.indexOf(SUPPRESSION_MARKER) + SUPPRESSION_MARKER.length()).trim();
                 if (afterMarker.isEmpty()) {
                     return true; // No recipe specified means suppress all
                 }
-                
+
                 // Check if the recipe name matches (simple or fully qualified)
-                String simpleRecipeName = recipeName.contains(".") ? 
+                String simpleRecipeName = recipeName.contains(".") ?
                     recipeName.substring(recipeName.lastIndexOf('.') + 1) : recipeName;
-                    
+
                 return afterMarker.equals(recipeName) || afterMarker.equals(simpleRecipeName);
             }
         }
-        
+
         return false;
     }
-    
+
     /**
      * Logs the suppression event.
      */
     private static void logSuppression(J element, String recipeName) {
         String elementType = getElementType(element);
         String elementName = getElementName(element);
-        
+
         if (recipeName != null) {
-            LOG.info("Skipping {} '{}' for recipe '{}' due to {} comment", 
+            LOG.info("Skipping {} '{}' for recipe '{}' due to {} comment",
                 elementType, elementName, recipeName, SUPPRESSION_MARKER);
         } else {
-            LOG.info("Skipping {} '{}' due to {} comment", 
+            LOG.info("Skipping {} '{}' due to {} comment",
                 elementType, elementName, SUPPRESSION_MARKER);
         }
     }
-    
+
     /**
      * Gets a human-readable type name for the element.
      */
@@ -179,7 +179,7 @@ public final class RecipeSuppressionUtil {
         }
         return "element";
     }
-    
+
     /**
      * Gets the name of the element for logging purposes.
      */

@@ -148,9 +148,9 @@ class AnnotationSuppressionLoggingTest implements RewriteTest {
 
         // then - verify no warnings or errors are logged
         // Using the class-based assertion for general check
-        LogAsserts.assertNoLogMessagePresent(TestLogLevel.WARN, 
+        LogAsserts.assertNoLogMessagePresent(TestLogLevel.WARN,
             RecipeSuppressionUtil.class);
-        LogAsserts.assertNoLogMessagePresent(TestLogLevel.ERROR, 
+        LogAsserts.assertNoLogMessagePresent(TestLogLevel.ERROR,
             RecipeSuppressionUtil.class);
     }
 

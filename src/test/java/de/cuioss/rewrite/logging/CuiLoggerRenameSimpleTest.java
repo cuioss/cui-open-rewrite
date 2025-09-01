@@ -23,13 +23,13 @@ import org.openrewrite.test.TypeValidation;
 import static org.openrewrite.java.Assertions.java;
 
 class CuiLoggerRenameSimpleTest implements RewriteTest {
-    
+
     @Override
     public void defaults(RecipeSpec spec) {
         spec.recipe(new CuiLoggerStandardsRecipe())
             .typeValidationOptions(TypeValidation.none());
     }
-    
+
     @Test
     void renamesLoggerToUppercase() {
         rewriteRun(
