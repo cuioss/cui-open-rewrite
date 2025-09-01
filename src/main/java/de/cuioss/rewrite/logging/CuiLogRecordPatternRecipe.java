@@ -227,7 +227,11 @@ public class CuiLogRecordPatternRecipe extends Recipe {
         private J.MemberReference createFormatMethodReference(J.MethodInvocation formatCall, boolean preservePrefix) {
             Expression selectBase = formatCall.getSelect();
             // We already checked that getSelect() != null in isZeroParamFormatCall
-            Expression select = preservePrefix && selectBase != null ?
+            // but add null check to satisfy static analysis
+            if (selectBase == null) {
+                throw new IllegalStateException("formatCall.getSelect() should not be null");
+            }
+            Expression select = preservePrefix ?
                 selectBase.withPrefix(formatCall.getPrefix()) :
                 selectBase;
 
@@ -257,8 +261,9 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                 return true;
             }
             JavaType.Method methodType = mi.getMethodType();
-            if (methodType != null && methodType.getDeclaringType() != null) {
-                return !TypeUtils.isOfClassType(methodType.getDeclaringType(), CUI_LOGGER_TYPE);
+            if (methodType != null) {
+                JavaType declaringType = methodType.getDeclaringType();
+                return !TypeUtils.isOfClassType(declaringType, CUI_LOGGER_TYPE);
             }
             return true;
         }
@@ -271,42 +276,33 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
             Expression firstArg = args.getFirst();
 
+            // Check if first argument is a LogRecord pattern
+            if (isLogRecordFormatExpression(firstArg)) {
+                return true;
+            }
+
+            // Check if first argument is an exception followed by LogRecord
+            if (isExceptionType(firstArg) && args.size() > 1) {
+                Expression secondArg = args.get(1);
+                return isLogRecordFormatExpression(secondArg);
+            }
+
+            return false;
+        }
+
+        private boolean isLogRecordFormatExpression(Expression expr) {
             // Check for method reference like INFO.SOME_MESSAGE::format
-            if (firstArg instanceof J.MemberReference memberRef) {
-                if (FORMAT_METHOD_NAME.equals(memberRef.getReference().getSimpleName())) {
-                    return isLogRecordExpression(memberRef.getContaining());
-                }
+            if (expr instanceof J.MemberReference memberRef &&
+                FORMAT_METHOD_NAME.equals(memberRef.getReference().getSimpleName())) {
+                return isLogRecordExpression(memberRef.getContaining());
             }
 
             // Check for method invocation like INFO.SOME_MESSAGE.format(...)
-            if (firstArg instanceof J.MethodInvocation formatCall) {
-                if (FORMAT_METHOD_NAME.equals(formatCall.getSimpleName())) {
-                    Expression select = formatCall.getSelect();
-                    if (select != null) {
-                        return isLogRecordExpression(select);
-                    }
-                }
-            }
-
-            // Check if first argument is an exception (could be followed by LogRecord)
-            if (isExceptionType(firstArg) && args.size() > 1) {
-                Expression secondArg = args.get(1);
-
-                // Check for method reference
-                if (secondArg instanceof J.MemberReference memberRef) {
-                    if (FORMAT_METHOD_NAME.equals(memberRef.getReference().getSimpleName())) {
-                        return isLogRecordExpression(memberRef.getContaining());
-                    }
-                }
-
-                // Check for method invocation
-                if (secondArg instanceof J.MethodInvocation formatCall) {
-                    if (FORMAT_METHOD_NAME.equals(formatCall.getSimpleName())) {
-                        Expression select = formatCall.getSelect();
-                        if (select != null) {
-                            return isLogRecordExpression(select);
-                        }
-                    }
+            if (expr instanceof J.MethodInvocation formatCall &&
+                FORMAT_METHOD_NAME.equals(formatCall.getSimpleName())) {
+                Expression select = formatCall.getSelect();
+                if (select != null) {
+                    return isLogRecordExpression(select);
                 }
             }
 
