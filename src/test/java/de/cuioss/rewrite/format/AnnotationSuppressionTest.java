@@ -150,9 +150,7 @@ class AnnotationSuppressionTest implements RewriteTest {
                     @SuppressWarnings("unused") @Deprecated private String field1;
                     // cui-rewrite:enable AnnotationNewlineFormat
                     
-                    @SuppressWarnings("unused")
-                    @Deprecated
-                    private String field2;
+                    @SuppressWarnings("unused") @Deprecated private String field2;
                 }
                 """
             )
@@ -257,7 +255,9 @@ class AnnotationSuppressionTest implements RewriteTest {
                         return "2";
                     }
                     
-                    @Override @Deprecated public String method3() {
+                    @Override
+                    @Deprecated
+                    public String method3() {
                         return "3";
                     }
                     // cui-rewrite:enable AnnotationNewlineFormat

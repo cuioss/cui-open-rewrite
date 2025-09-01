@@ -63,7 +63,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 
                 class Test {
-                    /*~~>*/private static final CuiLogger log = new CuiLogger(Test.class);
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                 }
                 """
             )
@@ -85,7 +85,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                 import de.cuioss.tools.logging.CuiLogger;
                 
                 class Test {
-                    /*~~>*/public static CuiLogger LOGGER = new CuiLogger(Test.class);
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                 }
                 """
             )
@@ -117,8 +117,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                     
                     void method() {
                         String value = "test";
-                        /*~~>*/LOGGER.info("Message with {} placeholder", value);
-                        /*~~>*/LOGGER.debug("Value is %d", 42);
+                        LOGGER.info("Message with %s placeholder", value);
+                        LOGGER.debug("Value is %s", 42);
                     }
                 }
                 """
@@ -180,7 +180,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                     
                     void method(Exception e) {
-                        /*~~>*/LOGGER.error("Error occurred", e);
+                        LOGGER.error(e, "Error occurred");
                     }
                 }
                 """
