@@ -15,6 +15,8 @@
  */
 package de.cuioss.rewrite.logging;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,7 +54,7 @@ public final class PlaceholderValidationUtil {
      * @param message the message to check
      * @return true if incorrect placeholders are found
      */
-    public static boolean hasIncorrectPlaceholders(String message) {
+    public static boolean hasIncorrectPlaceholders(@Nullable String message) {
         if (message == null) {
             return false;
         }
@@ -65,7 +67,8 @@ public final class PlaceholderValidationUtil {
      * @param message the message to correct
      * @return the corrected message with all placeholders replaced by %s
      */
-    public static String correctPlaceholders(String message) {
+    @Nullable
+    public static String correctPlaceholders(@Nullable String message) {
         if (message == null) {
             return null;
         }
@@ -79,7 +82,7 @@ public final class PlaceholderValidationUtil {
      * @param message the message to analyze
      * @return the count of %s placeholders
      */
-    public static int countPlaceholders(String message) {
+    public static int countPlaceholders(@Nullable String message) {
         if (message == null) {
             return 0;
         }
