@@ -30,7 +30,10 @@ import org.openrewrite.java.tree.J;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@EnableTestLogger @SuppressWarnings("java:S2699") // Tests use assertions via LogAsserts
+@EnableTestLogger @SuppressWarnings({
+    "java:S2699", // Tests use assertions via LogAsserts
+    "java:S5976"  // Similar tests are intentionally kept separate for clarity
+})
 class RecipeSuppressionUtilTest {
 
     private final JavaParser parser = JavaParser.fromJavaVersion().build();
@@ -213,10 +216,10 @@ class RecipeSuppressionUtilTest {
             public class TestClass {
                 // cui-rewrite:disable
                 public void method1() {}
-                
+
                 // cui-rewrite:disable TestRecipe
                 public void method2() {}
-                
+
                 public void method3() {}
             }
             """;
@@ -236,7 +239,7 @@ class RecipeSuppressionUtilTest {
     void shouldSuppressWithTrailingComment() {
         String source = """
             public class TestClass {
-                // cui-rewrite:disable   
+                // cui-rewrite:disable
                 public void method() {}
             }
             """;
