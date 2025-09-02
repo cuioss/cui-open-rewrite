@@ -75,7 +75,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
     private static class InvalidExceptionUsageVisitor extends JavaIsoVisitor<ExecutionContext> {
 
-        @Override @SuppressWarnings("nullness") // SearchResult.found() never returns null for non-null input
+        @Override @SuppressWarnings("java:S2637") // SearchResult.found() never returns null for non-null input
         public J.Try.Catch visitCatch(J.Try.Catch catchBlock, ExecutionContext ctx) {
             J.Try.Catch c = super.visitCatch(catchBlock, ctx);
 
@@ -99,7 +99,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             return c;
         }
 
-        @Override @SuppressWarnings("nullness") // SearchResult.found() never returns null for non-null input
+        @Override @SuppressWarnings("java:S2637") // SearchResult.found() never returns null for non-null input
         public J.Throw visitThrow(J.Throw thrown, ExecutionContext ctx) {
             J.Throw t = super.visitThrow(thrown, ctx);
 
@@ -121,7 +121,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             return t;
         }
 
-        @Override @SuppressWarnings("nullness") // SearchResult.found() never returns null for non-null input
+        @Override @SuppressWarnings("java:S2637") // SearchResult.found() never returns null for non-null input
         public J.NewClass visitNewClass(J.NewClass newClass, ExecutionContext ctx) {
             J.NewClass nc = super.visitNewClass(newClass, ctx);
 
