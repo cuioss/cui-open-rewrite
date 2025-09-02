@@ -331,4 +331,58 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             )
         );
     }
+
+    @Test void shouldHandleExceptionFirstWithPlaceholders() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+
+                    void method(Exception e) {
+                        String value = "test";
+                        // When exception is first, message is second arg
+                        // Should not flag this as parameter count mismatch
+                        LOGGER.error(e, "Error with value: %s", value);
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test void shouldDetectParameterMismatchWithExceptionFirst() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+
+                    void method(Exception e) {
+                        String value = "test";
+                        // Exception first, then message with 2 placeholders but only 1 param
+                        LOGGER.error(e, "Error with %s and %s", value);
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+
+                    void method(Exception e) {
+                        String value = "test";
+                        // Exception first, then message with 2 placeholders but only 1 param
+                        /*~~>*/LOGGER.error(e, "Error with %s and %s", value);
+                    }
+                }
+                """
+            )
+        );
+    }
 }

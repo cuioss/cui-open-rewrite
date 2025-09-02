@@ -85,10 +85,9 @@ Execute in sequence before ANY commit:
 2. **Documentation**: Ensure all changes are documented
     - Update Javadoc for public APIs
     - Update AsciiDoc documentation if necessary
+    - Update if changes affect APIs, features, or configuration
 
-3. **Documentation**: Update if changes affect APIs, features, or configuration
-
-4. **Commit Message**: Follow Git Commit Standards
+3. **Commit Message**: Follow Git Commit Standards
 
 ### Quality Requirements
 - New code requires appropriate test coverage
@@ -102,7 +101,7 @@ Common Maven commands for CUI projects:
 - Build Single Module: `./mvnw clean install -pl <module-name>`
 - Run tests: `./mvnw test`
 - Run single test: `./mvnw test -Dtest=ClassName#methodName`
-- Clean-Up Code: `./mvnw -Ppre-commit clean installComply to ` -> Check the console after running the command and fix all errors and warnings, verify until they are all corrected
+- Clean-Up Code: `./mvnw -Ppre-commit clean install` -> Check the console after running the command and fix all errors and warnings, verify until they are all corrected
 
 ## Standards Overview
 **Base Reference**: `{STANDARDS_BASE_URL}/standards`

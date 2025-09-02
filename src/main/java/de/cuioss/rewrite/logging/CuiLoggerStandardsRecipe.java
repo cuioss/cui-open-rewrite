@@ -218,8 +218,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
         private J.MethodInvocation checkSystemStreams(J.MethodInvocation mi) {
             if (isSystemOutOrErr(mi)) {
-                J.MethodInvocation result = SearchResult.found(mi);
-                return result != null ? result : mi;
+                return mi.withMarkers(mi.getMarkers().add(new SearchResult(randomId(), null)));
             }
             return mi;
         }
@@ -249,11 +248,31 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
         private LoggerCallContext analyzeLoggerCall(J.MethodInvocation mi) {
             List<Expression> args = mi.getArguments();
-            Expression messageArg = args.getFirst();
+            Expression messageArg = null;
             int messageArgIndex = 0;
             boolean hasException = false;
 
-            // Simplified: assume standard pattern (message first)
+            // Check if first argument is an exception
+            if (!args.isEmpty() && isExceptionType(args.getFirst())) {
+                hasException = true;
+                // If exception is first, message should be second argument
+                if (args.size() > 1) {
+                    messageArg = args.get(1);
+                    messageArgIndex = 1;
+                }
+            } else {
+                // Standard pattern: message is first argument
+                messageArg = args.getFirst();
+                // messageArgIndex is already 0 from initialization
+                // Check if any of the remaining arguments is an exception
+                for (int i = 1; i < args.size(); i++) {
+                    if (isExceptionType(args.get(i))) {
+                        hasException = true;
+                        break;
+                    }
+                }
+            }
+
             String message = extractMessageString(messageArg);
             return new LoggerCallContext(messageArg, messageArgIndex, hasException, message);
         }
@@ -291,7 +310,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
         private J.MethodInvocation validateParameterCount(J.MethodInvocation mi, LoggerCallContext context) {
             // Extract the current message (may have been fixed by checkPlaceholderPatterns)
-            String currentMessage = extractMessageString(mi.getArguments().getFirst());
+            String currentMessage = extractMessageString(mi.getArguments().get(context.messageArgIndex));
             if (currentMessage == null) {
                 return mi;
             }
@@ -309,8 +328,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             }
 
             if (placeholderCount != paramCount) {
-                J.MethodInvocation result = SearchResult.found(mi);
-                return result != null ? result : mi;
+                return mi.withMarkers(mi.getMarkers().add(new SearchResult(randomId(), null)));
             }
 
             return mi;
