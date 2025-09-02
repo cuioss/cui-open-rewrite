@@ -167,6 +167,7 @@ public CuiLogger logger = new CuiLogger(Example.class); // Won't be changed
 ==== CuiLogRecordPatternRecipe
 
 Enforces proper usage of LogRecord pattern according to CUI logging standards:
+
 * **Mandatory** for INFO/WARN/ERROR/FATAL levels - Direct logging is not allowed
 * **Forbidden** for DEBUG/TRACE levels - Must use direct logging instead
 

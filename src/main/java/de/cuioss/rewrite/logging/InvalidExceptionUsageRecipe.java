@@ -52,35 +52,30 @@ public class InvalidExceptionUsageRecipe extends Recipe {
         "java.lang.Throwable"
     );
 
-    @Override
-    public String getDisplayName() {
+    @Override public String getDisplayName() {
         return "Invalid exception usage";
     }
 
-    @Override
-    public String getDescription() {
+    @Override public String getDescription() {
         return "Flags usage of generic exception types (Exception, RuntimeException, Throwable) " +
             "in catch blocks and throw statements. Code should use specific exception types instead.";
     }
 
-    @Override
-    public Set<String> getTags() {
+    @Override public Set<String> getTags() {
         return Set.of("CUI", "exceptions", "best-practices");
     }
 
-    @Override
-    public Duration getEstimatedEffortPerOccurrence() {
+    @Override public Duration getEstimatedEffortPerOccurrence() {
         return Duration.ofMinutes(5);
     }
 
-    @Override
-    public TreeVisitor<?, ExecutionContext> getVisitor() {
+    @Override public TreeVisitor<?, ExecutionContext> getVisitor() {
         return new InvalidExceptionUsageVisitor();
     }
 
     private static class InvalidExceptionUsageVisitor extends JavaIsoVisitor<ExecutionContext> {
 
-        @Override
+        @Override @SuppressWarnings("nullness") // SearchResult.found() never returns null for non-null input
         public J.Try.Catch visitCatch(J.Try.Catch catchBlock, ExecutionContext ctx) {
             J.Try.Catch c = super.visitCatch(catchBlock, ctx);
 
@@ -97,7 +92,6 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                 JavaType.FullyQualified fqType = TypeUtils.asFullyQualified(type);
 
                 if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
-                    // SearchResult.found() never returns null for non-null input
                     return SearchResult.found(c);
                 }
             }
@@ -105,7 +99,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             return c;
         }
 
-        @Override
+        @Override @SuppressWarnings("nullness") // SearchResult.found() never returns null for non-null input
         public J.Throw visitThrow(J.Throw thrown, ExecutionContext ctx) {
             J.Throw t = super.visitThrow(thrown, ctx);
 
@@ -120,7 +114,6 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                 JavaType.FullyQualified fqType = TypeUtils.asFullyQualified(type);
 
                 if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
-                    // SearchResult.found() never returns null for non-null input
                     return SearchResult.found(t);
                 }
             }
@@ -128,7 +121,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             return t;
         }
 
-        @Override
+        @Override @SuppressWarnings("nullness") // SearchResult.found() never returns null for non-null input
         public J.NewClass visitNewClass(J.NewClass newClass, ExecutionContext ctx) {
             J.NewClass nc = super.visitNewClass(newClass, ctx);
 
@@ -147,7 +140,6 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             JavaType.FullyQualified fqType = TypeUtils.asFullyQualified(type);
 
             if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
-                // SearchResult.found() never returns null for non-null input
                 return SearchResult.found(nc);
             }
 

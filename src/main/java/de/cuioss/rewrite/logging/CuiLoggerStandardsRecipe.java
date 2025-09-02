@@ -41,31 +41,26 @@ public class CuiLoggerStandardsRecipe extends Recipe {
     private static final String CUI_LOGGER_TYPE = "de.cuioss.tools.logging.CuiLogger";
     private static final String LOGGER_NAME = "LOGGER";
 
-    @Override
-    public String getDisplayName() {
+    @Override public String getDisplayName() {
         return "CUI logger standards";
     }
 
-    @Override
-    public String getDescription() {
+    @Override public String getDescription() {
         return "Enforces CUI-specific logging standards including proper logger naming, " +
             "string substitution patterns, exception parameter position, parameter validation, " +
             "LogRecord pattern usage for INFO/WARN/ERROR levels, " +
             "and detection of System.out/System.err usage.";
     }
 
-    @Override
-    public Set<String> getTags() {
+    @Override public Set<String> getTags() {
         return Set.of("CUI", "logging", "standards");
     }
 
-    @Override
-    public Duration getEstimatedEffortPerOccurrence() {
+    @Override public Duration getEstimatedEffortPerOccurrence() {
         return Duration.ofMinutes(5);
     }
 
-    @Override
-    public TreeVisitor<?, ExecutionContext> getVisitor() {
+    @Override public TreeVisitor<?, ExecutionContext> getVisitor() {
         return new CuiLoggerStandardsVisitor();
     }
 
@@ -75,8 +70,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             return UUID.randomUUID();
         }
 
-        @Override
-        public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations variableDecls, ExecutionContext ctx) {
+        @Override public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations variableDecls, ExecutionContext ctx) {
             J.VariableDeclarations vd = super.visitVariableDeclarations(variableDecls, ctx);
 
             if (!isLoggerField(vd)) {
@@ -194,8 +188,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         }
 
 
-        @Override
-        public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
+        @Override public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
             J.MethodInvocation mi = super.visitMethodInvocation(method, ctx);
 
             if (RecipeSuppressionUtil.isSuppressed(mi, getCursor(), "CuiLoggerStandardsRecipe")) {

@@ -26,8 +26,7 @@ import static org.openrewrite.java.Assertions.java;
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class CuiLoggerAutoFixTest implements RewriteTest {
 
-    @Override
-    public void defaults(RecipeSpec spec) {
+    @Override public void defaults(RecipeSpec spec) {
         spec.recipe(new CuiLoggerStandardsRecipe())
             .typeValidationOptions(TypeValidation.none())
             .parser(JavaParser.fromJavaVersion()
@@ -51,8 +50,7 @@ class CuiLoggerAutoFixTest implements RewriteTest {
                 ));
     }
 
-    @Test
-    void fixesPublicModifierToPrivateStaticFinal() {
+    @Test void fixesPublicModifierToPrivateStaticFinal() {
         rewriteRun(
             java(
                 """
@@ -73,8 +71,7 @@ class CuiLoggerAutoFixTest implements RewriteTest {
         );
     }
 
-    @Test
-    void fixesProtectedModifierToPrivateStaticFinal() {
+    @Test void fixesProtectedModifierToPrivateStaticFinal() {
         rewriteRun(
             java(
                 """
@@ -95,8 +92,7 @@ class CuiLoggerAutoFixTest implements RewriteTest {
         );
     }
 
-    @Test
-    void replacesSLF4JPlaceholders() {
+    @Test void replacesSLF4JPlaceholders() {
         rewriteRun(
             java(
                 """
@@ -127,8 +123,7 @@ class CuiLoggerAutoFixTest implements RewriteTest {
         );
     }
 
-    @Test
-    void replacesPrintfStylePlaceholders() {
+    @Test void replacesPrintfStylePlaceholders() {
         rewriteRun(
             java(
                 """
@@ -159,8 +154,7 @@ class CuiLoggerAutoFixTest implements RewriteTest {
         );
     }
 
-    @Test
-    void movesExceptionToFirstPosition() {
+    @Test void movesExceptionToFirstPosition() {
         rewriteRun(
             java(
                 """
@@ -191,8 +185,7 @@ class CuiLoggerAutoFixTest implements RewriteTest {
         );
     }
 
-    @Test
-    void combinedFixes() {
+    @Test void combinedFixes() {
         rewriteRun(
             java(
                 """
@@ -221,8 +214,7 @@ class CuiLoggerAutoFixTest implements RewriteTest {
         );
     }
 
-    @Test
-    void doesNotChangeCorrectCode() {
+    @Test void doesNotChangeCorrectCode() {
         rewriteRun(
             java(
                 """

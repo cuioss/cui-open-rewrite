@@ -25,14 +25,12 @@ import static org.openrewrite.java.Assertions.java;
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class CuiLoggerRenameSimpleTest implements RewriteTest {
 
-    @Override
-    public void defaults(RecipeSpec spec) {
+    @Override public void defaults(RecipeSpec spec) {
         spec.recipe(new CuiLoggerStandardsRecipe())
             .typeValidationOptions(TypeValidation.none());
     }
 
-    @Test
-    void renamesLoggerToUppercase() {
+    @Test void renamesLoggerToUppercase() {
         rewriteRun(
             java(
                 """

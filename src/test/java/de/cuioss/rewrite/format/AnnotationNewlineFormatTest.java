@@ -25,14 +25,12 @@ import static org.openrewrite.java.Assertions.java;
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class AnnotationNewlineFormatTest implements RewriteTest {
 
-    @Override
-    public void defaults(RecipeSpec spec) {
+    @Override public void defaults(RecipeSpec spec) {
         spec.recipe(new AnnotationNewlineFormat())
             .parser(JavaParser.fromJavaVersion());
     }
 
-    @Test
-    void formatSingleClassAnnotation() {
+    @Test void formatSingleClassAnnotation() {
         rewriteRun(
             java(
                 """
@@ -50,8 +48,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void formatMultipleClassAnnotations() {
+    @Test void formatMultipleClassAnnotations() {
         rewriteRun(
             java(
                 """
@@ -72,8 +69,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void preserveExistingNewlines() {
+    @Test void preserveExistingNewlines() {
         rewriteRun(
             java(
                 """
@@ -89,8 +85,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void formatInterfaceAnnotations() {
+    @Test void formatInterfaceAnnotations() {
         rewriteRun(
             java(
                 """
@@ -108,8 +103,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void formatEnumAnnotations() {
+    @Test void formatEnumAnnotations() {
         rewriteRun(
             java(
                 """
@@ -127,8 +121,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void formatPackagePrivateMethodWithAnnotation() {
+    @Test void formatPackagePrivateMethodWithAnnotation() {
         rewriteRun(
             java(
                 """
@@ -150,8 +143,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void formatPackagePrivateFieldWithAnnotation() {
+    @Test void formatPackagePrivateFieldWithAnnotation() {
         rewriteRun(
             java(
                 """
@@ -169,8 +161,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void formatMultiplePackagePrivateFieldsWithAnnotations() {
+    @Test void formatMultiplePackagePrivateFieldsWithAnnotations() {
         rewriteRun(
             java(
                 """
@@ -192,8 +183,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void formatPackagePrivateClassWithAnnotation() {
+    @Test void formatPackagePrivateClassWithAnnotation() {
         // This test expects no change since package-private classes at top level
         // already have the correct formatting
         rewriteRun(
@@ -208,8 +198,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void formatMethodWithoutModifiersButWithReturnType() {
+    @Test void formatMethodWithoutModifiersButWithReturnType() {
         rewriteRun(
             java(
                 """
@@ -232,8 +221,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void formatFieldWithoutModifiersButWithType() {
+    @Test void formatFieldWithoutModifiersButWithType() {
         rewriteRun(
             java(
                 """
@@ -252,8 +240,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void preserveFormattingWhenNoAnnotations() {
+    @Test void preserveFormattingWhenNoAnnotations() {
         rewriteRun(
             java(
                 """
@@ -269,8 +256,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void formatNestedClassAnnotations() {
+    @Test void formatNestedClassAnnotations() {
         rewriteRun(
             java(
                 """
@@ -297,8 +283,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void formatAnnotationWithArrayValues() {
+    @Test void formatAnnotationWithArrayValues() {
         rewriteRun(
             java(
                 """

@@ -21,35 +21,29 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class PlaceholderValidationUtilTest {
 
-    @Test
-    void hasIncorrectPlaceholdersNull() {
+    @Test void hasIncorrectPlaceholdersNull() {
         assertFalse(PlaceholderValidationUtil.hasIncorrectPlaceholders(null));
     }
 
-    @Test
-    void hasIncorrectPlaceholdersEmptyString() {
+    @Test void hasIncorrectPlaceholdersEmptyString() {
         assertFalse(PlaceholderValidationUtil.hasIncorrectPlaceholders(""));
     }
 
-    @Test
-    void hasIncorrectPlaceholdersNoPlaceholders() {
+    @Test void hasIncorrectPlaceholdersNoPlaceholders() {
         assertFalse(PlaceholderValidationUtil.hasIncorrectPlaceholders("Simple message"));
     }
 
-    @Test
-    void hasIncorrectPlaceholdersCorrectPlaceholders() {
+    @Test void hasIncorrectPlaceholdersCorrectPlaceholders() {
         assertFalse(PlaceholderValidationUtil.hasIncorrectPlaceholders("Message with %s placeholder"));
         assertFalse(PlaceholderValidationUtil.hasIncorrectPlaceholders("%s %s multiple"));
     }
 
-    @Test
-    void hasIncorrectPlaceholdersIncorrectCurlyBraces() {
+    @Test void hasIncorrectPlaceholdersIncorrectCurlyBraces() {
         assertTrue(PlaceholderValidationUtil.hasIncorrectPlaceholders("Message with {} placeholder"));
         assertTrue(PlaceholderValidationUtil.hasIncorrectPlaceholders("{} {} multiple"));
     }
 
-    @Test
-    void hasIncorrectPlaceholdersIncorrectFormatSpecifiers() {
+    @Test void hasIncorrectPlaceholdersIncorrectFormatSpecifiers() {
         assertTrue(PlaceholderValidationUtil.hasIncorrectPlaceholders("Integer %d placeholder"));
         assertTrue(PlaceholderValidationUtil.hasIncorrectPlaceholders("Float %f placeholder"));
         assertTrue(PlaceholderValidationUtil.hasIncorrectPlaceholders("Boolean %b placeholder"));
@@ -57,44 +51,37 @@ class PlaceholderValidationUtilTest {
         assertTrue(PlaceholderValidationUtil.hasIncorrectPlaceholders("Scientific %e placeholder"));
     }
 
-    @Test
-    void hasIncorrectPlaceholdersMixedPlaceholders() {
+    @Test void hasIncorrectPlaceholdersMixedPlaceholders() {
         assertTrue(PlaceholderValidationUtil.hasIncorrectPlaceholders("Mixed %s and {} placeholders"));
         assertTrue(PlaceholderValidationUtil.hasIncorrectPlaceholders("%s correct but %d incorrect"));
     }
 
-    @Test
-    void correctPlaceholdersNull() {
+    @Test void correctPlaceholdersNull() {
         assertNull(PlaceholderValidationUtil.correctPlaceholders(null));
     }
 
-    @Test
-    void correctPlaceholdersEmptyString() {
+    @Test void correctPlaceholdersEmptyString() {
         assertEquals("", PlaceholderValidationUtil.correctPlaceholders(""));
     }
 
-    @Test
-    void correctPlaceholdersNoPlaceholders() {
+    @Test void correctPlaceholdersNoPlaceholders() {
         String message = "Simple message without placeholders";
         assertEquals(message, PlaceholderValidationUtil.correctPlaceholders(message));
     }
 
-    @Test
-    void correctPlaceholdersAlreadyCorrect() {
+    @Test void correctPlaceholdersAlreadyCorrect() {
         String message = "Message with %s placeholder";
         assertEquals(message, PlaceholderValidationUtil.correctPlaceholders(message));
     }
 
-    @Test
-    void correctPlaceholdersReplaceCurlyBraces() {
+    @Test void correctPlaceholdersReplaceCurlyBraces() {
         assertEquals("Message with %s placeholder",
             PlaceholderValidationUtil.correctPlaceholders("Message with {} placeholder"));
         assertEquals("%s %s multiple",
             PlaceholderValidationUtil.correctPlaceholders("{} {} multiple"));
     }
 
-    @Test
-    void correctPlaceholdersReplaceFormatSpecifiers() {
+    @Test void correctPlaceholdersReplaceFormatSpecifiers() {
         assertEquals("Integer %s placeholder",
             PlaceholderValidationUtil.correctPlaceholders("Integer %d placeholder"));
         assertEquals("Float %s placeholder",
@@ -119,8 +106,7 @@ class PlaceholderValidationUtilTest {
             PlaceholderValidationUtil.correctPlaceholders("Octal %o placeholder"));
     }
 
-    @Test
-    void correctPlaceholdersMixedPlaceholders() {
+    @Test void correctPlaceholdersMixedPlaceholders() {
         assertEquals("Mixed %s and %s placeholders",
             PlaceholderValidationUtil.correctPlaceholders("Mixed %s and {} placeholders"));
         assertEquals("%s correct and %s also correct",
@@ -129,45 +115,37 @@ class PlaceholderValidationUtilTest {
             PlaceholderValidationUtil.correctPlaceholders("{} %d %f all converted"));
     }
 
-    @Test
-    void countPlaceholdersNull() {
+    @Test void countPlaceholdersNull() {
         assertEquals(0, PlaceholderValidationUtil.countPlaceholders(null));
     }
 
-    @Test
-    void countPlaceholdersEmptyString() {
+    @Test void countPlaceholdersEmptyString() {
         assertEquals(0, PlaceholderValidationUtil.countPlaceholders(""));
     }
 
-    @Test
-    void countPlaceholdersNoPlaceholders() {
+    @Test void countPlaceholdersNoPlaceholders() {
         assertEquals(0, PlaceholderValidationUtil.countPlaceholders("Simple message"));
     }
 
-    @Test
-    void countPlaceholdersSinglePlaceholder() {
+    @Test void countPlaceholdersSinglePlaceholder() {
         assertEquals(1, PlaceholderValidationUtil.countPlaceholders("Message with %s"));
     }
 
-    @Test
-    void countPlaceholdersMultiplePlaceholders() {
+    @Test void countPlaceholdersMultiplePlaceholders() {
         assertEquals(2, PlaceholderValidationUtil.countPlaceholders("%s and %s"));
         assertEquals(3, PlaceholderValidationUtil.countPlaceholders("%s %s %s"));
     }
 
-    @Test
-    void countPlaceholdersConsecutivePlaceholders() {
+    @Test void countPlaceholdersConsecutivePlaceholders() {
         assertEquals(2, PlaceholderValidationUtil.countPlaceholders("%s%s"));
     }
 
-    @Test
-    void countPlaceholdersEscapedPercent() {
+    @Test void countPlaceholdersEscapedPercent() {
         assertEquals(1, PlaceholderValidationUtil.countPlaceholders("100%% complete with %s"));
         assertEquals(0, PlaceholderValidationUtil.countPlaceholders("100%% complete"));
     }
 
-    @Test
-    void countPlaceholdersComplexPattern() {
+    @Test void countPlaceholdersComplexPattern() {
         assertEquals(3, PlaceholderValidationUtil.countPlaceholders("User %s logged in at %s with 100%% success rate: %s"));
     }
 }

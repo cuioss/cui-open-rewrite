@@ -39,8 +39,7 @@ class RecipeSuppressionUtilTest {
     private final JavaParser parser = JavaParser.fromJavaVersion().build();
     private final ExecutionContext ctx = new InMemoryExecutionContext();
 
-    @Test
-    void shouldDetectClassSuppressionWithGeneralComment() {
+    @Test void shouldDetectClassSuppressionWithGeneralComment() {
         String source = """
             // cui-rewrite:disable
             public class TestClass {
@@ -58,8 +57,7 @@ class RecipeSuppressionUtilTest {
             "Skipping class 'TestClass' due to cui-rewrite:disable comment");
     }
 
-    @Test
-    void shouldDetectMethodSuppressionWithGeneralComment() {
+    @Test void shouldDetectMethodSuppressionWithGeneralComment() {
         String source = """
             public class TestClass {
                 // cui-rewrite:disable
@@ -77,8 +75,7 @@ class RecipeSuppressionUtilTest {
             "Skipping method 'testMethod' due to cui-rewrite:disable comment");
     }
 
-    @Test
-    void shouldNotSuppressWithoutComment() {
+    @Test void shouldNotSuppressWithoutComment() {
         String source = """
             public class TestClass {
                 public void method() {}
@@ -96,8 +93,7 @@ class RecipeSuppressionUtilTest {
         assertFalse(visitor.fieldWasSuppressed);
     }
 
-    @Test
-    void shouldSuppressSpecificRecipeBySimpleName() {
+    @Test void shouldSuppressSpecificRecipeBySimpleName() {
         String source = """
             // cui-rewrite:disable TestRecipe
             public class TestClass {}
@@ -113,8 +109,7 @@ class RecipeSuppressionUtilTest {
             "Skipping class 'TestClass' for recipe 'TestRecipe'");
     }
 
-    @Test
-    void shouldSuppressSpecificRecipeByFullyQualifiedName() {
+    @Test void shouldSuppressSpecificRecipeByFullyQualifiedName() {
         String source = """
             // cui-rewrite:disable de.cuioss.rewrite.TestRecipe
             public class TestClass {}
@@ -130,8 +125,7 @@ class RecipeSuppressionUtilTest {
             "Skipping class 'TestClass' for recipe 'de.cuioss.rewrite.TestRecipe'");
     }
 
-    @Test
-    void shouldNotSuppressDifferentRecipe() {
+    @Test void shouldNotSuppressDifferentRecipe() {
         String source = """
             // cui-rewrite:disable OtherRecipe
             public class TestClass {}
@@ -145,8 +139,7 @@ class RecipeSuppressionUtilTest {
         assertFalse(visitor.classWasSuppressed);
     }
 
-    @Test
-    void shouldSuppressWithAnnotationPrefix() {
+    @Test void shouldSuppressWithAnnotationPrefix() {
         String source = """
             // cui-rewrite:disable
             @Deprecated
@@ -161,8 +154,7 @@ class RecipeSuppressionUtilTest {
         assertTrue(visitor.classWasSuppressed);
     }
 
-    @Test
-    void shouldHandleRecipeNameWithoutPackage() {
+    @Test void shouldHandleRecipeNameWithoutPackage() {
         String source = """
             // cui-rewrite:disable SimpleRecipe
             public class TestClass {}
@@ -178,8 +170,7 @@ class RecipeSuppressionUtilTest {
             "Skipping class 'TestClass' for recipe 'SimpleRecipe'");
     }
 
-    @Test
-    void shouldMatchSimpleNameFromFullyQualifiedRecipe() {
+    @Test void shouldMatchSimpleNameFromFullyQualifiedRecipe() {
         String source = """
             // cui-rewrite:disable TestRecipe
             public class TestClass {}
@@ -195,8 +186,7 @@ class RecipeSuppressionUtilTest {
             "Skipping class 'TestClass' for recipe 'com.example.TestRecipe'");
     }
 
-    @Test
-    void shouldNotSuppressWhenRecipeNameMismatch() {
+    @Test void shouldNotSuppressWhenRecipeNameMismatch() {
         String source = """
             // cui-rewrite:disable SimpleRecipe
             public class TestClass {}
@@ -210,8 +200,7 @@ class RecipeSuppressionUtilTest {
         assertFalse(visitor.classWasSuppressed);
     }
 
-    @Test
-    void shouldHandleMultipleSuppressionComments() {
+    @Test void shouldHandleMultipleSuppressionComments() {
         String source = """
             public class TestClass {
                 // cui-rewrite:disable
@@ -235,8 +224,7 @@ class RecipeSuppressionUtilTest {
         assertTrue(visitor.methodWasSuppressed);
     }
 
-    @Test
-    void shouldSuppressWithTrailingComment() {
+    @Test void shouldSuppressWithTrailingComment() {
         String source = """
             public class TestClass {
                 // cui-rewrite:disable
@@ -266,8 +254,7 @@ class RecipeSuppressionUtilTest {
             this.recipeName = recipeName;
         }
 
-        @Override
-        public J.@NonNull ClassDeclaration visitClassDeclaration(J.@NonNull ClassDeclaration classDecl, @NonNull ExecutionContext ctx) {
+        @Override public J.@NonNull ClassDeclaration visitClassDeclaration(J.@NonNull ClassDeclaration classDecl, @NonNull ExecutionContext ctx) {
             if (RecipeSuppressionUtil.isSuppressed(classDecl, getCursor(), recipeName)) {
                 classWasSuppressed = true;
                 return classDecl;
@@ -275,8 +262,7 @@ class RecipeSuppressionUtilTest {
             return super.visitClassDeclaration(classDecl, ctx);
         }
 
-        @Override
-        public J.@NonNull MethodDeclaration visitMethodDeclaration(J.@NonNull MethodDeclaration method, @NonNull ExecutionContext ctx) {
+        @Override public J.@NonNull MethodDeclaration visitMethodDeclaration(J.@NonNull MethodDeclaration method, @NonNull ExecutionContext ctx) {
             if (RecipeSuppressionUtil.isSuppressed(method, getCursor(), recipeName)) {
                 methodWasSuppressed = true;
                 return method;
@@ -284,8 +270,7 @@ class RecipeSuppressionUtilTest {
             return super.visitMethodDeclaration(method, ctx);
         }
 
-        @Override
-        public J.@NonNull VariableDeclarations visitVariableDeclarations(J.@NonNull VariableDeclarations multiVariable, @NonNull ExecutionContext ctx) {
+        @Override public J.@NonNull VariableDeclarations visitVariableDeclarations(J.@NonNull VariableDeclarations multiVariable, @NonNull ExecutionContext ctx) {
             if (isFieldDeclaration() && RecipeSuppressionUtil.isSuppressed(multiVariable, getCursor(), recipeName)) {
                 fieldWasSuppressed = true;
                 return multiVariable;

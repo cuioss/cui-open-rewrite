@@ -35,28 +35,23 @@ public class AnnotationNewlineFormat extends Recipe {
 
     public static final String RECIPE_NAME = "AnnotationNewlineFormat";
 
-    @Override
-    public String getDisplayName() {
+    @Override public String getDisplayName() {
         return "Format annotations with newlines";
     }
 
-    @Override
-    public String getDescription() {
+    @Override public String getDescription() {
         return "Ensures type-level and method-level annotations are on separate lines.";
     }
 
-    @Override
-    public Set<String> getTags() {
+    @Override public Set<String> getTags() {
         return Set.of("CUI", "format", "annotation");
     }
 
-    @Override
-    public Duration getEstimatedEffortPerOccurrence() {
+    @Override public Duration getEstimatedEffortPerOccurrence() {
         return Duration.ofMinutes(1);
     }
 
-    @Override
-    public TreeVisitor<?, ExecutionContext> getVisitor() {
+    @Override public TreeVisitor<?, ExecutionContext> getVisitor() {
         return new AnnotationNewlineFormatVisitor();
     }
 
@@ -64,8 +59,7 @@ public class AnnotationNewlineFormat extends Recipe {
 
         private static final CuiLogger LOGGER = new CuiLogger(AnnotationNewlineFormatVisitor.class);
 
-        @Override
-        public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
+        @Override public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
             // Check for suppression comments
             if (RecipeSuppressionUtil.isSuppressed(classDecl, getCursor(), RECIPE_NAME)) {
                 LOGGER.debug("Skipping class {} due to suppression", classDecl.getSimpleName());
@@ -89,8 +83,7 @@ public class AnnotationNewlineFormat extends Recipe {
             return cd;
         }
 
-        @Override
-        public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
+        @Override public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
             // Check for suppression comments
             if (RecipeSuppressionUtil.isSuppressed(method, getCursor(), RECIPE_NAME)) {
                 LOGGER.debug("Skipping method {} due to suppression", method.getSimpleName());
@@ -114,8 +107,7 @@ public class AnnotationNewlineFormat extends Recipe {
             return md;
         }
 
-        @Override
-        public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations multiVariable, ExecutionContext ctx) {
+        @Override public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations multiVariable, ExecutionContext ctx) {
             // Check for suppression only on fields
             if (isFieldDeclaration() && RecipeSuppressionUtil.isSuppressed(multiVariable, getCursor(), RECIPE_NAME)) {
                 return multiVariable;

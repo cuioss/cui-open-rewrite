@@ -25,14 +25,12 @@ import static org.openrewrite.java.Assertions.java;
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class AnnotationSuppressionTest implements RewriteTest {
 
-    @Override
-    public void defaults(RecipeSpec spec) {
+    @Override public void defaults(RecipeSpec spec) {
         spec.recipe(new AnnotationNewlineFormat())
             .parser(JavaParser.fromJavaVersion());
     }
 
-    @Test
-    void suppressSingleLineForClass() {
+    @Test void suppressSingleLineForClass() {
         rewriteRun(
             java(
                 """
@@ -45,8 +43,7 @@ class AnnotationSuppressionTest implements RewriteTest {
         );
     }
 
-    @Test
-    void suppressSingleLineForMethod() {
+    @Test void suppressSingleLineForMethod() {
         rewriteRun(
             java(
                 """
@@ -61,8 +58,7 @@ class AnnotationSuppressionTest implements RewriteTest {
         );
     }
 
-    @Test
-    void suppressSingleLineForField() {
+    @Test void suppressSingleLineForField() {
         rewriteRun(
             java(
                 """
@@ -75,8 +71,7 @@ class AnnotationSuppressionTest implements RewriteTest {
         );
     }
 
-    @Test
-    void suppressGlobalAll() {
+    @Test void suppressGlobalAll() {
         rewriteRun(
             java(
                 """
@@ -91,8 +86,7 @@ class AnnotationSuppressionTest implements RewriteTest {
         );
     }
 
-    @Test
-    void suppressSpecificRecipeBySimpleName() {
+    @Test void suppressSpecificRecipeBySimpleName() {
         rewriteRun(
             java(
                 """
@@ -106,8 +100,7 @@ class AnnotationSuppressionTest implements RewriteTest {
         );
     }
 
-    @Test
-    void suppressSpecificRecipeByFullName() {
+    @Test void suppressSpecificRecipeByFullName() {
         rewriteRun(
             java(
                 """
@@ -121,8 +114,7 @@ class AnnotationSuppressionTest implements RewriteTest {
     }
 
 
-    @Test
-    void suppressNextLineWithoutRecipeName() {
+    @Test void suppressNextLineWithoutRecipeName() {
         rewriteRun(
             java(
                 """
@@ -135,8 +127,7 @@ class AnnotationSuppressionTest implements RewriteTest {
         );
     }
 
-    @Test
-    void suppressWithTrailingComment() {
+    @Test void suppressWithTrailingComment() {
         // Note: Trailing comments on the same line are not fully supported 
         // due to OpenRewrite AST limitations. The comment may be attached 
         // to the body or other parts of the AST, making detection unreliable.
@@ -159,8 +150,7 @@ class AnnotationSuppressionTest implements RewriteTest {
         );
     }
 
-    @Test
-    void suppressWithWrongRecipeName() {
+    @Test void suppressWithWrongRecipeName() {
         rewriteRun(
             java(
                 """

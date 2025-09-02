@@ -27,17 +27,14 @@ import static org.openrewrite.java.Assertions.java;
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class LombokAnnotationFormatTest implements RewriteTest {
 
-    @Override
-    public void defaults(RecipeSpec spec) {
+    @Override public void defaults(RecipeSpec spec) {
         spec.recipe(new AnnotationNewlineFormat())
             .parser(JavaParser.fromJavaVersion()
                 .logCompilationWarningsAndErrors(true))
             .typeValidationOptions(TypeValidation.none());
     }
 
-    @DocumentExample
-    @Test
-    void formatUtilityClassAnnotation() {
+    @DocumentExample @Test void formatUtilityClassAnnotation() {
         rewriteRun(
             java(
                 """
@@ -59,8 +56,7 @@ class LombokAnnotationFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void formatDataAnnotation() {
+    @Test void formatDataAnnotation() {
         rewriteRun(
             java(
                 """
@@ -84,8 +80,7 @@ class LombokAnnotationFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void formatMultipleLombokAnnotations() {
+    @Test void formatMultipleLombokAnnotations() {
         rewriteRun(
             java(
                 """
@@ -118,8 +113,7 @@ class LombokAnnotationFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void formatSlf4jAnnotation() {
+    @Test void formatSlf4jAnnotation() {
         rewriteRun(
             java(
                 """
@@ -145,8 +139,7 @@ class LombokAnnotationFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void preserveAlreadyFormattedLombokAnnotations() {
+    @Test void preserveAlreadyFormattedLombokAnnotations() {
         rewriteRun(
             java(
                 """
@@ -164,8 +157,7 @@ class LombokAnnotationFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void formatMixedLombokAndJavaAnnotations() {
+    @Test void formatMixedLombokAndJavaAnnotations() {
         rewriteRun(
             java(
                 """

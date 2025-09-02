@@ -45,38 +45,32 @@ public class CuiLogRecordPatternRecipe extends Recipe {
     private static final String PATTERN_DOC_URL =
         "https://gitingest.com/github.com/cuioss/cui-llm-rules/tree/main/standards/logging/implementation-guide.adoc";
 
-    @Override
-    public String getDisplayName() {
+    @Override public String getDisplayName() {
         return "CUI LogRecord pattern validation";
     }
 
-    @Override
-    public String getDescription() {
+    @Override public String getDescription() {
         return "Enforces proper usage of LogRecord pattern: " +
             "mandatory for INFO/WARN/ERROR/FATAL levels, " +
             "forbidden for DEBUG/TRACE levels. " +
             "See: " + PATTERN_DOC_URL + ".";
     }
 
-    @Override
-    public Set<String> getTags() {
+    @Override public Set<String> getTags() {
         return Set.of("CUI", "logging", "LogRecord", "standards");
     }
 
-    @Override
-    public Duration getEstimatedEffortPerOccurrence() {
+    @Override public Duration getEstimatedEffortPerOccurrence() {
         return Duration.ofMinutes(3);
     }
 
-    @Override
-    public TreeVisitor<?, ExecutionContext> getVisitor() {
+    @Override public TreeVisitor<?, ExecutionContext> getVisitor() {
         return new CuiLogRecordPatternVisitor();
     }
 
     private static class CuiLogRecordPatternVisitor extends JavaIsoVisitor<ExecutionContext> {
 
-        @Override
-        public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
+        @Override public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
             J.MethodInvocation mi = super.visitMethodInvocation(method, ctx);
 
             // Check if suppressed
