@@ -256,21 +256,11 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
         private LoggerCallContext analyzeLoggerCall(J.MethodInvocation mi) {
             List<Expression> args = mi.getArguments();
-            Expression messageArg = null;
+            Expression messageArg = args.getFirst();
             int messageArgIndex = 0;
             boolean hasException = false;
 
-            // Check if first argument is an exception
-            if (isExceptionType(args.getFirst())) {
-                hasException = true;
-                if (args.size() > 1) {
-                    messageArg = args.get(1);
-                    messageArgIndex = 1;
-                }
-            } else {
-                messageArg = args.getFirst();
-            }
-
+            // Simplified: assume standard pattern (message first)
             String message = extractMessageString(messageArg);
             return new LoggerCallContext(messageArg, messageArgIndex, hasException, message);
         }
@@ -285,13 +275,6 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             return null;
         }
 
-        private @Nullable String extractCurrentMessage(J.MethodInvocation mi, int messageArgIndex) {
-            List<Expression> args = mi.getArguments();
-            if (messageArgIndex >= 0 && messageArgIndex < args.size()) {
-                return extractMessageString(args.get(messageArgIndex));
-            }
-            return null;
-        }
 
         private J.MethodInvocation checkPlaceholderPatterns(J.MethodInvocation mi, LoggerCallContext context) {
             if (context.message == null) {
@@ -315,7 +298,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
         private J.MethodInvocation validateParameterCount(J.MethodInvocation mi, LoggerCallContext context) {
             // Extract the current message (may have been fixed by checkPlaceholderPatterns)
-            String currentMessage = extractCurrentMessage(mi, context.messageArgIndex);
+            String currentMessage = extractMessageString(mi.getArguments().getFirst());
             if (currentMessage == null) {
                 return mi;
             }

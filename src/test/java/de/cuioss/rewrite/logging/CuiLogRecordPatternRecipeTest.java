@@ -583,4 +583,24 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void shouldWorkWithSuppressionComment() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                
+                public class Example {
+                    private static final CuiLogger LOGGER = new CuiLogger(Example.class);
+                    
+                    public void test() {
+                        // cui-rewrite:disable
+                        LOGGER.info("Message without LogRecord");
+                    }
+                }
+                """
+            )
+        );
+    }
 }

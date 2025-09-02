@@ -315,4 +315,5 @@ class AnnotationNewlineFormatTest implements RewriteTest {
             )
         );
     }
+
 }

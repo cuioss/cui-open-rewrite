@@ -456,4 +456,5 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
             )
         );
     }
+
 }

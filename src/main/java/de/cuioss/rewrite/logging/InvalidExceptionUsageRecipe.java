@@ -98,9 +98,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
                 if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
                     // SearchResult.found() never returns null for non-null input
-                    J.Try.Catch marked = SearchResult.found(c);
-                    assert marked != null;
-                    return marked;
+                    return SearchResult.found(c);
                 }
             }
 
@@ -123,9 +121,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
                 if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
                     // SearchResult.found() never returns null for non-null input
-                    J.Throw marked = SearchResult.found(t);
-                    assert marked != null;
-                    return marked;
+                    return SearchResult.found(t);
                 }
             }
 
@@ -152,9 +148,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
             if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
                 // SearchResult.found() never returns null for non-null input
-                J.NewClass marked = SearchResult.found(nc);
-                assert marked != null;
-                return marked;
+                return SearchResult.found(nc);
             }
 
             return nc;

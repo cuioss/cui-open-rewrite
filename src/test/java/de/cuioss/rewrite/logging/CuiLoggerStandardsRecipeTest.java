@@ -256,4 +256,92 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void shouldHandleLoggerWithPublicModifier() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                
+                public class Test {
+                    public static final CuiLogger logger = new CuiLogger(Test.class);
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                
+                public class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void shouldHandleLoggerWithProtectedModifier() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                
+                public class Test {
+                    protected static CuiLogger LOGGER = new CuiLogger(Test.class);
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                
+                public class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void shouldHandleLoggerWithoutFinalModifier() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                
+                public class Test {
+                    private static CuiLogger LOGGER = new CuiLogger(Test.class);
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                
+                public class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void shouldHandleLoggerWithoutStaticModifier() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                
+                public class Test {
+                    private final CuiLogger LOGGER = new CuiLogger(Test.class);
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                
+                public class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                }
+                """
+            )
+        );
+    }
 }
