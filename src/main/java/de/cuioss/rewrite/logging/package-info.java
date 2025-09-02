@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-module de.cuioss.rewrite {
-    exports de.cuioss.rewrite;
+@NullMarked
+package de.cuioss.rewrite.logging;
 
-    requires static lombok;
-}
+import org.jspecify.annotations.NullMarked;

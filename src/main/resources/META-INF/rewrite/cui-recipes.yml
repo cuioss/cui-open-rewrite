@@ -1,0 +1,48 @@
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: de.cuioss.rewrite.format.AnnotationNewlineFormat
+displayName: Format annotations with newlines
+description: Ensures type-level and method-level annotations are on separate lines
+tags:
+  - CUI
+  - format
+  - annotation
+
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: de.cuioss.rewrite.logging.CuiLoggerStandardsRecipe
+displayName: CUI Logger Standards
+description: Enforces CUI-specific logging standards including proper logger naming, string substitution patterns, exception parameter position, parameter validation, and detection of System.out/System.err usage
+tags:
+  - CUI
+  - logging
+  - standards
+
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: de.cuioss.rewrite.logging.CuiLogRecordPatternRecipe
+displayName: CUI LogRecord pattern validation
+description: Enforces proper usage of LogRecord pattern - mandatory for INFO/WARN/ERROR/FATAL levels, forbidden for DEBUG/TRACE levels
+tags:
+  - CUI
+  - logging
+  - LogRecord
+  - standards
+
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: de.cuioss.rewrite.logging.InvalidExceptionUsageRecipe
+displayName: Invalid exception usage
+description: Flags usage of generic exception types (Exception, RuntimeException, Throwable) in catch blocks and throw statements. Code should use specific exception types instead
+tags:
+  - CUI
+  - exceptions
+  - best-practices
+
+---
+type: specs.openrewrite.org/v1beta/category
+name: de.cuioss.rewrite.CUI
+packageName: de.cuioss.rewrite
+description: Collection of OpenRewrite recipes for CUI OpenSource Software projects
+tags:
+  - CUI

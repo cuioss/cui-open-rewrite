@@ -16,15 +16,300 @@ https://cuioss.github.io/cui-java-module-template/about.html[Generated Documenta
 
 == What is it?
 
-
+Custom OpenRewrite recipes for CUI-OSS projects that enforce specific code formatting standards not available in existing OpenRewrite recipes.
 
 === Maven Coordinates
 
 [source,xml]
 ----
-    <dependency>
-        <groupId>de.cuioss.rewrite</groupId>
-        <artifactId>cui-open-rewrite</artifactId>
-    </dependency>
+<dependency>
+    <groupId>de.cuioss.rewrite</groupId>
+    <artifactId>cui-open-rewrite</artifactId>
+</dependency>
+----
+
+=== Usage
+
+==== With OpenRewrite Maven Plugin
+
+[source,xml]
+----
+<plugin>
+    <groupId>org.openrewrite.maven</groupId>
+    <artifactId>rewrite-maven-plugin</artifactId>
+    <configuration>
+        <activeRecipes>
+            <recipe>de.cuioss.rewrite.format.AnnotationNewlineFormat</recipe>
+            <recipe>de.cuioss.rewrite.logging.CuiLoggerStandardsRecipe</recipe>
+            <recipe>de.cuioss.rewrite.logging.CuiLogRecordPatternRecipe</recipe>
+            <recipe>de.cuioss.rewrite.logging.InvalidExceptionUsageRecipe</recipe>
+        </activeRecipes>
+    </configuration>
+    <dependencies>
+        <dependency>
+            <groupId>de.cuioss.rewrite</groupId>
+            <artifactId>cui-open-rewrite</artifactId>
+            <version>${cui-open-rewrite.version}</version>
+        </dependency>
+    </dependencies>
+</plugin>
+----
+
+==== Run the recipe
+
+[source,bash]
+----
+mvn rewrite:run
+----
+
+=== Features
+
+==== AnnotationNewlineFormat Recipe
+
+Ensures that Java annotations are formatted on separate lines for better readability.
+
+**Effect:**
+
+* Class-level annotations (e.g., `@UtilityClass`, `@Slf4j`) are placed on separate lines
+* Method-level annotations (e.g., `@Override`, `@Test`) are placed on separate lines  
+* Field-level annotations are placed on separate lines
+* Multiple annotations are each placed on their own line
+
+**Example transformation:**
+[source,java]
+----
+// Before
+@Data @Builder public class Person {
+    @Override public String toString() {
+        return "Person";
+    }
+}
+
+// After
+@Data
+@Builder
+public class Person {
+    @Override
+    public String toString() {
+        return "Person";
+    }
+}
+----
+
+**Suppression:**
+
+Recipes can be suppressed using comments:
+
+* `// cui-rewrite:disable` - Suppresses all recipes for the next element
+* `// cui-rewrite:disable RecipeName` - Suppresses specific recipe only
+
+[source,java]
+----
+// cui-rewrite:disable
+@Data @Builder public class Person {  // Will not be formatted
+    
+    // cui-rewrite:disable AnnotationNewlineFormat  
+    @Override @Test public void test() {}  // Only AnnotationNewlineFormat is suppressed
+}
+----
+
+**Known Limitations:**
+
+* Indentation preservation issues in nested classes (see https://github.com/cuioss/cui-open-rewrite/issues/1[Issue #1])
+* Some edge cases with field annotations
+* Trailing comments (`public class Foo { // cui-rewrite:disable`) not fully supported due to OpenRewrite AST limitations
+* 6 tests currently disabled pending indentation fixes
+
+==== CuiLoggerStandardsRecipe
+
+Enforces CUI-specific logging standards including proper logger naming, string substitution patterns, exception parameter positioning, and detection of System.out/System.err usage.
+
+**Auto-fixes:**
+
+* **Logger naming** - Renames logger fields to `LOGGER` (uppercase)
+* **Logger modifiers** - Fixes loggers to be `private static final`
+* **Placeholder patterns** - Replaces `{}` (SLF4J) and `%d`, `%f`, etc. with `%s`
+* **Exception positioning** - Moves exception parameters to first position for error/warn calls
+
+**Detects only:**
+
+* **System.out/err usage** - Flags inappropriate console output
+* **Parameter count mismatch** - Warns when placeholder count doesn't match parameter count
+
+**Example detections:**
+
+[source,java]
+----
+public class Example {
+    public static CuiLogger log = new CuiLogger(Example.class); // ⚠️ Should be 'LOGGER' and 'private static final'
+    
+    void method(Exception e) {
+        System.out.println("Debug message"); // ⚠️ Use proper logging
+        log.error("Error {} occurred", "Database", e); // ⚠️ Wrong placeholder and exception position
+        log.info("Count: %d", 42); // ⚠️ Should use %s
+    }
+}
+----
+
+**Suppression:**
+
+Uses the same suppression mechanism as other recipes:
+
+[source,java]
+----
+// cui-rewrite:disable
+System.out.println("This won't be flagged");
+
+// cui-rewrite:disable CuiLoggerStandardsRecipe
+public CuiLogger logger = new CuiLogger(Example.class); // Won't be changed
+----
+
+==== CuiLogRecordPatternRecipe
+
+Enforces proper usage of LogRecord pattern according to CUI logging standards:
+
+* **Mandatory** for INFO/WARN/ERROR/FATAL levels - Direct logging is not allowed
+* **Forbidden** for DEBUG/TRACE levels - Must use direct logging instead
+
+See the https://gitingest.com/github.com/cuioss/cui-llm-rules/tree/main/standards/logging/implementation-guide.adoc[Logging Implementation Guide] for details.
+
+**Auto-fixes:**
+
+* **LogRecord template placeholders** - Replaces incorrect placeholders (`{}`, `%d`, `%f`, etc.) with `%s` in LogRecord templates
+* **Zero-parameter format() to method reference** - Converts `LogRecord.format()` calls with no parameters to method references (`LogRecord::format`)
+
+**Detects only:**
+
+* **Missing LogRecord** - Flags INFO/WARN/ERROR/FATAL calls without LogRecord
+* **Inappropriate LogRecord** - Flags DEBUG/TRACE calls using LogRecord
+* **Supports both invocation and reference** - Works with `.format()` and `::format` patterns
+
+**Example detections:**
+
+[source,java]
+----
+public class Example {
+    private static final CuiLogger LOGGER = new CuiLogger(Example.class);
+    
+    // LogMessage constants
+    static class INFO {
+        static final LogRecord USER_LOGIN = LogRecordModel.builder()
+            .template("User %s logged in")
+            .build();
+    }
+    
+    void goodExamples() {
+        // ✅ Correct: LogRecord for INFO level
+        LOGGER.info(INFO.USER_LOGIN.format(username));
+        
+        // ✅ Correct: Method reference for zero-parameter format
+        LOGGER.info(INFO.APPLICATION_STARTED::format);
+        
+        // ✅ Correct: Direct logging for DEBUG level
+        LOGGER.debug("Processing file %s", filename);
+    }
+    
+    void badExamples() {
+        // ⚠️ Wrong: Direct logging for INFO level
+        LOGGER.info("User %s logged in", username);
+        
+        // ⚠️ Wrong: LogRecord for DEBUG level  
+        LOGGER.debug(DEBUG.SOME_MESSAGE.format());
+        
+        // 🔧 Auto-fixed: Zero-parameter format() converted to method reference
+        LOGGER.info(INFO.SIMPLE_MESSAGE.format()); // → INFO.SIMPLE_MESSAGE::format
+    }
+}
+----
+
+**Suppression:**
+
+[source,java]
+----
+// cui-rewrite:disable CuiLogRecordPatternRecipe
+LOGGER.info("Direct logging suppressed for this call");
+----
+
+==== InvalidExceptionUsageRecipe
+
+Flags inappropriate usage of generic exception types that should be replaced with specific exceptions for better error handling and debugging.
+
+**Detects (no auto-fix):**
+
+* **Catching generic exceptions** - Flags catch blocks using `Exception`, `RuntimeException`, or `Throwable`
+* **Throwing generic exceptions** - Flags throw statements with `new Exception()`, `new RuntimeException()`, or `new Throwable()`
+* **Creating generic exceptions** - Flags instantiation of generic exception types even when not immediately thrown
+
+**Why no auto-fix?**
+
+The appropriate specific exception type depends on the context and business logic. Manual review is required to choose the correct exception type.
+
+**Example detections:**
+
+[source,java]
+----
+public class Example {
+    void badExamples() {
+        try {
+            doSomething();
+        } catch (Exception e) {  // ⚠️ Too generic - use specific exception
+            log.error("Error occurred", e);
+        }
+        
+        try {
+            riskyOperation();
+        } catch (RuntimeException e) {  // ⚠️ Too generic
+            throw new Exception("Wrapped", e);  // ⚠️ Throwing generic exception
+        }
+        
+        try {
+            doIO();
+        } catch (Throwable t) {  // ⚠️ Never catch Throwable
+            // Handle
+        }
+    }
+    
+    void goodExamples() throws IOException {
+        try {
+            doSomething();
+        } catch (IOException e) {  // ✅ Specific exception type
+            log.error("IO error", e);
+        } catch (IllegalArgumentException e) {  // ✅ Specific runtime exception
+            throw new ValidationException("Invalid input", e);  // ✅ Domain-specific exception
+        }
+    }
+}
+----
+
+**Suppression:**
+
+[source,java]
+----
+// cui-rewrite:disable InvalidExceptionUsageRecipe
+catch (Exception e) {  // Suppressed for this specific case
+    // Legacy code that needs generic catch
+}
+
+// cui-rewrite:disable
+throw new RuntimeException("Suppressed generic exception");
+----
+
+=== For Recipe Developers
+
+==== Using RecipeSuppressionUtil
+
+All recipes should support suppression. Use the provided utility:
+
+[source,java]
+----
+import de.cuioss.rewrite.util.RecipeSuppressionUtil;
+
+@Override
+public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
+    if (RecipeSuppressionUtil.isSuppressed(classDecl, getCursor(), "YourRecipeName")) {
+        return classDecl; // Skip processing
+    }
+    // Recipe logic here
+}
 ----
 

@@ -33,16 +33,63 @@
     </issueManagement>
     <properties>
         <maven.jar.plugin.automatic.module.name>de.cuioss.rewrite</maven.jar.plugin.automatic.module.name>
+        <openrewrite.version>8.61.2</openrewrite.version>
+        <openrewrite.maven.version>6.17.0</openrewrite.maven.version>
     </properties>
     <dependencies>
+        <!-- OpenRewrite Core -->
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
+            <groupId>org.openrewrite</groupId>
+            <artifactId>rewrite-java</artifactId>
+            <version>${openrewrite.version}</version>
         </dependency>
+
+        <!-- Runtime dependency for Java 11+ support -->
+        <dependency>
+            <groupId>org.openrewrite</groupId>
+            <artifactId>rewrite-java-11</artifactId>
+            <version>${openrewrite.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- JSpecify for nullability annotations -->
+        <dependency>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+        </dependency>
+
+        <!-- CUI Java Tools for CuiLogger -->
+        <dependency>
+            <groupId>de.cuioss</groupId>
+            <artifactId>cui-java-tools</artifactId>
+        </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.openrewrite</groupId>
+            <artifactId>rewrite-test</artifactId>
+            <version>${openrewrite.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Unit testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
+        </dependency>
+
+        <!-- Lombok for testing recipe with Lombok annotations -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- CUI Test Juli Logger for testing log output -->
+        <dependency>
+            <groupId>de.cuioss.test</groupId>
+            <artifactId>cui-test-juli-logger</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
