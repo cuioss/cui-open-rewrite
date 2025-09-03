@@ -15,7 +15,7 @@
  */
 package de.cuioss.rewrite.logging;
 
-import de.cuioss.rewrite.util.RecipeSuppressionUtil;
+import de.cuioss.rewrite.util.BaseSuppressionVisitor;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
@@ -82,7 +82,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             J.MethodInvocation mi = super.visitMethodInvocation(method, ctx);
 
             // Check if suppressed
-            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
+            if (isSuppressed()) {
                 return mi;
             }
 

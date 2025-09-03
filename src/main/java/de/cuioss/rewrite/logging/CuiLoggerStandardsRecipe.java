@@ -15,7 +15,7 @@
  */
 package de.cuioss.rewrite.logging;
 
-import de.cuioss.rewrite.util.RecipeSuppressionUtil;
+import de.cuioss.rewrite.util.BaseSuppressionVisitor;
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
@@ -86,7 +86,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                 return vd;
             }
 
-            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
+            if (isSuppressed()) {
                 return vd;
             }
 
@@ -209,7 +209,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         @Override public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
             J.MethodInvocation mi = super.visitMethodInvocation(method, ctx);
 
-            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
+            if (isSuppressed()) {
                 return mi;
             }
 

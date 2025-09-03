@@ -416,11 +416,11 @@ public void testMethod() throws Exception {
 
 ==== BaseSuppressionVisitor (Recommended)
 
-For new recipes, extend `BaseSuppressionVisitor` to automatically handle suppression logic:
+For new recipes, extend `BaseSuppressionVisitor` to eliminate suppression code duplication:
 
 [source,java]
 ----
-import de.cuioss.rewrite.logging.BaseSuppressionVisitor;
+import de.cuioss.rewrite.util.BaseSuppressionVisitor;
 
 public class YourRecipe extends Recipe {
     public static final String RECIPE_NAME = "YourRecipeName";
@@ -431,14 +431,14 @@ public class YourRecipe extends Recipe {
             super(RECIPE_NAME);
         }
         
-        // Only implement the specific visit methods you need
-        // BaseSuppressionVisitor handles class/method level suppression automatically
+        // Class and method level suppression is handled automatically
+        // For element-level suppression, use the convenient helper method
         @Override
         public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
             J.MethodInvocation mi = super.visitMethodInvocation(method, ctx);
             
-            // Check for element-level suppression (comments directly on this method invocation)
-            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
+            // Check element-level suppression using the convenient helper
+            if (isSuppressed()) {
                 return mi;
             }
             
@@ -453,7 +453,21 @@ public class YourRecipe extends Recipe {
 
 **Benefits:**
 
-* Eliminates code duplication for class and method level suppression patterns
-* Automatically handles class-level and method-level suppression (no need to check in visitClassDeclaration/visitMethodDeclaration)
+* Eliminates code duplication for class and method level suppression (handled automatically)
+* Provides convenient `isSuppressed()` helper method instead of verbose `RecipeSuppressionUtil.isSuppressed(getCursor(), recipeName)`
 * Consistent suppression behavior across all recipes
-* Reduces boilerplate code (but element-level suppression checks still needed in specific visit methods)
+* Reduces suppression boilerplate while maintaining full recipe functionality
+
+**Design Rationale:**
+
+Complete automatic suppression is not feasible because many recipes need to process elements before determining whether they should be suppressed. For example, a recipe might need to:
+
+* Process a method invocation to determine if it should be marked with a warning
+* Check business logic conditions before applying suppression
+* Perform transformations that depend on the element's content
+
+`BaseSuppressionVisitor` strikes the optimal balance by:
+
+1. **Automatically handling** class/method suppression (which always works the same way)
+2. **Providing a clean helper** for element-level suppression (which varies by recipe logic)
+3. **Eliminating the original code duplication** that triggered the Sonar warning

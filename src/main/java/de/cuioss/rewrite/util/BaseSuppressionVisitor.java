@@ -13,15 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.cuioss.rewrite.logging;
+package de.cuioss.rewrite.util;
 
-import de.cuioss.rewrite.util.RecipeSuppressionUtil;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.tree.J;
 
 /**
- * Base visitor that provides common suppression handling for recipe visitors.
+ * Base visitor that eliminates suppression code duplication while maintaining recipe functionality.
+ * 
+ * <p>Automatically handles class and method level suppression (which always work the same way)
+ * and provides a convenient helper for element-level suppression (which varies by recipe logic).
+ * 
+ * <p><strong>Design Rationale:</strong> Complete automatic suppression is not feasible because
+ * many recipes need to process elements before determining whether they should be suppressed.
+ * This class strikes the optimal balance between eliminating duplication and preserving functionality.
  */
 public abstract class BaseSuppressionVisitor extends JavaIsoVisitor<ExecutionContext> {
 
@@ -31,20 +37,24 @@ public abstract class BaseSuppressionVisitor extends JavaIsoVisitor<ExecutionCon
         this.recipeName = recipeName;
     }
 
+    /**
+     * Helper method to check if the current element is suppressed.
+     * Use this in visit methods that need element-level suppression control.
+     */
+    protected boolean isSuppressed() {
+        return RecipeSuppressionUtil.isSuppressed(getCursor(), recipeName);
+    }
+
     @Override public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
-        // Check for class-level suppression
-        if (RecipeSuppressionUtil.isSuppressed(getCursor(), recipeName)) {
-            // Skip the entire class and its children by not calling super
-            return classDecl;
+        if (isSuppressed()) {
+            return classDecl; // Skip entire class and children - this pattern is always the same
         }
         return super.visitClassDeclaration(classDecl, ctx);
     }
 
     @Override public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
-        // Check for method-level suppression
-        if (RecipeSuppressionUtil.isSuppressed(getCursor(), recipeName)) {
-            // Skip the entire method without visiting children
-            return method;
+        if (isSuppressed()) {
+            return method; // Skip entire method and children - this pattern is always the same
         }
         return super.visitMethodDeclaration(method, ctx);
     }
