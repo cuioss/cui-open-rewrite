@@ -73,24 +73,10 @@ public class CuiLogRecordPatternRecipe extends Recipe {
         return List.of();
     }
 
-    private static class CuiLogRecordPatternVisitor extends JavaIsoVisitor<ExecutionContext> {
+    private static class CuiLogRecordPatternVisitor extends BaseSuppressionVisitor {
 
-        @Override public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
-            // Check for class-level suppression
-            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
-                // Skip the entire class
-                return classDecl;
-            }
-            return super.visitClassDeclaration(classDecl, ctx);
-        }
-
-        @Override public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
-            // Check for method-level suppression
-            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
-                // Skip the entire method without visiting children
-                return method;
-            }
-            return super.visitMethodDeclaration(method, ctx);
+        public CuiLogRecordPatternVisitor() {
+            super(RECIPE_NAME);
         }
 
         @Override public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {

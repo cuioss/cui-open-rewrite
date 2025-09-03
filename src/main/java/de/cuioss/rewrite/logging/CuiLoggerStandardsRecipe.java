@@ -69,28 +69,14 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         return List.of();
     }
 
-    private static class CuiLoggerStandardsVisitor extends JavaIsoVisitor<ExecutionContext> {
+    private static class CuiLoggerStandardsVisitor extends BaseSuppressionVisitor {
+
+        public CuiLoggerStandardsVisitor() {
+            super(RECIPE_NAME);
+        }
 
         private UUID randomId() {
             return UUID.randomUUID();
-        }
-
-        @Override public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
-            // Check for class-level suppression
-            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
-                // Skip the entire class and its children by not calling super
-                return classDecl;
-            }
-            return super.visitClassDeclaration(classDecl, ctx);
-        }
-
-        @Override public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
-            // Check for method-level suppression
-            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
-                // Skip the entire method without visiting children
-                return method;
-            }
-            return super.visitMethodDeclaration(method, ctx);
         }
 
         @Override public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations variableDecls, ExecutionContext ctx) {
