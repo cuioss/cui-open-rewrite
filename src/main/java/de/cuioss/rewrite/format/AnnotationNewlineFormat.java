@@ -61,7 +61,7 @@ public class AnnotationNewlineFormat extends Recipe {
 
         @Override public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
             // Check for suppression comments
-            if (RecipeSuppressionUtil.isSuppressed(classDecl, getCursor(), RECIPE_NAME)) {
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
                 LOGGER.debug("Skipping class {} due to suppression", classDecl.getSimpleName());
                 return classDecl;
             }
@@ -85,7 +85,7 @@ public class AnnotationNewlineFormat extends Recipe {
 
         @Override public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
             // Check for suppression comments
-            if (RecipeSuppressionUtil.isSuppressed(method, getCursor(), RECIPE_NAME)) {
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
                 LOGGER.debug("Skipping method {} due to suppression", method.getSimpleName());
                 return method;
             }
@@ -109,7 +109,7 @@ public class AnnotationNewlineFormat extends Recipe {
 
         @Override public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations multiVariable, ExecutionContext ctx) {
             // Check for suppression only on fields
-            if (isFieldDeclaration() && RecipeSuppressionUtil.isSuppressed(multiVariable, getCursor(), RECIPE_NAME)) {
+            if (isFieldDeclaration() && RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
                 return multiVariable;
             }
 

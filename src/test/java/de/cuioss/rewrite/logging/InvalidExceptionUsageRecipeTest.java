@@ -53,13 +53,13 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~>*/catch (Exception e) {
+                        } /*~~(Catch specific not Exception)~~>*/catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
 
                     void doSomething() throws Exception {
-                        /*~~>*/throw new Exception("test");
+                        /*~~(Throw specific not Exception)~~>*/throw new Exception("test");
                     }
                 }
                 """
@@ -90,7 +90,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~>*/catch (RuntimeException e) {
+                        } /*~~(Catch specific not RuntimeException)~~>*/catch (RuntimeException e) {
                             e.printStackTrace();
                         }
                     }
@@ -127,7 +127,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~>*/catch (Throwable t) {
+                        } /*~~(Catch specific not Throwable)~~>*/catch (Throwable t) {
                             t.printStackTrace();
                         }
                     }
@@ -154,7 +154,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                 """
                 class Test {
                     void test() throws Exception {
-                        /*~~>*/throw new Exception("Bad practice");
+                        /*~~(Throw specific not Exception)~~>*/throw new Exception("Bad practice");
                     }
                 }
                 """
@@ -175,7 +175,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                 """
                 class Test {
                     void test() {
-                        /*~~>*/throw new RuntimeException("Bad practice");
+                        /*~~(Throw specific not RuntimeException)~~>*/throw new RuntimeException("Bad practice");
                     }
                 }
                 """
@@ -197,7 +197,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                 """
                 class Test {
                     void test() {
-                        Exception e = /*~~>*/new Exception("Bad practice");
+                        Exception e = /*~~(Use specific not Exception)~~>*/new Exception("Bad practice");
                         // Do something with e
                     }
                 }
@@ -261,7 +261,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                             doSomething();
                         } catch (IOException e) {
                             // Handle specific exception
-                        } /*~~>*/catch (Exception e) {
+                        } /*~~(Catch specific not Exception)~~>*/catch (Exception e) {
                             // Generic catch as fallback
                         }
                     }
@@ -353,10 +353,10 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                         try {
                             try {
                                 doSomething();
-                            } /*~~>*/catch (RuntimeException re) {
-                                /*~~>*/throw new Exception("Wrapping", re);
+                            } /*~~(Catch specific not RuntimeException)~~>*/catch (RuntimeException re) {
+                                /*~~(Throw specific not Exception)~~>*/throw new Exception("Wrapping", re);
                             }
-                        } /*~~>*/catch (Exception e) {
+                        } /*~~(Catch specific not Exception)~~>*/catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
@@ -400,8 +400,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                         Supplier<String> supplier = () -> {
                             try {
                                 return doSomething();
-                            } /*~~>*/catch (Exception e) {
-                                /*~~>*/throw new RuntimeException(e);
+                            } /*~~(Catch specific not Exception)~~>*/catch (Exception e) {
+                                /*~~(Throw specific not RuntimeException)~~>*/throw new RuntimeException(e);
                             }
                         };
                     }
@@ -436,6 +436,206 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
 
                     void doSomething() throws CustomException {
                         throw new CustomException("Custom is OK");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test void respectClassLevelSuppression() {
+        rewriteRun(
+            java(
+                """
+                // cui-rewrite:disable InvalidExceptionUsageRecipe
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    void doSomething() throws Exception {
+                        throw new Exception("Should be suppressed");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test void detectDuplicateMarkersNotAdded() {
+        rewriteRun(
+            spec -> spec.expectedCyclesThatMakeChanges(1),
+            java(
+                """
+                class Test {
+                    void test() throws Exception {
+                        throw new Exception("Bad practice");
+                    }
+                }
+                """,
+                """
+                class Test {
+                    void test() throws Exception {
+                        /*~~(Throw specific not Exception)~~>*/throw new Exception("Bad practice");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test void detectExceptionInAssignment() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    Exception createException() {
+                        return new RuntimeException("Assignment case");
+                    }
+                }
+                """,
+                """
+                class Test {
+                    Exception createException() {
+                        return /*~~(Use specific not RuntimeException)~~>*/new RuntimeException("Assignment case");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test void detectExceptionPassedAsParameter() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    void test() {
+                        handleException(new Exception("Parameter case"));
+                    }
+                    
+                    void handleException(Exception e) {
+                        // Handle exception
+                    }
+                }
+                """,
+                """
+                class Test {
+                    void test() {
+                        handleException(/*~~(Use specific not Exception)~~>*/new Exception("Parameter case"));
+                    }
+                    
+                    void handleException(Exception e) {
+                        // Handle exception
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test void respectMethodLevelSuppression() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    // cui-rewrite:disable InvalidExceptionUsageRecipe
+                    void suppressedMethod() throws Exception {
+                        throw new Exception("Method suppressed");
+                    }
+
+                    void notSuppressedMethod() throws Exception {
+                        throw new Exception("Not suppressed");
+                    }
+                }
+                """,
+                """
+                class Test {
+                    // cui-rewrite:disable InvalidExceptionUsageRecipe
+                    void suppressedMethod() throws Exception {
+                        throw new Exception("Method suppressed");
+                    }
+
+                    void notSuppressedMethod() throws Exception {
+                        /*~~(Throw specific not Exception)~~>*/throw new Exception("Not suppressed");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test void handleThrowableType() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        } catch (Throwable t) {
+                            throw new Throwable("Wrapping", t);
+                        }
+                    }
+
+                    void doSomething() {
+                        // Something
+                    }
+                }
+                """,
+                """
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        } /*~~(Catch specific not Throwable)~~>*/catch (Throwable t) {
+                            /*~~(Throw specific not Throwable)~~>*/throw new Throwable("Wrapping", t);
+                        }
+                    }
+
+                    void doSomething() {
+                        // Something
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test void handleExceptionInStaticContext() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    static {
+                        try {
+                            initialize();
+                        } catch (Exception e) {
+                            throw new RuntimeException("Static init failed", e);
+                        }
+                    }
+
+                    static void initialize() throws Exception {
+                        throw new Exception("Init error");
+                    }
+                }
+                """,
+                """
+                class Test {
+                    static {
+                        try {
+                            initialize();
+                        } /*~~(Catch specific not Exception)~~>*/catch (Exception e) {
+                            /*~~(Throw specific not RuntimeException)~~>*/throw new RuntimeException("Static init failed", e);
+                        }
+                    }
+
+                    static void initialize() throws Exception {
+                        /*~~(Throw specific not Exception)~~>*/throw new Exception("Init error");
                     }
                 }
                 """

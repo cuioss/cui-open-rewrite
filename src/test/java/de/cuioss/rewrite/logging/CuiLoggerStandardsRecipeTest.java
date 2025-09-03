@@ -35,6 +35,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                     package de.cuioss.tools.logging;
                     public class CuiLogger {
                         public CuiLogger(Class<?> clazz) {}
+                        public CuiLogger(String className) {}
                         public void trace(String message, Object... args) {}
                         public void debug(String message, Object... args) {}
                         public void info(String message, Object... args) {}
@@ -45,6 +46,14 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                         public void info(Throwable t, String message, Object... args) {}
                         public void warn(Throwable t, String message, Object... args) {}
                         public void error(Throwable t, String message, Object... args) {}
+                    }
+                    """,
+                    """
+                    package de.cuioss.tools.logging;
+                    public class CuiLoggerFactory {
+                        public static CuiLogger getLogger() { return null; }
+                        public static CuiLogger getLogger(Class<?> clazz) { return null; }
+                        public static CuiLogger getLogger(String className) { return null; }
                     }
                     """
                 ));
@@ -148,7 +157,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
 
                     void method() {
                         String value1 = "test";
-                        /*~~>*/LOGGER.info("Message with %s and %s", value1);
+                        /*~~(2 placeholders, 1 params)~~>*/LOGGER.info("Message with %s and %s", value1);
                     }
                 }
                 """
@@ -199,8 +208,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                 """
                 class Test {
                     void method() {
-                        /*~~>*/System.out.println("Should not use System.out");
-                        /*~~>*/System.err.println("Should not use System.err");
+                        /*~~(Use CuiLogger)~~>*/System.out.println("Should not use System.out");
+                        /*~~(Use CuiLogger)~~>*/System.err.println("Should not use System.err");
                     }
                 }
                 """
@@ -378,7 +387,80 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                     void method(Exception e) {
                         String value = "test";
                         // Exception first, then message with 2 placeholders but only 1 param
-                        /*~~>*/LOGGER.error(e, "Error with %s and %s", value);
+                        /*~~(2 placeholders, 1 params)~~>*/LOGGER.error(e, "Error with %s and %s", value);
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test void shouldNotModifyLocalVariableLoggers() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.CuiLoggerFactory;
+                
+                public class TestClass {
+                    // This field should be renamed and fixed
+                    public CuiLogger log = new CuiLogger(TestClass.class);
+                    
+                    void testMethod() {
+                        // Local variables should NOT be modified
+                        CuiLogger localLogger = new CuiLogger(TestClass.class);
+                        localLogger.info("Local logger message");
+                        
+                        // Even with factory pattern
+                        CuiLogger factoryLogger = CuiLoggerFactory.getLogger(TestClass.class);
+                        factoryLogger.debug("Factory logger message");
+                        
+                        // Even with wrong naming
+                        final CuiLogger wrongName = new CuiLogger(TestClass.class);
+                        wrongName.error("Wrong name but local");
+                    }
+                    
+                    void anotherMethod() {
+                        // Static-like local variables should also NOT be modified
+                        final CuiLogger LOGGER = CuiLoggerFactory.getLogger();
+                        LOGGER.warn("Warning from local");
+                        
+                        // Even with private static final-like declaration
+                        final CuiLogger logger = new CuiLogger(TestClass.class);
+                        logger.info("Info from local");
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.CuiLoggerFactory;
+                
+                public class TestClass {
+                    // This field should be renamed and fixed
+                    private static final CuiLogger LOGGER = new CuiLogger(TestClass.class);
+                    
+                    void testMethod() {
+                        // Local variables should NOT be modified
+                        CuiLogger localLogger = new CuiLogger(TestClass.class);
+                        localLogger.info("Local logger message");
+                        
+                        // Even with factory pattern
+                        CuiLogger factoryLogger = CuiLoggerFactory.getLogger(TestClass.class);
+                        factoryLogger.debug("Factory logger message");
+                        
+                        // Even with wrong naming
+                        final CuiLogger wrongName = new CuiLogger(TestClass.class);
+                        wrongName.error("Wrong name but local");
+                    }
+                    
+                    void anotherMethod() {
+                        // Static-like local variables should also NOT be modified
+                        final CuiLogger LOGGER = CuiLoggerFactory.getLogger();
+                        LOGGER.warn("Warning from local");
+                        
+                        // Even with private static final-like declaration
+                        final CuiLogger logger = new CuiLogger(TestClass.class);
+                        logger.info("Info from local");
                     }
                 }
                 """
