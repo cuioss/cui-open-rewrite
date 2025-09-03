@@ -30,6 +30,7 @@ import java.util.UUID;
 
 import static org.openrewrite.java.Assertions.java;
 
+@SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class BaseSuppressionVisitorTest implements RewriteTest {
 
     @Test void classLevelSuppressionSkipsEntireClass() {
@@ -58,7 +59,7 @@ class BaseSuppressionVisitorTest implements RewriteTest {
                     public void suppressedMethod() {
                         System.out.println("This should not be marked");
                     }
-                    
+
                     public void normalMethod() {
                         System.out.println("This should be marked");
                     }
@@ -70,7 +71,7 @@ class BaseSuppressionVisitorTest implements RewriteTest {
                     public void suppressedMethod() {
                         System.out.println("This should not be marked");
                     }
-                    
+
                     public void normalMethod() {
                         /*~~(TEST: Found println)~~>*/System.out.println("This should be marked");
                     }
