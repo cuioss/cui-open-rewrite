@@ -443,4 +443,204 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
+    @Test void respectClassLevelSuppression() {
+        rewriteRun(
+            java(
+                """
+                // cui-rewrite:disable InvalidExceptionUsageRecipe
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    void doSomething() throws Exception {
+                        throw new Exception("Should be suppressed");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test void detectDuplicateMarkersNotAdded() {
+        rewriteRun(
+            spec -> spec.expectedCyclesThatMakeChanges(1),
+            java(
+                """
+                class Test {
+                    void test() throws Exception {
+                        throw new Exception("Bad practice");
+                    }
+                }
+                """,
+                """
+                class Test {
+                    void test() throws Exception {
+                        /*~~(TASK: Throw specific not Exception)~~>*/throw new Exception("Bad practice");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test void detectExceptionInAssignment() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    Exception createException() {
+                        return new RuntimeException("Assignment case");
+                    }
+                }
+                """,
+                """
+                class Test {
+                    Exception createException() {
+                        return /*~~(TASK: Use specific not RuntimeException)~~>*/new RuntimeException("Assignment case");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test void detectExceptionPassedAsParameter() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    void test() {
+                        handleException(new Exception("Parameter case"));
+                    }
+                    
+                    void handleException(Exception e) {
+                        // Handle exception
+                    }
+                }
+                """,
+                """
+                class Test {
+                    void test() {
+                        handleException(/*~~(TASK: Use specific not Exception)~~>*/new Exception("Parameter case"));
+                    }
+                    
+                    void handleException(Exception e) {
+                        // Handle exception
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test void respectMethodLevelSuppression() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    // cui-rewrite:disable InvalidExceptionUsageRecipe
+                    void suppressedMethod() throws Exception {
+                        throw new Exception("Method suppressed");
+                    }
+
+                    void notSuppressedMethod() throws Exception {
+                        throw new Exception("Not suppressed");
+                    }
+                }
+                """,
+                """
+                class Test {
+                    // cui-rewrite:disable InvalidExceptionUsageRecipe
+                    void suppressedMethod() throws Exception {
+                        throw new Exception("Method suppressed");
+                    }
+
+                    void notSuppressedMethod() throws Exception {
+                        /*~~(TASK: Throw specific not Exception)~~>*/throw new Exception("Not suppressed");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test void handleThrowableType() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        } catch (Throwable t) {
+                            throw new Throwable("Wrapping", t);
+                        }
+                    }
+
+                    void doSomething() {
+                        // Something
+                    }
+                }
+                """,
+                """
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        } /*~~(TASK: Catch specific not Throwable)~~>*/catch (Throwable t) {
+                            /*~~(TASK: Throw specific not Throwable)~~>*/throw new Throwable("Wrapping", t);
+                        }
+                    }
+
+                    void doSomething() {
+                        // Something
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test void handleExceptionInStaticContext() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    static {
+                        try {
+                            initialize();
+                        } catch (Exception e) {
+                            throw new RuntimeException("Static init failed", e);
+                        }
+                    }
+
+                    static void initialize() throws Exception {
+                        throw new Exception("Init error");
+                    }
+                }
+                """,
+                """
+                class Test {
+                    static {
+                        try {
+                            initialize();
+                        } /*~~(TASK: Catch specific not Exception)~~>*/catch (Exception e) {
+                            /*~~(TASK: Throw specific not RuntimeException)~~>*/throw new RuntimeException("Static init failed", e);
+                        }
+                    }
+
+                    static void initialize() throws Exception {
+                        /*~~(TASK: Throw specific not Exception)~~>*/throw new Exception("Init error");
+                    }
+                }
+                """
+            )
+        );
+    }
+
 }
