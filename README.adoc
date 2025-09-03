@@ -64,6 +64,16 @@ mvn rewrite:run
 
 === Features
 
+==== Important Note on Detection Markers
+
+When recipes detect issues that cannot be auto-fixed, they add **SearchResult markers** following OpenRewrite standards:
+
+* Markers appear as `/*~~(Message)~~>*/` comments in the source code
+* The message often starts with "TODO:" to indicate required manual action
+* These markers are visible in the modified source files after running `mvn rewrite:run`
+* This is standard OpenRewrite behavior for marking code that needs attention
+* To remove markers, either fix the underlying issue or suppress the recipe
+
 ==== AnnotationNewlineFormat Recipe
 
 Ensures that Java annotations are formatted on separate lines for better readability.
@@ -101,15 +111,60 @@ public class Person {
 Recipes can be suppressed using comments:
 
 * `// cui-rewrite:disable` - Suppresses all recipes for the next element
-* `// cui-rewrite:disable RecipeName` - Suppresses specific recipe only
+* `// cui-rewrite:disable AnnotationNewlineFormat` - Suppresses this specific recipe only
+
+**⚠️ IMPORTANT: Comment Positioning for Suppression**
+
+Due to how OpenRewrite attaches comments to AST nodes, the position of suppression comments is critical:
+
+* **For elements with annotations**: Place the suppression comment **BEFORE** the first annotation, not between annotations and the declaration
+* **For elements without annotations**: Place the suppression comment directly before the element
+
+[source,java]
+----
+// ✅ CORRECT: Comment before annotations
+// cui-rewrite:disable
+@Data
+@Builder
+public class Person {
+    
+    // ✅ CORRECT: Comment before annotation
+    // cui-rewrite:disable AnnotationNewlineFormat
+    @Override
+    @Test
+    public void test() {}
+    
+    // ✅ CORRECT: No annotations, comment directly before element
+    // cui-rewrite:disable
+    public void simpleMethod() {}
+}
+
+// ❌ WRONG: Comment between annotations and class
+@Data
+@Builder
+// cui-rewrite:disable  // This won't work!
+public class Person {
+    
+    // ❌ WRONG: Comment between annotations  
+    @Override
+    // cui-rewrite:disable  // This won't work!
+    @Test
+    public void test() {}
+}
+----
+
+**Class-Level Suppression:**
+
+When a class has a suppression comment, it applies to all elements within that class:
 
 [source,java]
 ----
 // cui-rewrite:disable
-@Data @Builder public class Person {  // Will not be formatted
-    
-    // cui-rewrite:disable AnnotationNewlineFormat  
-    @Override @Test public void test() {}  // Only AnnotationNewlineFormat is suppressed
+@Data
+public class Person {
+    // All methods, fields, and nested classes are suppressed
+    private String name;
+    public void method() {}
 }
 ----
 
@@ -118,7 +173,28 @@ Recipes can be suppressed using comments:
 * Indentation preservation issues in nested classes (see https://github.com/cuioss/cui-open-rewrite/issues/1[Issue #1])
 * Some edge cases with field annotations
 * Trailing comments (`public class Foo { // cui-rewrite:disable`) not fully supported due to OpenRewrite AST limitations
+* **Trailing comments on annotations are removed** - Comments like `@SuppressWarnings("all") // reason` will lose the comment part
+  - This is a fundamental OpenRewrite limitation - inline comments are not part of the AST structure
+  - Cannot be detected or moved programmatically before they're lost
+  - **Recommended solution**: Manually move comments to the line above before running the recipe
 * 6 tests currently disabled pending indentation fixes
+
+**Best Practice for Annotation Comments:**
+
+Instead of:
+[source,java]
+----
+@SuppressWarnings("squid:S00107") // Number of parameters match to the use-case
+public static Map<K, V> mutableMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4) {
+----
+
+Use:
+[source,java]
+----
+// Number of parameters match to the use-case
+@SuppressWarnings("squid:S00107")
+public static Map<K, V> mutableMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4) {
+----
 
 ==== CuiLoggerStandardsRecipe
 
@@ -131,10 +207,10 @@ Enforces CUI-specific logging standards including proper logger naming, string s
 * **Placeholder patterns** - Replaces `{}` (SLF4J) and `%d`, `%f`, etc. with `%s`
 * **Exception positioning** - Moves exception parameters to first position for error/warn calls
 
-**Detects only:**
+**Marks for review (with SearchResult markers):**
 
-* **System.out/err usage** - Flags inappropriate console output
-* **Parameter count mismatch** - Warns when placeholder count doesn't match parameter count
+* **System.out/err usage** - Adds markers to flag inappropriate console output
+* **Parameter count mismatch** - Adds markers when placeholder count doesn't match parameter count
 
 **Example detections:**
 
@@ -153,15 +229,22 @@ public class Example {
 
 **Suppression:**
 
-Uses the same suppression mechanism as other recipes:
+To suppress this specific recipe, use `// cui-rewrite:disable CuiLoggerStandardsRecipe` (see **Comment Positioning for Suppression** section above for critical placement rules):
 
 [source,java]
 ----
-// cui-rewrite:disable
+// cui-rewrite:disable CuiLoggerStandardsRecipe
 System.out.println("This won't be flagged");
 
 // cui-rewrite:disable CuiLoggerStandardsRecipe
 public CuiLogger logger = new CuiLogger(Example.class); // Won't be changed
+
+// For methods/classes with annotations, place before the first annotation:
+// cui-rewrite:disable CuiLoggerStandardsRecipe
+@Test
+public void testMethod() {
+    System.out.println("Suppressed");
+}
 ----
 
 ==== CuiLogRecordPatternRecipe
@@ -178,11 +261,11 @@ See the https://gitingest.com/github.com/cuioss/cui-llm-rules/tree/main/standard
 * **LogRecord template placeholders** - Replaces incorrect placeholders (`{}`, `%d`, `%f`, etc.) with `%s` in LogRecord templates
 * **Zero-parameter format() to method reference** - Converts `LogRecord.format()` calls with no parameters to method references (`LogRecord::format`)
 
-**Detects only:**
+**Marks for review (with SearchResult markers):**
 
-* **Missing LogRecord** - Flags INFO/WARN/ERROR/FATAL calls without LogRecord
-* **Inappropriate LogRecord** - Flags DEBUG/TRACE calls using LogRecord
-* **Supports both invocation and reference** - Works with `.format()` and `::format` patterns
+* **Missing LogRecord** - Adds `/*~~(TODO: INFO/WARN/ERROR/FATAL needs LogRecord)~~>*/` markers to calls without LogRecord
+* **Inappropriate LogRecord** - Adds `/*~~(TODO: DEBUG/TRACE no LogRecord)~~>*/` markers to calls using LogRecord
+* **Note:** These markers follow OpenRewrite standards and will appear in the source code when using `rewrite:run`
 
 **Example detections:**
 
@@ -224,21 +307,31 @@ public class Example {
 
 **Suppression:**
 
+To suppress this specific recipe, use `// cui-rewrite:disable CuiLogRecordPatternRecipe` (see **Comment Positioning for Suppression** section above for critical placement rules):
+
 [source,java]
 ----
 // cui-rewrite:disable CuiLogRecordPatternRecipe
 LOGGER.info("Direct logging suppressed for this call");
+
+// For annotated methods, place before the first annotation:
+// cui-rewrite:disable CuiLogRecordPatternRecipe
+@Test
+public void testMethod() {
+    LOGGER.info("Direct logging allowed here");
+}
 ----
 
 ==== InvalidExceptionUsageRecipe
 
 Flags inappropriate usage of generic exception types that should be replaced with specific exceptions for better error handling and debugging.
 
-**Detects (no auto-fix):**
+**Marks for review (with SearchResult markers):**
 
-* **Catching generic exceptions** - Flags catch blocks using `Exception`, `RuntimeException`, or `Throwable`
-* **Throwing generic exceptions** - Flags throw statements with `new Exception()`, `new RuntimeException()`, or `new Throwable()`
-* **Creating generic exceptions** - Flags instantiation of generic exception types even when not immediately thrown
+* **Catching generic exceptions** - Adds markers to catch blocks using `Exception`, `RuntimeException`, or `Throwable`
+* **Throwing generic exceptions** - Adds markers to throw statements with `new Exception()`, `new RuntimeException()`, or `new Throwable()`
+* **Creating generic exceptions** - Adds markers to instantiation of generic exception types even when not immediately thrown
+* **Note:** These issues require manual review to choose appropriate specific exception types
 
 **Why no auto-fix?**
 
@@ -283,6 +376,8 @@ public class Example {
 
 **Suppression:**
 
+To suppress this specific recipe, use `// cui-rewrite:disable InvalidExceptionUsageRecipe` (see **Comment Positioning for Suppression** section above for critical placement rules):
+
 [source,java]
 ----
 // cui-rewrite:disable InvalidExceptionUsageRecipe
@@ -290,8 +385,15 @@ catch (Exception e) {  // Suppressed for this specific case
     // Legacy code that needs generic catch
 }
 
-// cui-rewrite:disable
+// cui-rewrite:disable InvalidExceptionUsageRecipe
 throw new RuntimeException("Suppressed generic exception");
+
+// For annotated methods, place before the first annotation:
+// cui-rewrite:disable InvalidExceptionUsageRecipe
+@Test
+public void testMethod() throws Exception {
+    // Generic exception allowed in test
+}
 ----
 
 === For Recipe Developers
@@ -307,9 +409,23 @@ import de.cuioss.rewrite.util.RecipeSuppressionUtil;
 @Override
 public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
     if (RecipeSuppressionUtil.isSuppressed(classDecl, getCursor(), "YourRecipeName")) {
-        return classDecl; // Skip processing
+        return classDecl; // Skip processing - DO NOT call super.visitClassDeclaration()
     }
-    // Recipe logic here
+    return super.visitClassDeclaration(classDecl, ctx);
+}
+
+@Override
+public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
+    if (RecipeSuppressionUtil.isSuppressed(method, getCursor(), "YourRecipeName")) {
+        return method; // Skip processing
+    }
+    return super.visitMethodDeclaration(method, ctx);
 }
 ----
+
+**Important Notes:**
+
+* When a class is suppressed, return the class WITHOUT calling `super.visitClassDeclaration()` to prevent traversing child elements
+* The utility automatically handles class-level suppression inheritance (child elements inherit parent suppression)
+* Comments must be positioned correctly (see **Comment Positioning for Suppression** section)
 

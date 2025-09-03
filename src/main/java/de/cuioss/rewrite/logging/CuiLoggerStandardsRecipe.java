@@ -40,6 +40,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
     private static final String CUI_LOGGER_TYPE = "de.cuioss.tools.logging.CuiLogger";
     private static final String LOGGER_NAME = "LOGGER";
+    public static final String RECIPE_NAME = "CuiLoggerStandardsRecipe";
 
     @Override public String getDisplayName() {
         return "CUI logger standards";
@@ -64,20 +65,43 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         return new CuiLoggerStandardsVisitor();
     }
 
+    @Override public List<Recipe> getRecipeList() {
+        return List.of();
+    }
+
     private static class CuiLoggerStandardsVisitor extends JavaIsoVisitor<ExecutionContext> {
 
         private UUID randomId() {
             return UUID.randomUUID();
         }
 
+        @Override public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
+            // Check for class-level suppression
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
+                // Skip the entire class and its children by not calling super
+                return classDecl;
+            }
+            return super.visitClassDeclaration(classDecl, ctx);
+        }
+
+        @Override public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
+            // Check for method-level suppression
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
+                // Skip the entire method without visiting children
+                return method;
+            }
+            return super.visitMethodDeclaration(method, ctx);
+        }
+
         @Override public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations variableDecls, ExecutionContext ctx) {
             J.VariableDeclarations vd = super.visitVariableDeclarations(variableDecls, ctx);
 
+            // Only process field declarations, not local variables
             if (!isLoggerField(vd)) {
                 return vd;
             }
 
-            if (RecipeSuppressionUtil.isSuppressed(vd, getCursor(), "CuiLoggerStandardsRecipe")) {
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
                 return vd;
             }
 
@@ -88,7 +112,16 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         }
 
         private boolean isLoggerField(J.VariableDeclarations vd) {
-            return TypeUtils.isOfClassType(vd.getType(), CUI_LOGGER_TYPE);
+            // First check if it's a CuiLogger type
+            if (!TypeUtils.isOfClassType(vd.getType(), CUI_LOGGER_TYPE)) {
+                return false;
+            }
+
+            // Check if this is a field declaration (not a local variable)
+            // Field declarations are direct children of class declarations or blocks at class level
+            // Local variables are inside method declarations
+            return getCursor().getParentTreeCursor().getValue() instanceof J.Block &&
+                getCursor().getParentTreeCursor().getParentTreeCursor().getValue() instanceof J.ClassDeclaration;
         }
 
         private J.VariableDeclarations checkLoggerNaming(J.VariableDeclarations vd) {
@@ -191,7 +224,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         @Override public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
             J.MethodInvocation mi = super.visitMethodInvocation(method, ctx);
 
-            if (RecipeSuppressionUtil.isSuppressed(mi, getCursor(), "CuiLoggerStandardsRecipe")) {
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
                 return mi;
             }
 
@@ -218,7 +251,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
         private J.MethodInvocation checkSystemStreams(J.MethodInvocation mi) {
             if (isSystemOutOrErr(mi)) {
-                return mi.withMarkers(mi.getMarkers().add(new SearchResult(randomId(), null)));
+                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(randomId(), "TASK: Use CuiLogger")));
             }
             return mi;
         }
@@ -328,7 +361,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             }
 
             if (placeholderCount != paramCount) {
-                return mi.withMarkers(mi.getMarkers().add(new SearchResult(randomId(), null)));
+                String message = "TASK: %d placeholders, %d params".formatted(placeholderCount, paramCount);
+                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(randomId(), message)));
             }
 
             return mi;

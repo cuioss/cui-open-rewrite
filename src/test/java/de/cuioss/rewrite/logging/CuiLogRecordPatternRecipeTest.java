@@ -105,7 +105,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
 
                     void method() {
                         String username = "john";
-                        /*~~>*/LOGGER.info("User %s logged in", username);
+                        /*~~(TASK: INFO needs LogRecord)~~>*/LOGGER.info("User %s logged in", username);
                     }
                 }
                 """
@@ -134,7 +134,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
 
                     void method(Exception e) {
-                        /*~~>*/LOGGER.error(e, "Error occurred: %s", e.getMessage());
+                        /*~~(TASK: ERROR needs LogRecord)~~>*/LOGGER.error(e, "Error occurred: %s", e.getMessage());
                     }
                 }
                 """
@@ -163,7 +163,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
 
                     void method() {
-                        /*~~>*/LOGGER.warn("Something is wrong");
+                        /*~~(TASK: WARN needs LogRecord)~~>*/LOGGER.warn("Something is wrong");
                     }
                 }
                 """
@@ -202,7 +202,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                         .build();
 
                     void method() {
-                        /*~~>*/LOGGER.debug(DEBUG_MESSAGE.format("value"));
+                        /*~~(TASK: DEBUG no LogRecord)~~>*/LOGGER.debug(DEBUG_MESSAGE.format("value"));
                     }
                 }
                 """
@@ -241,7 +241,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                         .build();
 
                     void method() {
-                        /*~~>*/LOGGER.trace(TRACE_MESSAGE.format());
+                        /*~~(TASK: TRACE no LogRecord)~~>*/LOGGER.trace(TRACE_MESSAGE.format());
                     }
                 }
                 """
@@ -276,7 +276,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void acceptCorrectLogRecordUsageForError() {
+    @Test void detectZeroParamFormatCallForError() {
         rewriteRun(
             java(
                 """
@@ -313,7 +313,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                     }
 
                     void method(Exception e) {
-                        /*~~(Converted zero-parameter format() call to method reference)~~>*/LOGGER.error(e, ERROR.DATABASE_ERROR::format);
+                        LOGGER.error(e, ERROR.DATABASE_ERROR::format);
                     }
                 }
                 """
@@ -400,7 +400,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
 
                 class Test {
                     static class INFO {
-                        static final LogRecord USER_LOGIN = /*~~(Fixed incorrect placeholder pattern in LogRecord template)~~>*/LogRecordModel.builder()
+                        static final LogRecord USER_LOGIN = /*~~(Fixed placeholders)~~>*/LogRecordModel.builder()
                             .template("User %s logged in with ID: %s")
                             .prefix("TEST")
                             .identifier(1)
@@ -464,7 +464,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                         .build();
 
                     void method() {
-                        /*~~(Converted zero-parameter format() call to method reference)~~>*/LOGGER.info(INFO_MESSAGE::format);
+                        LOGGER.info(INFO_MESSAGE::format);
                     }
                 }
                 """
@@ -509,7 +509,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                     }
 
                     void method(Exception e) {
-                        /*~~(Converted zero-parameter format() call to method reference)~~>*/LOGGER.error(e, ERROR.DATABASE_ERROR::format);
+                        LOGGER.error(e, ERROR.DATABASE_ERROR::format);
                     }
                 }
                 """

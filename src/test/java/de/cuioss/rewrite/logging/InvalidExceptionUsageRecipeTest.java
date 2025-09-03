@@ -53,13 +53,13 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~>*/catch (Exception e) {
+                        } /*~~(TASK: Catch specific not Exception)~~>*/catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
 
                     void doSomething() throws Exception {
-                        /*~~>*/throw new Exception("test");
+                        /*~~(TASK: Throw specific not Exception)~~>*/throw new Exception("test");
                     }
                 }
                 """
@@ -90,7 +90,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~>*/catch (RuntimeException e) {
+                        } /*~~(TASK: Catch specific not RuntimeException)~~>*/catch (RuntimeException e) {
                             e.printStackTrace();
                         }
                     }
@@ -127,7 +127,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~>*/catch (Throwable t) {
+                        } /*~~(TASK: Catch specific not Throwable)~~>*/catch (Throwable t) {
                             t.printStackTrace();
                         }
                     }
@@ -154,7 +154,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                 """
                 class Test {
                     void test() throws Exception {
-                        /*~~>*/throw new Exception("Bad practice");
+                        /*~~(TASK: Throw specific not Exception)~~>*/throw new Exception("Bad practice");
                     }
                 }
                 """
@@ -175,7 +175,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                 """
                 class Test {
                     void test() {
-                        /*~~>*/throw new RuntimeException("Bad practice");
+                        /*~~(TASK: Throw specific not RuntimeException)~~>*/throw new RuntimeException("Bad practice");
                     }
                 }
                 """
@@ -197,7 +197,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                 """
                 class Test {
                     void test() {
-                        Exception e = /*~~>*/new Exception("Bad practice");
+                        Exception e = /*~~(TASK: Use specific not Exception)~~>*/new Exception("Bad practice");
                         // Do something with e
                     }
                 }
@@ -261,7 +261,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                             doSomething();
                         } catch (IOException e) {
                             // Handle specific exception
-                        } /*~~>*/catch (Exception e) {
+                        } /*~~(TASK: Catch specific not Exception)~~>*/catch (Exception e) {
                             // Generic catch as fallback
                         }
                     }
@@ -353,10 +353,10 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                         try {
                             try {
                                 doSomething();
-                            } /*~~>*/catch (RuntimeException re) {
-                                /*~~>*/throw new Exception("Wrapping", re);
+                            } /*~~(TASK: Catch specific not RuntimeException)~~>*/catch (RuntimeException re) {
+                                /*~~(TASK: Throw specific not Exception)~~>*/throw new Exception("Wrapping", re);
                             }
-                        } /*~~>*/catch (Exception e) {
+                        } /*~~(TASK: Catch specific not Exception)~~>*/catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
@@ -400,8 +400,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                         Supplier<String> supplier = () -> {
                             try {
                                 return doSomething();
-                            } /*~~>*/catch (Exception e) {
-                                /*~~>*/throw new RuntimeException(e);
+                            } /*~~(TASK: Catch specific not Exception)~~>*/catch (Exception e) {
+                                /*~~(TASK: Throw specific not RuntimeException)~~>*/throw new RuntimeException(e);
                             }
                         };
                     }

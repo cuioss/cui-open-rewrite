@@ -301,4 +301,30 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
+    // Known limitation: Trailing comments on annotations are removed
+    // This is due to OpenRewrite's AST model not preserving inline comments during transformation
+    // See README.adoc for workarounds
+    @Test void knownLimitation_trailingCommentsOnAnnotationsAreRemoved() {
+        rewriteRun(
+            java(
+                """
+                public class TestClass {
+                    @SuppressWarnings("squid:S00107") // This comment explains why
+                    public void methodWithManyParams(int a, int b, int c, int d, int e, int f, int g, int h) {
+                        // method body
+                    }
+                }
+                """,
+                """
+                public class TestClass {
+                    @SuppressWarnings("squid:S00107")
+                public void methodWithManyParams(int a, int b, int c, int d, int e, int f, int g, int h) {
+                        // method body
+                    }
+                }
+                """
+            )
+        );
+    }
+
 }

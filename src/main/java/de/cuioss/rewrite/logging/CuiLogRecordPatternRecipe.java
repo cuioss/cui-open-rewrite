@@ -68,13 +68,39 @@ public class CuiLogRecordPatternRecipe extends Recipe {
         return new CuiLogRecordPatternVisitor();
     }
 
+    @Override public List<Recipe> getRecipeList() {
+        return List.of();
+    }
+
     private static class CuiLogRecordPatternVisitor extends JavaIsoVisitor<ExecutionContext> {
+
+        private UUID randomId() {
+            return UUID.randomUUID();
+        }
+
+        @Override public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
+            // Check for class-level suppression
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), "CuiLogRecordPatternRecipe")) {
+                // Skip the entire class
+                return classDecl;
+            }
+            return super.visitClassDeclaration(classDecl, ctx);
+        }
+
+        @Override public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
+            // Check for method-level suppression
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), "CuiLogRecordPatternRecipe")) {
+                // Skip the entire method without visiting children
+                return method;
+            }
+            return super.visitMethodDeclaration(method, ctx);
+        }
 
         @Override public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
             J.MethodInvocation mi = super.visitMethodInvocation(method, ctx);
 
             // Check if suppressed
-            if (RecipeSuppressionUtil.isSuppressed(mi, getCursor(), "CuiLogRecordPatternRecipe")) {
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), "CuiLogRecordPatternRecipe")) {
                 return mi;
             }
 
@@ -84,10 +110,10 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                 return templateCheck;
             }
 
-            // Check for zero-parameter format() calls that can be converted to method references
+            // Check for zero-parameter format() calls and convert them to method references
             J.MethodInvocation converted = convertZeroParamFormatToMethodReference(mi);
             if (converted != mi) {
-                // If we made a conversion, return it with the marker
+                // Return the converted version (auto-fix)
                 return converted;
             }
 
@@ -99,8 +125,10 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             String methodName = mi.getSimpleName();
             LogLevel level = LogLevel.fromMethodName(methodName);
 
-            // level will never be null here as we already checked isNotLoggerMethod()
-            // which returned false, ensuring mi is a CuiLogger method, and we handle all log levels
+            // Check if this is actually a logging method (not getName, etc.)
+            if (level == null) {
+                return mi;
+            }
 
             boolean usesLogRecord = checkUsesLogRecord(mi);
 
@@ -108,13 +136,15 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             switch (level) {
                 case INFO, WARN, ERROR, FATAL:
                     if (!usesLogRecord) {
-                        return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), null)));
+                        String message = "TASK: " + level + " needs LogRecord";
+                        return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), message)));
                     }
                     break;
 
                 case DEBUG, TRACE:
                     if (usesLogRecord) {
-                        return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), null)));
+                        String message = "TASK: " + level + " no LogRecord";
+                        return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), message)));
                     }
                     break;
             }
@@ -151,7 +181,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                 List<Expression> newArgs = new ArrayList<>(args);
                 newArgs.set(0, newLiteral);
                 mi = mi.withArguments(newArgs);
-                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), "Fixed incorrect placeholder pattern in LogRecord template")));
+                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), "Fixed placeholders")));
             }
 
             return mi;
@@ -191,8 +221,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                 J.MemberReference methodRef = createFormatMethodReference(formatCall, true);
                 List<Expression> newArgs = new ArrayList<>(args);
                 newArgs.set(0, methodRef);
-                mi = mi.withArguments(newArgs);
-                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), "Converted zero-parameter format() call to method reference")));
+                return mi.withArguments(newArgs);
             }
 
             // Check for exception followed by zero-parameter format() call
@@ -202,8 +231,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                     J.MemberReference methodRef = createFormatMethodReference(formatCall, false);
                     List<Expression> newArgs = new ArrayList<>(args);
                     newArgs.set(1, methodRef);
-                    mi = mi.withArguments(newArgs);
-                    return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), "Converted zero-parameter format() call to method reference")));
+                    return mi.withArguments(newArgs);
                 }
             }
 
@@ -249,6 +277,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                 null // No variable
             );
         }
+
 
         private boolean isNotLoggerMethod(J.MethodInvocation mi) {
             if (mi.getSelect() == null) {
@@ -335,9 +364,13 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             TRACE, DEBUG, INFO, WARN, ERROR, FATAL;
 
             static LogLevel fromMethodName(String methodName) {
-                // This should not throw as we already checked isNotLoggerMethod
-                // which ensures this is a valid CuiLogger method
-                return LogLevel.valueOf(methodName.toUpperCase());
+                // Convert method name to uppercase and try to match
+                try {
+                    return LogLevel.valueOf(methodName.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    // Not a logging method
+                    return null;
+                }
             }
         }
     }

@@ -255,7 +255,7 @@ class RecipeSuppressionUtilTest {
         }
 
         @Override public J.@NonNull ClassDeclaration visitClassDeclaration(J.@NonNull ClassDeclaration classDecl, @NonNull ExecutionContext ctx) {
-            if (RecipeSuppressionUtil.isSuppressed(classDecl, getCursor(), recipeName)) {
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), recipeName)) {
                 classWasSuppressed = true;
                 return classDecl;
             }
@@ -263,7 +263,7 @@ class RecipeSuppressionUtilTest {
         }
 
         @Override public J.@NonNull MethodDeclaration visitMethodDeclaration(J.@NonNull MethodDeclaration method, @NonNull ExecutionContext ctx) {
-            if (RecipeSuppressionUtil.isSuppressed(method, getCursor(), recipeName)) {
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), recipeName)) {
                 methodWasSuppressed = true;
                 return method;
             }
@@ -271,7 +271,7 @@ class RecipeSuppressionUtilTest {
         }
 
         @Override public J.@NonNull VariableDeclarations visitVariableDeclarations(J.@NonNull VariableDeclarations multiVariable, @NonNull ExecutionContext ctx) {
-            if (isFieldDeclaration() && RecipeSuppressionUtil.isSuppressed(multiVariable, getCursor(), recipeName)) {
+            if (isFieldDeclaration() && RecipeSuppressionUtil.isSuppressed(getCursor(), recipeName)) {
                 fieldWasSuppressed = true;
                 return multiVariable;
             }

@@ -20,12 +20,15 @@ import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.JavaIsoVisitor;
+import org.openrewrite.java.tree.Comment;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
+import org.openrewrite.java.tree.Space;
 import org.openrewrite.java.tree.TypeUtils;
 import org.openrewrite.marker.SearchResult;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -73,14 +76,71 @@ public class InvalidExceptionUsageRecipe extends Recipe {
         return new InvalidExceptionUsageVisitor();
     }
 
+    @Override public List<Recipe> getRecipeList() {
+        return List.of();
+    }
+
     private static class InvalidExceptionUsageVisitor extends JavaIsoVisitor<ExecutionContext> {
+
+        /**
+         * Checks if a comment with the given message already exists near the element.
+         * This prevents duplicate markers when recipes run multiple times.
+         * We check for the specific format that OpenRewrite uses: "/*~~(TASK: ...)~~>* /"
+         */
+        private boolean hasTaskComment(J element, String taskMessage) {
+            return switch (element) {
+                case J.Try.Catch catchBlock -> hasTaskCommentInCatchBlock(catchBlock, taskMessage);
+                case J.Throw throwStmt -> hasTaskCommentInThrowStatement(throwStmt, taskMessage);
+                case J.NewClass newClass -> containsTaskInSpace(newClass.getPrefix(), taskMessage);
+                default -> false;
+            };
+        }
+
+        private boolean hasTaskCommentInCatchBlock(J.Try.Catch catchBlock, String taskMessage) {
+            if (containsTaskInSpace(catchBlock.getPrefix(), taskMessage)) {
+                return true;
+            }
+            // Also check the body prefix
+            return containsTaskInSpace(catchBlock.getBody().getPrefix(), taskMessage);
+        }
+
+        private boolean hasTaskCommentInThrowStatement(J.Throw throwStmt, String taskMessage) {
+            if (containsTaskInSpace(throwStmt.getPrefix(), taskMessage)) {
+                return true;
+            }
+            // Also check exception prefix if it's a NewClass
+            if (throwStmt.getException() instanceof J.NewClass nc) {
+                return containsTaskInSpace(nc.getPrefix(), taskMessage);
+            }
+            return false;
+        }
+
+        /**
+         * Checks if a Space contains a comment with the given message.
+         */
+        private boolean containsTaskInSpace(Space space, String taskMessage) {
+            return space.getComments().stream()
+                .filter(Comment::isMultiline)
+                .map(Comment::getSuffix)
+                .anyMatch(suffix -> suffix.contains(taskMessage));
+        }
+
+
+        @Override public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
+            // Check for class-level suppression
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
+                // Skip the entire class
+                return classDecl;
+            }
+            return super.visitClassDeclaration(classDecl, ctx);
+        }
 
         @Override @SuppressWarnings("java:S2637") // SearchResult.found() never returns null for non-null input
         public J.Try.Catch visitCatch(J.Try.Catch catchBlock, ExecutionContext ctx) {
             J.Try.Catch c = super.visitCatch(catchBlock, ctx);
 
-            // Check if suppressed
-            if (RecipeSuppressionUtil.isSuppressed(c, getCursor(), RECIPE_NAME)) {
+            // Check for suppression (handles all scenarios automatically)
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
                 return c;
             }
 
@@ -92,7 +152,13 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                 JavaType.FullyQualified fqType = TypeUtils.asFullyQualified(type);
 
                 if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
-                    return SearchResult.found(c);
+                    String simpleType = fqType.getClassName();
+                    String taskMessage = "TASK: Catch specific not " + simpleType;
+
+                    // Check if this comment already exists (from a previous run)
+                    if (!hasTaskComment(c, taskMessage) && c.getMarkers().findFirst(SearchResult.class).isEmpty()) {
+                        return SearchResult.found(c, taskMessage);
+                    }
                 }
             }
 
@@ -104,7 +170,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             J.Throw t = super.visitThrow(thrown, ctx);
 
             // Check if suppressed
-            if (RecipeSuppressionUtil.isSuppressed(t, getCursor(), RECIPE_NAME)) {
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
                 return t;
             }
 
@@ -114,7 +180,13 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                 JavaType.FullyQualified fqType = TypeUtils.asFullyQualified(type);
 
                 if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
-                    return SearchResult.found(t);
+                    String simpleType = fqType.getClassName();
+                    String taskMessage = "TASK: Throw specific not " + simpleType;
+
+                    // Check if this comment already exists (from a previous run)
+                    if (!hasTaskComment(t, taskMessage) && t.getMarkers().findFirst(SearchResult.class).isEmpty()) {
+                        return SearchResult.found(t, taskMessage);
+                    }
                 }
             }
 
@@ -131,8 +203,8 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                 return nc;
             }
 
-            // Check if suppressed
-            if (RecipeSuppressionUtil.isSuppressed(nc, getCursor(), RECIPE_NAME)) {
+            // Check if suppressed - either directly or via parent element
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
                 return nc;
             }
 
@@ -140,7 +212,13 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             JavaType.FullyQualified fqType = TypeUtils.asFullyQualified(type);
 
             if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
-                return SearchResult.found(nc);
+                String simpleType = fqType.getClassName();
+                String taskMessage = "TASK: Use specific not " + simpleType;
+
+                // Check if this comment already exists (from a previous run)
+                if (!hasTaskComment(nc, taskMessage) && nc.getMarkers().findFirst(SearchResult.class).isEmpty()) {
+                    return SearchResult.found(nc, taskMessage);
+                }
             }
 
             return nc;
