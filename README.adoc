@@ -437,12 +437,9 @@ public class YourRecipe extends Recipe {
         public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
             J.MethodInvocation mi = super.visitMethodInvocation(method, ctx);
             
-            // Check for suppression at this specific element if needed
-            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
-                return mi;
-            }
+            // Your recipe logic here - suppression already handled by BaseSuppressionVisitor
+            // Example: if (someCondition) { mi = mi.withSomeModification(...); }
             
-            // Your recipe logic here
             return mi;
         }
     }
@@ -450,39 +447,8 @@ public class YourRecipe extends Recipe {
 ----
 
 **Benefits:**
+
 * Eliminates code duplication for common suppression patterns
 * Automatically handles class-level and method-level suppression
 * Consistent suppression behavior across all recipes
 * Reduces boilerplate code
-
-==== Using RecipeSuppressionUtil Directly (Legacy)
-
-For existing recipes or when you need custom suppression logic:
-
-[source,java]
-----
-import de.cuioss.rewrite.util.RecipeSuppressionUtil;
-
-@Override
-public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
-    if (RecipeSuppressionUtil.isSuppressed(getCursor(), "YourRecipeName")) {
-        return classDecl; // Skip processing - DO NOT call super.visitClassDeclaration()
-    }
-    return super.visitClassDeclaration(classDecl, ctx);
-}
-
-@Override
-public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
-    if (RecipeSuppressionUtil.isSuppressed(getCursor(), "YourRecipeName")) {
-        return method; // Skip processing
-    }
-    return super.visitMethodDeclaration(method, ctx);
-}
-----
-
-**Important Notes:**
-
-* When a class is suppressed, return the class WITHOUT calling `super.visitClassDeclaration()` to prevent traversing child elements
-* The utility automatically handles class-level suppression inheritance (child elements inherit parent suppression)
-* Comments must be positioned correctly (see **Comment Positioning for Suppression** section)
-
