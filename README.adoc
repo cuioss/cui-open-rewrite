@@ -194,7 +194,6 @@ To this (comment preserved):
 @SuppressWarnings("all")
 public void method() {
 ----
-* 6 tests currently disabled pending indentation fixes
 
 **Best Practice for Annotation Comments:**
 
@@ -415,9 +414,50 @@ public void testMethod() throws Exception {
 
 === For Recipe Developers
 
-==== Using RecipeSuppressionUtil
+==== BaseSuppressionVisitor (Recommended)
 
-All recipes should support suppression. Use the provided utility:
+For new recipes, extend `BaseSuppressionVisitor` to automatically handle suppression logic:
+
+[source,java]
+----
+import de.cuioss.rewrite.logging.BaseSuppressionVisitor;
+
+public class YourRecipe extends Recipe {
+    public static final String RECIPE_NAME = "YourRecipeName";
+    
+    private static class YourRecipeVisitor extends BaseSuppressionVisitor {
+        
+        public YourRecipeVisitor() {
+            super(RECIPE_NAME);
+        }
+        
+        // Only implement the specific visit methods you need
+        // BaseSuppressionVisitor handles class/method suppression automatically
+        @Override
+        public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
+            J.MethodInvocation mi = super.visitMethodInvocation(method, ctx);
+            
+            // Check for suppression at this specific element if needed
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
+                return mi;
+            }
+            
+            // Your recipe logic here
+            return mi;
+        }
+    }
+}
+----
+
+**Benefits:**
+* Eliminates code duplication for common suppression patterns
+* Automatically handles class-level and method-level suppression
+* Consistent suppression behavior across all recipes
+* Reduces boilerplate code
+
+==== Using RecipeSuppressionUtil Directly (Legacy)
+
+For existing recipes or when you need custom suppression logic:
 
 [source,java]
 ----
@@ -425,7 +465,7 @@ import de.cuioss.rewrite.util.RecipeSuppressionUtil;
 
 @Override
 public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
-    if (RecipeSuppressionUtil.isSuppressed(classDecl, getCursor(), "YourRecipeName")) {
+    if (RecipeSuppressionUtil.isSuppressed(getCursor(), "YourRecipeName")) {
         return classDecl; // Skip processing - DO NOT call super.visitClassDeclaration()
     }
     return super.visitClassDeclaration(classDecl, ctx);
@@ -433,7 +473,7 @@ public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, Ex
 
 @Override
 public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
-    if (RecipeSuppressionUtil.isSuppressed(method, getCursor(), "YourRecipeName")) {
+    if (RecipeSuppressionUtil.isSuppressed(getCursor(), "YourRecipeName")) {
         return method; // Skip processing
     }
     return super.visitMethodDeclaration(method, ctx);
