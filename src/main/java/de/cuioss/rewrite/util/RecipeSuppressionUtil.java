@@ -95,29 +95,26 @@ public final class RecipeSuppressionUtil {
         J element = cursor.getValue();
 
         // For catch blocks and throw statements: check try blocks and methods within method boundary
-        if (element instanceof J.Try.Catch || element instanceof J.Throw) {
-            if (checkParentsWithinBoundary(cursor, recipeName, J.MethodDeclaration.class,
-                J.Try.class, J.MethodDeclaration.class)) {
-                return true;
-            }
+        if ((element instanceof J.Try.Catch || element instanceof J.Throw) && checkParentsWithinBoundary(cursor, recipeName, J.MethodDeclaration.class,
+            J.Try.class, J.MethodDeclaration.class)) {
+            return true;
         }
+
 
         // For new class expressions (exception creation): check fields and methods
         if (element instanceof J.NewClass) {
             Cursor parentCursor = cursor.getParentTreeCursor();
-            if (parentCursor != null && !(parentCursor.getValue() instanceof J.Throw)) {
-                if (checkFirstParentOfTypes(cursor, recipeName, J.VariableDeclarations.class, J.MethodDeclaration.class)) {
-                    return true;
-                }
+            if (!(parentCursor.getValue() instanceof J.Throw) && checkFirstParentOfTypes(cursor, recipeName, J.VariableDeclarations.class, J.MethodDeclaration.class)) {
+                return true;
             }
+
         }
 
         // For method invocations: check methods and classes
-        if (element instanceof J.MethodInvocation) {
-            if (checkFirstParentOfTypes(cursor, recipeName, J.MethodDeclaration.class, J.ClassDeclaration.class)) {
-                return true;
-            }
+        if (element instanceof J.MethodInvocation && checkFirstParentOfTypes(cursor, recipeName, J.MethodDeclaration.class, J.ClassDeclaration.class)) {
+            return true;
         }
+
 
         // Always check class-level suppression (applies to all elements)
         return isParentClassSuppressed(cursor, recipeName);
@@ -279,7 +276,7 @@ public final class RecipeSuppressionUtil {
     @SafeVarargs private static boolean checkParentsWithinBoundary(Cursor cursor, String recipeName,
         Class<? extends J> stopAtType, Class<? extends J>... parentTypes) {
         Cursor parentCursor = cursor.getParentTreeCursor();
-        while (parentCursor != null) {
+        while (true) {
             Object value = parentCursor.getValue();
             if (!(value instanceof J parent)) {
                 return false;
@@ -287,11 +284,10 @@ public final class RecipeSuppressionUtil {
 
             // Check if parent matches any of the specified types
             for (Class<? extends J> parentType : parentTypes) {
-                if (parentType.isInstance(parent)) {
-                    if (isSuppressed(parentCursor, recipeName)) {
-                        return true;
-                    }
+                if (parentType.isInstance(parent) && isSuppressed(parentCursor, recipeName)) {
+                    return true;
                 }
+
             }
 
             // Stop if we've reached the boundary type
@@ -301,7 +297,6 @@ public final class RecipeSuppressionUtil {
 
             parentCursor = parentCursor.getParentTreeCursor();
         }
-        return false;
     }
 
     /**
@@ -309,7 +304,7 @@ public final class RecipeSuppressionUtil {
      */
     @SafeVarargs private static boolean checkFirstParentOfTypes(Cursor cursor, String recipeName, Class<? extends J>... parentTypes) {
         Cursor parentCursor = cursor.getParentTreeCursor();
-        while (parentCursor != null) {
+        while (true) {
             Object value = parentCursor.getValue();
             if (!(value instanceof J parent)) {
                 return false;
@@ -323,7 +318,6 @@ public final class RecipeSuppressionUtil {
 
             parentCursor = parentCursor.getParentTreeCursor();
         }
-        return false;
     }
 
     /**
@@ -334,7 +328,8 @@ public final class RecipeSuppressionUtil {
      * @param recipeName The recipe name to check for suppression
      * @return true if a parent class has suppression
      */
-    private static boolean isParentClassSuppressed(Cursor cursor, String recipeName) {
+    // owolff: Refactoring would introduce complexity - hence suppressing
+    @SuppressWarnings("java:S3776") private static boolean isParentClassSuppressed(Cursor cursor, String recipeName) {
         // Walk up the cursor tree looking for class declarations
         Cursor current = cursor;
         while (current != null) {
@@ -358,7 +353,7 @@ public final class RecipeSuppressionUtil {
                 }
 
                 // Also check the class body prefix for trailing comments
-                if (cd.getBody() != null && hasSuppression(cd.getBody().getPrefix().getComments(), cursor, recipeName)) {
+                if (hasSuppression(cd.getBody().getPrefix().getComments(), cursor, recipeName)) {
                     LOG.debug("Found class-level suppression on class %s body for recipe %s",
                         cd.getSimpleName(), recipeName);
                     return true;

@@ -44,6 +44,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
     private static final String FORMAT_METHOD_NAME = "format";
     private static final String PATTERN_DOC_URL =
         "https://gitingest.com/github.com/cuioss/cui-llm-rules/tree/main/standards/logging/implementation-guide.adoc";
+    public static final String RECIPE_NAME = "CuiLogRecordPatternRecipe";
 
     @Override public String getDisplayName() {
         return "CUI LogRecord pattern validation";
@@ -74,13 +75,9 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
     private static class CuiLogRecordPatternVisitor extends JavaIsoVisitor<ExecutionContext> {
 
-        private UUID randomId() {
-            return UUID.randomUUID();
-        }
-
         @Override public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
             // Check for class-level suppression
-            if (RecipeSuppressionUtil.isSuppressed(getCursor(), "CuiLogRecordPatternRecipe")) {
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
                 // Skip the entire class
                 return classDecl;
             }
@@ -89,7 +86,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
         @Override public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
             // Check for method-level suppression
-            if (RecipeSuppressionUtil.isSuppressed(getCursor(), "CuiLogRecordPatternRecipe")) {
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
                 // Skip the entire method without visiting children
                 return method;
             }
@@ -100,7 +97,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             J.MethodInvocation mi = super.visitMethodInvocation(method, ctx);
 
             // Check if suppressed
-            if (RecipeSuppressionUtil.isSuppressed(getCursor(), "CuiLogRecordPatternRecipe")) {
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
                 return mi;
             }
 
@@ -124,11 +121,6 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
             String methodName = mi.getSimpleName();
             LogLevel level = LogLevel.fromMethodName(methodName);
-
-            // Check if this is actually a logging method (not getName, etc.)
-            if (level == null) {
-                return mi;
-            }
 
             boolean usesLogRecord = checkUsesLogRecord(mi);
 
@@ -365,12 +357,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
             static LogLevel fromMethodName(String methodName) {
                 // Convert method name to uppercase and try to match
-                try {
-                    return LogLevel.valueOf(methodName.toUpperCase());
-                } catch (IllegalArgumentException e) {
-                    // Not a logging method
-                    return null;
-                }
+                return LogLevel.valueOf(methodName.toUpperCase());
             }
         }
     }
