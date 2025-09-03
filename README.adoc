@@ -432,12 +432,17 @@ public class YourRecipe extends Recipe {
         }
         
         // Only implement the specific visit methods you need
-        // BaseSuppressionVisitor handles class/method suppression automatically
+        // BaseSuppressionVisitor handles class/method level suppression automatically
         @Override
         public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
             J.MethodInvocation mi = super.visitMethodInvocation(method, ctx);
             
-            // Your recipe logic here - suppression already handled by BaseSuppressionVisitor
+            // Check for element-level suppression (comments directly on this method invocation)
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
+                return mi;
+            }
+            
+            // Your recipe logic here
             // Example: if (someCondition) { mi = mi.withSomeModification(...); }
             
             return mi;
@@ -448,7 +453,7 @@ public class YourRecipe extends Recipe {
 
 **Benefits:**
 
-* Eliminates code duplication for common suppression patterns
-* Automatically handles class-level and method-level suppression
+* Eliminates code duplication for class and method level suppression patterns
+* Automatically handles class-level and method-level suppression (no need to check in visitClassDeclaration/visitMethodDeclaration)
 * Consistent suppression behavior across all recipes
-* Reduces boilerplate code
+* Reduces boilerplate code (but element-level suppression checks still needed in specific visit methods)
