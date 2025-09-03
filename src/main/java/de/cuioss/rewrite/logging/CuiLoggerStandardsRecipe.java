@@ -251,7 +251,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
         private J.MethodInvocation checkSystemStreams(J.MethodInvocation mi) {
             if (isSystemOutOrErr(mi)) {
-                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(randomId(), "TASK: Use CuiLogger")));
+                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(randomId(), "Use CuiLogger")));
             }
             return mi;
         }
@@ -361,7 +361,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             }
 
             if (placeholderCount != paramCount) {
-                String message = "TASK: %d placeholders, %d params".formatted(placeholderCount, paramCount);
+                String message = "%d placeholders, %d params".formatted(placeholderCount, paramCount);
                 return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(randomId(), message)));
             }
 

@@ -85,7 +85,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
         /**
          * Checks if a comment with the given message already exists near the element.
          * This prevents duplicate markers when recipes run multiple times.
-         * We check for the specific format that OpenRewrite uses: "/*~~(TASK: ...)~~>* /"
+         * We check for the specific format that OpenRewrite uses: "/*~~(...)~~>* /"
          */
         private boolean hasTaskComment(J element, String taskMessage) {
             return switch (element) {
@@ -153,7 +153,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
                 if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
                     String simpleType = fqType.getClassName();
-                    String taskMessage = "TASK: Catch specific not " + simpleType;
+                    String taskMessage = "Catch specific not " + simpleType;
 
                     // Check if this comment already exists (from a previous run)
                     if (!hasTaskComment(c, taskMessage) && c.getMarkers().findFirst(SearchResult.class).isEmpty()) {
@@ -181,7 +181,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
                 if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
                     String simpleType = fqType.getClassName();
-                    String taskMessage = "TASK: Throw specific not " + simpleType;
+                    String taskMessage = "Throw specific not " + simpleType;
 
                     // Check if this comment already exists (from a previous run)
                     if (!hasTaskComment(t, taskMessage) && t.getMarkers().findFirst(SearchResult.class).isEmpty()) {
@@ -213,7 +213,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
             if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
                 String simpleType = fqType.getClassName();
-                String taskMessage = "TASK: Use specific not " + simpleType;
+                String taskMessage = "Use specific not " + simpleType;
 
                 // Check if this comment already exists (from a previous run)
                 if (!hasTaskComment(nc, taskMessage) && nc.getMarkers().findFirst(SearchResult.class).isEmpty()) {

@@ -105,7 +105,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
 
                     void method() {
                         String username = "john";
-                        /*~~(TASK: INFO needs LogRecord)~~>*/LOGGER.info("User %s logged in", username);
+                        /*~~(INFO needs LogRecord)~~>*/LOGGER.info("User %s logged in", username);
                     }
                 }
                 """
@@ -134,7 +134,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
 
                     void method(Exception e) {
-                        /*~~(TASK: ERROR needs LogRecord)~~>*/LOGGER.error(e, "Error occurred: %s", e.getMessage());
+                        /*~~(ERROR needs LogRecord)~~>*/LOGGER.error(e, "Error occurred: %s", e.getMessage());
                     }
                 }
                 """
@@ -163,7 +163,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
 
                     void method() {
-                        /*~~(TASK: WARN needs LogRecord)~~>*/LOGGER.warn("Something is wrong");
+                        /*~~(WARN needs LogRecord)~~>*/LOGGER.warn("Something is wrong");
                     }
                 }
                 """
@@ -202,7 +202,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                         .build();
 
                     void method() {
-                        /*~~(TASK: DEBUG no LogRecord)~~>*/LOGGER.debug(DEBUG_MESSAGE.format("value"));
+                        /*~~(DEBUG no LogRecord)~~>*/LOGGER.debug(DEBUG_MESSAGE.format("value"));
                     }
                 }
                 """
@@ -241,7 +241,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                         .build();
 
                     void method() {
-                        /*~~(TASK: TRACE no LogRecord)~~>*/LOGGER.trace(TRACE_MESSAGE.format());
+                        /*~~(TRACE no LogRecord)~~>*/LOGGER.trace(TRACE_MESSAGE.format());
                     }
                 }
                 """

@@ -177,6 +177,23 @@ public class Person {
   - This is a fundamental OpenRewrite limitation - inline comments are not part of the AST structure
   - Cannot be detected or moved programmatically before they're lost
   - **Recommended solution**: Manually move comments to the line above before running the recipe
+
+**Example transformation to preserve comments:**
+
+Transform this (comment will be lost):
+[source,java]
+----
+@SuppressWarnings("all") // reason
+public void method() {
+----
+
+To this (comment preserved):
+[source,java]
+----
+// reason
+@SuppressWarnings("all")
+public void method() {
+----
 * 6 tests currently disabled pending indentation fixes
 
 **Best Practice for Annotation Comments:**

@@ -128,14 +128,14 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             switch (level) {
                 case INFO, WARN, ERROR, FATAL:
                     if (!usesLogRecord) {
-                        String message = "TASK: " + level + " needs LogRecord";
+                        String message = level + " needs LogRecord";
                         return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), message)));
                     }
                     break;
 
                 case DEBUG, TRACE:
                     if (usesLogRecord) {
-                        String message = "TASK: " + level + " no LogRecord";
+                        String message = level + " no LogRecord";
                         return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), message)));
                     }
                     break;

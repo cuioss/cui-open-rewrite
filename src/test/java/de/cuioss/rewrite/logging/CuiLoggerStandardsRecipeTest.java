@@ -157,7 +157,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
 
                     void method() {
                         String value1 = "test";
-                        /*~~(TASK: 2 placeholders, 1 params)~~>*/LOGGER.info("Message with %s and %s", value1);
+                        /*~~(2 placeholders, 1 params)~~>*/LOGGER.info("Message with %s and %s", value1);
                     }
                 }
                 """
@@ -208,8 +208,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                 """
                 class Test {
                     void method() {
-                        /*~~(TASK: Use CuiLogger)~~>*/System.out.println("Should not use System.out");
-                        /*~~(TASK: Use CuiLogger)~~>*/System.err.println("Should not use System.err");
+                        /*~~(Use CuiLogger)~~>*/System.out.println("Should not use System.out");
+                        /*~~(Use CuiLogger)~~>*/System.err.println("Should not use System.err");
                     }
                 }
                 """
@@ -387,7 +387,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                     void method(Exception e) {
                         String value = "test";
                         // Exception first, then message with 2 placeholders but only 1 param
-                        /*~~(TASK: 2 placeholders, 1 params)~~>*/LOGGER.error(e, "Error with %s and %s", value);
+                        /*~~(2 placeholders, 1 params)~~>*/LOGGER.error(e, "Error with %s and %s", value);
                     }
                 }
                 """
