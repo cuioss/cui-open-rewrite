@@ -33,6 +33,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -105,7 +106,12 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             }
 
             String methodName = mi.getSimpleName();
-            LogLevel level = LogLevel.fromMethodName(methodName);
+            Optional<LogLevel> levelOpt = LogLevel.fromMethodName(methodName);
+            if (levelOpt.isEmpty()) {
+                // Method name is not a valid log level, skip processing
+                return mi;
+            }
+            LogLevel level = levelOpt.get();
 
             boolean usesLogRecord = checkUsesLogRecord(mi);
 
@@ -340,9 +346,14 @@ public class CuiLogRecordPatternRecipe extends Recipe {
         private enum LogLevel {
             TRACE, DEBUG, INFO, WARN, ERROR, FATAL;
 
-            static LogLevel fromMethodName(String methodName) {
+            static Optional<LogLevel> fromMethodName(String methodName) {
                 // Convert method name to uppercase and try to match
-                return LogLevel.valueOf(methodName.toUpperCase());
+                String upperMethodName = methodName.toUpperCase();
+                try {
+                    return Optional.of(LogLevel.valueOf(upperMethodName));
+                } catch (IllegalArgumentException e) {
+                    return Optional.empty();
+                }
             }
         }
     }
