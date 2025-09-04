@@ -31,6 +31,7 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
     @Test
     void shouldSuppressCatchBlockWithCommentBeforeCatch() {
         rewriteRun(
+            spec -> spec.expectedCyclesThatMakeChanges(0),
             java(
                 """
                 class Test {

@@ -136,7 +136,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                 // Get the try block's body
                 var tryBody = tryStatement.getBody();
                 if (tryBody != null) {
-                    // Check comments in the try body's end space (before the closing brace)
+                    // First check comments in the try body's end space (before the closing brace)
                     var endComments = tryBody.getEnd().getComments();
                     for (Comment comment : endComments) {
                         String text = comment.printComment(cursor);
@@ -145,6 +145,24 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                             if (text.contains("InvalidExceptionUsageRecipe") || 
                                 text.trim().endsWith("cui-rewrite:disable")) {
                                 return true;
+                            }
+                        }
+                    }
+                    
+                    // Also check if the last statement in the try block has trailing comments
+                    // This handles cases where the comment is attached to the last statement
+                    if (!tryBody.getStatements().isEmpty()) {
+                        var lastStatement = tryBody.getStatements().get(tryBody.getStatements().size() - 1);
+                        // Check if the last statement has a trailing comment
+                        if (lastStatement instanceof J stmt) {
+                            var afterComments = stmt.getPrefix().getComments();
+                            for (Comment comment : afterComments) {
+                                String text = comment.printComment(cursor);
+                                if (text.contains("cui-rewrite:disable") && 
+                                    (text.contains("InvalidExceptionUsageRecipe") || 
+                                     text.trim().endsWith("cui-rewrite:disable"))) {
+                                    return true;
+                                }
                             }
                         }
                     }
@@ -170,6 +188,18 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             // Check for suppression (handles all scenarios automatically)
             if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
                 return c;
+            }
+            
+            // Additional check: the comment before the catch might be in the catch's own prefix
+            // This is because comments before "} catch" often attach to the catch block itself
+            var catchComments = c.getPrefix().getComments();
+            for (Comment comment : catchComments) {
+                String text = comment.printComment(getCursor());
+                if (text.contains("cui-rewrite:disable") && 
+                    (text.contains("InvalidExceptionUsageRecipe") || 
+                     text.trim().endsWith("cui-rewrite:disable"))) {
+                    return c;
+                }
             }
             
             // Special case: Check if suppression comment is at the end of the try block body
