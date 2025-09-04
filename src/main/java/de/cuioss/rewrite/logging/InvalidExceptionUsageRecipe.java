@@ -16,6 +16,7 @@
 package de.cuioss.rewrite.logging;
 
 import de.cuioss.rewrite.util.RecipeSuppressionUtil;
+import org.openrewrite.Cursor;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
@@ -48,6 +49,7 @@ import java.util.Set;
 public class InvalidExceptionUsageRecipe extends Recipe {
 
     private static final String RECIPE_NAME = "InvalidExceptionUsageRecipe";
+    private static final String SUPPRESSION_COMMENT = "cui-rewrite:disable";
 
     private static final Set<String> GENERIC_EXCEPTION_TYPES = Set.of(
         "java.lang.Exception",
@@ -129,46 +131,40 @@ public class InvalidExceptionUsageRecipe extends Recipe {
          * Checks if there's a suppression comment at the end of the try block that applies to this catch block.
          * This handles the common pattern where suppression is placed before the closing brace of try.
          */
-        private boolean checkTryBlockEndSuppression(J.Try.Catch catchBlock) {
+        private boolean checkTryBlockEndSuppression() {
             // Navigate to the parent Try statement
             var cursor = getCursor().getParentTreeCursor();
             if (cursor.getValue() instanceof J.Try tryStatement) {
-                // Get the try block's body
-                var tryBody = tryStatement.getBody();
-                if (tryBody != null) {
-                    // First check comments in the try body's end space (before the closing brace)
-                    var endComments = tryBody.getEnd().getComments();
-                    for (Comment comment : endComments) {
-                        String text = comment.printComment(cursor);
-                        if (text.contains("cui-rewrite:disable")) {
-                            // Check if it's a general suppression or specific to InvalidExceptionUsageRecipe
-                            if (text.contains("InvalidExceptionUsageRecipe") || 
-                                text.trim().endsWith("cui-rewrite:disable")) {
-                                return true;
-                            }
-                        }
-                    }
-                    
-                    // Also check if the last statement in the try block has trailing comments
-                    // This handles cases where the comment is attached to the last statement
-                    if (!tryBody.getStatements().isEmpty()) {
-                        var lastStatement = tryBody.getStatements().get(tryBody.getStatements().size() - 1);
-                        // Check if the last statement has a trailing comment
-                        if (lastStatement instanceof J stmt) {
-                            var afterComments = stmt.getPrefix().getComments();
-                            for (Comment comment : afterComments) {
-                                String text = comment.printComment(cursor);
-                                if (text.contains("cui-rewrite:disable") && 
-                                    (text.contains("InvalidExceptionUsageRecipe") || 
-                                     text.trim().endsWith("cui-rewrite:disable"))) {
-                                    return true;
-                                }
-                            }
-                        }
+                return checkSuppressionInTryBody(tryStatement.getBody(), cursor);
+            }
+            return false;
+        }
+        
+        private boolean checkSuppressionInTryBody(J.Block tryBody, Cursor cursor) {
+            // First check comments in the try body's end space (before the closing brace)
+            var endComments = tryBody.getEnd().getComments();
+            for (Comment comment : endComments) {
+                if (hasSuppressionComment(comment.printComment(cursor))) {
+                    return true;
+                }
+            }
+            
+            // Also check if the last statement in the try block has trailing comments
+            // This handles cases where the comment is attached to the last statement
+            if (!tryBody.getStatements().isEmpty()) {
+                var afterComments = tryBody.getStatements().getLast().getPrefix().getComments();
+                for (Comment comment : afterComments) {
+                    if (hasSuppressionComment(comment.printComment(cursor))) {
+                        return true;
                     }
                 }
             }
             return false;
+        }
+        
+        private boolean hasSuppressionComment(String text) {
+            return text.contains(SUPPRESSION_COMMENT) && 
+                   (text.contains(RECIPE_NAME) || text.trim().endsWith(SUPPRESSION_COMMENT));
         }
 
 
@@ -195,16 +191,16 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             var catchComments = c.getPrefix().getComments();
             for (Comment comment : catchComments) {
                 String text = comment.printComment(getCursor());
-                if (text.contains("cui-rewrite:disable") && 
-                    (text.contains("InvalidExceptionUsageRecipe") || 
-                     text.trim().endsWith("cui-rewrite:disable"))) {
+                if (text.contains(SUPPRESSION_COMMENT) && 
+                    (text.contains(RECIPE_NAME) || 
+                     text.trim().endsWith(SUPPRESSION_COMMENT))) {
                     return c;
                 }
             }
             
             // Special case: Check if suppression comment is at the end of the try block body
             // This handles the case where the suppression is placed before the closing brace of try
-            if (checkTryBlockEndSuppression(c)) {
+            if (checkTryBlockEndSuppression()) {
                 return c;
             }
 
@@ -220,9 +216,10 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                     String taskMessage = "Catch specific not " + simpleType;
 
                     // Check if this comment already exists (from a previous run)
-                    if (!hasTaskComment(c, taskMessage) && c.getMarkers().findFirst(SearchResult.class).isEmpty()) {
-                        return SearchResult.found(c, taskMessage);
+                    if (hasTaskComment(c, taskMessage) || c.getMarkers().findFirst(SearchResult.class).isPresent()) {
+                        return c;
                     }
+                    return SearchResult.found(c, taskMessage);
                 }
             }
 
@@ -248,9 +245,10 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                     String taskMessage = "Throw specific not " + simpleType;
 
                     // Check if this comment already exists (from a previous run)
-                    if (!hasTaskComment(t, taskMessage) && t.getMarkers().findFirst(SearchResult.class).isEmpty()) {
-                        return SearchResult.found(t, taskMessage);
+                    if (hasTaskComment(t, taskMessage) || t.getMarkers().findFirst(SearchResult.class).isPresent()) {
+                        return t;
                     }
+                    return SearchResult.found(t, taskMessage);
                 }
             }
 
@@ -280,9 +278,10 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                 String taskMessage = "Use specific not " + simpleType;
 
                 // Check if this comment already exists (from a previous run)
-                if (!hasTaskComment(nc, taskMessage) && nc.getMarkers().findFirst(SearchResult.class).isEmpty()) {
-                    return SearchResult.found(nc, taskMessage);
+                if (hasTaskComment(nc, taskMessage) || nc.getMarkers().findFirst(SearchResult.class).isPresent()) {
+                    return nc;
                 }
+                return SearchResult.found(nc, taskMessage);
             }
 
             return nc;

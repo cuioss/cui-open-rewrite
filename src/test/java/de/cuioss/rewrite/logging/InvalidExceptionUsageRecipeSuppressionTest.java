@@ -21,6 +21,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.java.Assertions.java;
 
+@SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
 
     @Override
@@ -43,7 +44,7 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
                             handleException(e);
                         }
                     }
-                    
+
                     void doSomething() {}
                     void handleException(Exception e) {}
                 }
@@ -66,7 +67,7 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
                             handleException(e);
                         }
                     }
-                    
+
                     void doSomething() {}
                     void handleException(Exception e) {}
                 }
@@ -88,7 +89,7 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
                             handleException(e);
                         }
                     }
-                    
+
                     void doSomething() {}
                     void handleException(Exception e) {}
                 }
@@ -102,7 +103,7 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
                             handleException(e);
                         }
                     }
-                    
+
                     void doSomething() {}
                     void handleException(Exception e) {}
                 }
@@ -117,10 +118,10 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
             java(
                 """
                 import java.util.logging.Level;
-                
+
                 class MoreStrings {
                     private static final java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger("Test");
-                    
+
                     static String lenientToString(Object o) {
                         try {
                             return String.valueOf(o);
