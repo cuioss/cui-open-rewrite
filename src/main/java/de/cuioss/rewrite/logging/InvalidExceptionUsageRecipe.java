@@ -124,6 +124,34 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                 .map(Comment::getSuffix)
                 .anyMatch(suffix -> suffix.contains(taskMessage));
         }
+        
+        /**
+         * Checks if there's a suppression comment at the end of the try block that applies to this catch block.
+         * This handles the common pattern where suppression is placed before the closing brace of try.
+         */
+        private boolean checkTryBlockEndSuppression(J.Try.Catch catchBlock) {
+            // Navigate to the parent Try statement
+            var cursor = getCursor().getParentTreeCursor();
+            if (cursor.getValue() instanceof J.Try tryStatement) {
+                // Get the try block's body
+                var tryBody = tryStatement.getBody();
+                if (tryBody != null) {
+                    // Check comments in the try body's end space (before the closing brace)
+                    var endComments = tryBody.getEnd().getComments();
+                    for (Comment comment : endComments) {
+                        String text = comment.printComment(cursor);
+                        if (text.contains("cui-rewrite:disable")) {
+                            // Check if it's a general suppression or specific to InvalidExceptionUsageRecipe
+                            if (text.contains("InvalidExceptionUsageRecipe") || 
+                                text.trim().endsWith("cui-rewrite:disable")) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
 
 
         @Override public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
@@ -141,6 +169,12 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
             // Check for suppression (handles all scenarios automatically)
             if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
+                return c;
+            }
+            
+            // Special case: Check if suppression comment is at the end of the try block body
+            // This handles the case where the suppression is placed before the closing brace of try
+            if (checkTryBlockEndSuppression(c)) {
                 return c;
             }
 
