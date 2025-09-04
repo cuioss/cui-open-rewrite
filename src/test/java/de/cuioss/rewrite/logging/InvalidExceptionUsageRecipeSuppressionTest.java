@@ -253,7 +253,6 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
                     void method() {
                         try {
                             doSomething();
-commit and push
                         // cui-rewrite:disable InvalidExceptionUsageRecipe
                         } catch (Exception e) {
                             handleException(e);
