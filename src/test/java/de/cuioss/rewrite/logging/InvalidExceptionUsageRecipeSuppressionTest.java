@@ -138,4 +138,132 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void shouldSuppressWithGeneralDisableComment() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    void method() {
+                        try {
+                            doSomething();
+                            // cui-rewrite:disable
+                        } catch (Exception e) {
+                            handleException(e);
+                        }
+                    }
+
+                    void doSomething() {}
+                    void handleException(Exception e) {}
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void shouldHandleEmptyTryBlockSuppression() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    void method() {
+                        try {
+                            // Empty try block
+                            // cui-rewrite:disable InvalidExceptionUsageRecipe
+                        } catch (Exception e) {
+                            handleException(e);
+                        }
+                    }
+
+                    void handleException(Exception e) {}
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void shouldHandleTryBlockWithOnlyComments() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    void method() {
+                        try {
+                            // Just comments
+                            // cui-rewrite:disable
+                        } catch (RuntimeException e) {
+                            handleException(e);
+                        }
+                    }
+
+                    void handleException(Exception e) {}
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void shouldNotSuppressWithWrongRecipeName() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    void method() {
+                        try {
+                            doSomething();
+                            // cui-rewrite:disable SomeOtherRecipe
+                        } catch (Exception e) {
+                            handleException(e);
+                        }
+                    }
+
+                    void doSomething() {}
+                    void handleException(Exception e) {}
+                }
+                """,
+                """
+                class Test {
+                    void method() {
+                        try {
+                            doSomething();
+                            // cui-rewrite:disable SomeOtherRecipe
+                        } /*~~(Catch specific not Exception)~~>*/catch (Exception e) {
+                            handleException(e);
+                        }
+                    }
+
+                    void doSomething() {}
+                    void handleException(Exception e) {}
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void shouldSuppressWithSpecificRecipeNameInComment() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    void method() {
+                        try {
+                            doSomething();
+                        } catch (Exception e) {
+                            // cui-rewrite:disable InvalidExceptionUsageRecipe
+                            handleException(e);
+                        }
+                    }
+
+                    void doSomething() {}
+                    void handleException(Exception e) {}
+                }
+                """
+            )
+        );
+    }
 }

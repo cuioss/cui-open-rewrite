@@ -643,4 +643,121 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
+    @Test void preventDuplicateMarkersOnCatch() {
+        rewriteRun(
+            spec -> spec.expectedCyclesThatMakeChanges(1).cycles(2),
+            java(
+                """
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    void doSomething() throws Exception {
+                        // Something
+                    }
+                }
+                """,
+                """
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        } /*~~(Catch specific not Exception)~~>*/catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    void doSomething() throws Exception {
+                        // Something
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test void preventDuplicateMarkersOnThrow() {
+        rewriteRun(
+            spec -> spec.expectedCyclesThatMakeChanges(1).cycles(2),
+            java(
+                """
+                class Test {
+                    void test() throws Exception {
+                        throw new Exception("Bad practice");
+                    }
+                }
+                """,
+                """
+                class Test {
+                    void test() throws Exception {
+                        /*~~(Throw specific not Exception)~~>*/throw new Exception("Bad practice");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test void preventDuplicateMarkersOnNewClass() {
+        rewriteRun(
+            spec -> spec.expectedCyclesThatMakeChanges(1).cycles(2),
+            java(
+                """
+                class Test {
+                    Exception createException() {
+                        return new RuntimeException("Assignment case");
+                    }
+                }
+                """,
+                """
+                class Test {
+                    Exception createException() {
+                        return /*~~(Use specific not RuntimeException)~~>*/new RuntimeException("Assignment case");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test void handleExceptionInTryWithResources() {
+        rewriteRun(
+            java(
+                """
+                import java.io.FileInputStream;
+                import java.io.IOException;
+
+                class Test {
+                    void test() {
+                        try (FileInputStream fis = new FileInputStream("test.txt")) {
+                            // Use resource
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+                """,
+                """
+                import java.io.FileInputStream;
+                import java.io.IOException;
+
+                class Test {
+                    void test() {
+                        try (FileInputStream fis = new FileInputStream("test.txt")) {
+                            // Use resource
+                        } /*~~(Catch specific not Exception)~~>*/catch (Exception e) {
+                            /*~~(Throw specific not RuntimeException)~~>*/throw new RuntimeException(e);
+                        }
+                    }
+                }
+                """
+            )
+        );
+    }
+
 }
