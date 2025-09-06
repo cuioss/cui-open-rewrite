@@ -119,14 +119,14 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             switch (level) {
                 case INFO, WARN, ERROR, FATAL:
                     if (!usesLogRecord) {
-                        String message = level + " needs LogRecord";
+                        String message = "TODO: " + level + " needs LogRecord";
                         return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), message)));
                     }
                     break;
 
                 case DEBUG, TRACE:
                     if (usesLogRecord) {
-                        String message = level + " no LogRecord";
+                        String message = "TODO: " + level + " no LogRecord";
                         return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), message)));
                     }
                     break;
@@ -164,7 +164,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                 List<Expression> newArgs = new ArrayList<>(args);
                 newArgs.set(0, newLiteral);
                 mi = mi.withArguments(newArgs);
-                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), "Fixed placeholders")));
+                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), "TODO: Fixed placeholders")));
             }
 
             return mi;

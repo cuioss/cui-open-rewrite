@@ -208,8 +208,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                 """
                 class Test {
                     void method() {
-                        /*~~(Use CuiLogger)~~>*/System.out.println("Should not use System.out");
-                        /*~~(Use CuiLogger)~~>*/System.err.println("Should not use System.err");
+                        /*~~(TODO: Use CuiLogger)~~>*/System.out.println("Should not use System.out");
+                        /*~~(TODO: Use CuiLogger)~~>*/System.err.println("Should not use System.err");
                     }
                 }
                 """

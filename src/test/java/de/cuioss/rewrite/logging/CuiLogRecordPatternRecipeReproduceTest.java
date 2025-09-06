@@ -87,7 +87,7 @@ class CuiLogRecordPatternRecipeReproduceTest implements RewriteTest {
 
                     public void testMethod() {
                         String name = getName(); // This should not be processed as a log level
-                        /*~~(INFO needs LogRecord)~~>*/LOG.info("Test message"); // This should be processed but shouldn't fail
+                        /*~~(TODO: INFO needs LogRecord)~~>*/LOG.info("Test message"); // This should be processed but shouldn't fail
                     }
 
                     private String getName() {

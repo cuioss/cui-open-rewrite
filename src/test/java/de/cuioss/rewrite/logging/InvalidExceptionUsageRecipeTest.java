@@ -53,13 +53,13 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~(Catch specific not Exception)~~>*/catch (Exception e) {
+                        } /*~~(TODO: Catch specific not Exception)~~>*/catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
 
                     void doSomething() throws Exception {
-                        /*~~(Throw specific not Exception)~~>*/throw new Exception("test");
+                        /*~~(TODO: Throw specific not Exception)~~>*/throw new Exception("test");
                     }
                 }
                 """
@@ -90,7 +90,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~(Catch specific not RuntimeException)~~>*/catch (RuntimeException e) {
+                        } /*~~(TODO: Catch specific not RuntimeException)~~>*/catch (RuntimeException e) {
                             e.printStackTrace();
                         }
                     }
@@ -127,7 +127,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~(Catch specific not Throwable)~~>*/catch (Throwable t) {
+                        } /*~~(TODO: Catch specific not Throwable)~~>*/catch (Throwable t) {
                             t.printStackTrace();
                         }
                     }
@@ -154,7 +154,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                 """
                 class Test {
                     void test() throws Exception {
-                        /*~~(Throw specific not Exception)~~>*/throw new Exception("Bad practice");
+                        /*~~(TODO: Throw specific not Exception)~~>*/throw new Exception("Bad practice");
                     }
                 }
                 """
@@ -175,7 +175,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                 """
                 class Test {
                     void test() {
-                        /*~~(Throw specific not RuntimeException)~~>*/throw new RuntimeException("Bad practice");
+                        /*~~(TODO: Throw specific not RuntimeException)~~>*/throw new RuntimeException("Bad practice");
                     }
                 }
                 """
@@ -197,7 +197,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                 """
                 class Test {
                     void test() {
-                        Exception e = /*~~(Use specific not Exception)~~>*/new Exception("Bad practice");
+                        Exception e = /*~~(TODO: Use specific not Exception)~~>*/new Exception("Bad practice");
                         // Do something with e
                     }
                 }
@@ -261,7 +261,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                             doSomething();
                         } catch (IOException e) {
                             // Handle specific exception
-                        } /*~~(Catch specific not Exception)~~>*/catch (Exception e) {
+                        } /*~~(TODO: Catch specific not Exception)~~>*/catch (Exception e) {
                             // Generic catch as fallback
                         }
                     }
@@ -353,10 +353,10 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                         try {
                             try {
                                 doSomething();
-                            } /*~~(Catch specific not RuntimeException)~~>*/catch (RuntimeException re) {
-                                /*~~(Throw specific not Exception)~~>*/throw new Exception("Wrapping", re);
+                            } /*~~(TODO: Catch specific not RuntimeException)~~>*/catch (RuntimeException re) {
+                                /*~~(TODO: Throw specific not Exception)~~>*/throw new Exception("Wrapping", re);
                             }
-                        } /*~~(Catch specific not Exception)~~>*/catch (Exception e) {
+                        } /*~~(TODO: Catch specific not Exception)~~>*/catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
@@ -400,8 +400,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                         Supplier<String> supplier = () -> {
                             try {
                                 return doSomething();
-                            } /*~~(Catch specific not Exception)~~>*/catch (Exception e) {
-                                /*~~(Throw specific not RuntimeException)~~>*/throw new RuntimeException(e);
+                            } /*~~(TODO: Catch specific not Exception)~~>*/catch (Exception e) {
+                                /*~~(TODO: Throw specific not RuntimeException)~~>*/throw new RuntimeException(e);
                             }
                         };
                     }
@@ -480,7 +480,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                 """
                 class Test {
                     void test() throws Exception {
-                        /*~~(Throw specific not Exception)~~>*/throw new Exception("Bad practice");
+                        /*~~(TODO: Throw specific not Exception)~~>*/throw new Exception("Bad practice");
                     }
                 }
                 """
@@ -501,7 +501,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                 """
                 class Test {
                     Exception createException() {
-                        return /*~~(Use specific not RuntimeException)~~>*/new RuntimeException("Assignment case");
+                        return /*~~(TODO: Use specific not RuntimeException)~~>*/new RuntimeException("Assignment case");
                     }
                 }
                 """
@@ -526,7 +526,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                 """
                 class Test {
                     void test() {
-                        handleException(/*~~(Use specific not Exception)~~>*/new Exception("Parameter case"));
+                        handleException(/*~~(TODO: Use specific not Exception)~~>*/new Exception("Parameter case"));
                     }
                     
                     void handleException(Exception e) {
@@ -561,7 +561,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     }
 
                     void notSuppressedMethod() throws Exception {
-                        /*~~(Throw specific not Exception)~~>*/throw new Exception("Not suppressed");
+                        /*~~(TODO: Throw specific not Exception)~~>*/throw new Exception("Not suppressed");
                     }
                 }
                 """
@@ -592,8 +592,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~(Catch specific not Throwable)~~>*/catch (Throwable t) {
-                            /*~~(Throw specific not Throwable)~~>*/throw new Throwable("Wrapping", t);
+                        } /*~~(TODO: Catch specific not Throwable)~~>*/catch (Throwable t) {
+                            /*~~(TODO: Throw specific not Throwable)~~>*/throw new Throwable("Wrapping", t);
                         }
                     }
 
@@ -629,13 +629,13 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     static {
                         try {
                             initialize();
-                        } /*~~(Catch specific not Exception)~~>*/catch (Exception e) {
-                            /*~~(Throw specific not RuntimeException)~~>*/throw new RuntimeException("Static init failed", e);
+                        } /*~~(TODO: Catch specific not Exception)~~>*/catch (Exception e) {
+                            /*~~(TODO: Throw specific not RuntimeException)~~>*/throw new RuntimeException("Static init failed", e);
                         }
                     }
 
                     static void initialize() throws Exception {
-                        /*~~(Throw specific not Exception)~~>*/throw new Exception("Init error");
+                        /*~~(TODO: Throw specific not Exception)~~>*/throw new Exception("Init error");
                     }
                 }
                 """
@@ -667,7 +667,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~(Catch specific not Exception)~~>*/catch (Exception e) {
+                        } /*~~(TODO: Catch specific not Exception)~~>*/catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
@@ -695,7 +695,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                 """
                 class Test {
                     void test() throws Exception {
-                        /*~~(Throw specific not Exception)~~>*/throw new Exception("Bad practice");
+                        /*~~(TODO: Throw specific not Exception)~~>*/throw new Exception("Bad practice");
                     }
                 }
                 """
@@ -717,7 +717,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                 """
                 class Test {
                     Exception createException() {
-                        return /*~~(Use specific not RuntimeException)~~>*/new RuntimeException("Assignment case");
+                        return /*~~(TODO: Use specific not RuntimeException)~~>*/new RuntimeException("Assignment case");
                     }
                 }
                 """
@@ -750,8 +750,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try (FileInputStream fis = new FileInputStream("test.txt")) {
                             // Use resource
-                        } /*~~(Catch specific not Exception)~~>*/catch (Exception e) {
-                            /*~~(Throw specific not RuntimeException)~~>*/throw new RuntimeException(e);
+                        } /*~~(TODO: Catch specific not Exception)~~>*/catch (Exception e) {
+                            /*~~(TODO: Throw specific not RuntimeException)~~>*/throw new RuntimeException(e);
                         }
                     }
                 }

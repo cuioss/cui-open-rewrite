@@ -213,7 +213,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
                 if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
                     String simpleType = fqType.getClassName();
-                    String taskMessage = "Catch specific not " + simpleType;
+                    String taskMessage = "TODO: Catch specific not " + simpleType;
 
                     // Check if this comment already exists (from a previous run)
                     if (hasTaskComment(c, taskMessage) || c.getMarkers().findFirst(SearchResult.class).isPresent()) {
@@ -242,7 +242,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
                 if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
                     String simpleType = fqType.getClassName();
-                    String taskMessage = "Throw specific not " + simpleType;
+                    String taskMessage = "TODO: Throw specific not " + simpleType;
 
                     // Check if this comment already exists (from a previous run)
                     if (hasTaskComment(t, taskMessage) || t.getMarkers().findFirst(SearchResult.class).isPresent()) {
@@ -275,7 +275,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
             if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
                 String simpleType = fqType.getClassName();
-                String taskMessage = "Use specific not " + simpleType;
+                String taskMessage = "TODO: Use specific not " + simpleType;
 
                 // Check if this comment already exists (from a previous run)
                 if (hasTaskComment(nc, taskMessage) || nc.getMarkers().findFirst(SearchResult.class).isPresent()) {

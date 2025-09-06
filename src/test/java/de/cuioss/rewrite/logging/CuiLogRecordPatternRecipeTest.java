@@ -105,7 +105,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
 
                     void method() {
                         String username = "john";
-                        /*~~(INFO needs LogRecord)~~>*/LOGGER.info("User %s logged in", username);
+                        /*~~(TODO: INFO needs LogRecord)~~>*/LOGGER.info("User %s logged in", username);
                     }
                 }
                 """
@@ -134,7 +134,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
 
                     void method(Exception e) {
-                        /*~~(ERROR needs LogRecord)~~>*/LOGGER.error(e, "Error occurred: %s", e.getMessage());
+                        /*~~(TODO: ERROR needs LogRecord)~~>*/LOGGER.error(e, "Error occurred: %s", e.getMessage());
                     }
                 }
                 """
@@ -163,7 +163,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
 
                     void method() {
-                        /*~~(WARN needs LogRecord)~~>*/LOGGER.warn("Something is wrong");
+                        /*~~(TODO: WARN needs LogRecord)~~>*/LOGGER.warn("Something is wrong");
                     }
                 }
                 """
@@ -202,7 +202,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                         .build();
 
                     void method() {
-                        /*~~(DEBUG no LogRecord)~~>*/LOGGER.debug(DEBUG_MESSAGE.format("value"));
+                        /*~~(TODO: DEBUG no LogRecord)~~>*/LOGGER.debug(DEBUG_MESSAGE.format("value"));
                     }
                 }
                 """
@@ -241,7 +241,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                         .build();
 
                     void method() {
-                        /*~~(TRACE no LogRecord)~~>*/LOGGER.trace(TRACE_MESSAGE.format());
+                        /*~~(TODO: TRACE no LogRecord)~~>*/LOGGER.trace(TRACE_MESSAGE.format());
                     }
                 }
                 """
@@ -400,7 +400,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
 
                 class Test {
                     static class INFO {
-                        static final LogRecord USER_LOGIN = /*~~(Fixed placeholders)~~>*/LogRecordModel.builder()
+                        static final LogRecord USER_LOGIN = /*~~(TODO: Fixed placeholders)~~>*/LogRecordModel.builder()
                             .template("User %s logged in with ID: %s")
                             .prefix("TEST")
                             .identifier(1)

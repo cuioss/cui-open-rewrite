@@ -236,7 +236,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
         private J.MethodInvocation checkSystemStreams(J.MethodInvocation mi) {
             if (isSystemOutOrErr(mi)) {
-                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(randomId(), "Use CuiLogger")));
+                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(randomId(), "TODO: Use CuiLogger")));
             }
             return mi;
         }
