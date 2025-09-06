@@ -164,7 +164,8 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                 List<Expression> newArgs = new ArrayList<>(args);
                 newArgs.set(0, newLiteral);
                 mi = mi.withArguments(newArgs);
-                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), "TODO: Fixed placeholders")));
+                // Auto-fixed, no marker needed
+                return mi;
             }
 
             return mi;

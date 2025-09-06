@@ -400,7 +400,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
 
                 class Test {
                     static class INFO {
-                        static final LogRecord USER_LOGIN = /*~~(TODO: Fixed placeholders)~~>*/LogRecordModel.builder()
+                        static final LogRecord USER_LOGIN = LogRecordModel.builder()
                             .template("User %s logged in with ID: %s")
                             .prefix("TEST")
                             .identifier(1)
