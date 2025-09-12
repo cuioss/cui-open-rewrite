@@ -32,15 +32,6 @@ When conflicting information exists, AI systems must follow this priority order:
 
 These rules govern ALL development activities:
 
-### 🚨 PRE-1.0 PROJECT RULE (HIGHEST PRIORITY)
-**This project is PRE-1.0 and therefore:**
-- **NEVER deprecate code** - Remove it directly if not needed
-- **NEVER add transitional comments** like "TODO: Remove in v2.0"
-- **NEVER enforce backward compatibility** - Make breaking changes freely
-- **NEVER add @Deprecated annotations** - Delete unnecessary code immediately
-- **Clean APIs aggressively** - Remove unused methods, classes, and patterns
-- **Focus on final API design** - Design for post-1.0 stability, not pre-1.0 transitions
-
 ### General Process Rules
 1. **If in doubt, ask the user** - Never make assumptions
 2. **Always research topics** - Use available tools (WebSearch, WebFetch, etc.) to find the most recent best practices
@@ -98,7 +89,6 @@ Execute in sequence before ANY commit:
 ## Build Commands Template
 Common Maven commands for CUI projects:
 - Build project: `./mvnw clean install`
-- Build Single Module: `./mvnw clean install -pl <module-name>`
 - Run tests: `./mvnw test`
 - Run single test: `./mvnw test -Dtest=ClassName#methodName`
 - Clean-Up Code: `./mvnw -Ppre-commit clean install` -> Check the console after running the command and fix all errors and warnings, verify until they are all corrected
@@ -143,15 +133,6 @@ Common Maven commands for CUI projects:
 - Use @Override annotation consistently
 - Avoid premature optimization
 - See Lombok Usage section for annotation patterns
-
-### Lombok Usage
-**Reference**: `{STANDARDS_BASE_URL}/standards/java/java-code-standards.adoc`
-- Use `@Builder` for complex object creation
-- Use `@Value` for immutable objects
-- Use `@NonNull` for required parameters
-- Use `@ToString` and `@EqualsAndHashCode` for value objects
-- Use `@UtilityClass` for utility classes
-- Make proper use of `lombok.config` settings
 
 ## Logging Standards
 **References**: 

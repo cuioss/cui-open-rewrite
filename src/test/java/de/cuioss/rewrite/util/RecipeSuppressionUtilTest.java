@@ -30,7 +30,7 @@ import org.openrewrite.java.tree.J;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@EnableTestLogger @SuppressWarnings({
+@EnableTestLogger(rootLevel = TestLogLevel.DEBUG) @SuppressWarnings({
     "java:S2699", // Tests use assertions via LogAsserts
     "java:S5976"  // Similar tests are intentionally kept separate for clarity
 })
@@ -53,7 +53,7 @@ class RecipeSuppressionUtilTest {
         visitor.visit(cu, ctx);
 
         assertTrue(visitor.classWasSuppressed);
-        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.INFO,
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG,
             "Skipping class 'TestClass' due to cui-rewrite:disable comment");
     }
 
@@ -71,7 +71,7 @@ class RecipeSuppressionUtilTest {
         visitor.visit(cu, ctx);
 
         assertTrue(visitor.methodWasSuppressed);
-        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.INFO,
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG,
             "Skipping method 'testMethod' due to cui-rewrite:disable comment");
     }
 
@@ -105,7 +105,7 @@ class RecipeSuppressionUtilTest {
         visitor.visit(cu, ctx);
 
         assertTrue(visitor.classWasSuppressed);
-        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.INFO,
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG,
             "Skipping class 'TestClass' for recipe 'TestRecipe'");
     }
 
@@ -121,7 +121,7 @@ class RecipeSuppressionUtilTest {
         visitor.visit(cu, ctx);
 
         assertTrue(visitor.classWasSuppressed);
-        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.INFO,
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG,
             "Skipping class 'TestClass' for recipe 'de.cuioss.rewrite.TestRecipe'");
     }
 
@@ -166,7 +166,7 @@ class RecipeSuppressionUtilTest {
         visitor.visit(cu, ctx);
 
         assertTrue(visitor.classWasSuppressed);
-        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.INFO,
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG,
             "Skipping class 'TestClass' for recipe 'SimpleRecipe'");
     }
 
@@ -182,7 +182,7 @@ class RecipeSuppressionUtilTest {
         visitor.visit(cu, ctx);
 
         assertTrue(visitor.classWasSuppressed);
-        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.INFO,
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG,
             "Skipping class 'TestClass' for recipe 'com.example.TestRecipe'");
     }
 
@@ -306,7 +306,7 @@ class RecipeSuppressionUtilTest {
         // This test creates a scenario that exercises the getElementType/getElementName default cases
         // The logic is already tested indirectly through the existing tests
         // This test serves to document that behavior and ensure coverage
-        
+
         String source = """
             // cui-rewrite:disable
             public class TestClass {
@@ -321,7 +321,7 @@ class RecipeSuppressionUtilTest {
 
         assertTrue(visitor.classWasSuppressed);
         // This exercises the logging paths for both class and method suppression
-        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.INFO, "Skipping class 'TestClass'");
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Skipping class 'TestClass'");
     }
 
     private static class TestVisitor extends JavaIsoVisitor<@NonNull ExecutionContext> {

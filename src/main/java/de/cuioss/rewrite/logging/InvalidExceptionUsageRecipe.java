@@ -126,7 +126,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                 .map(Comment::getSuffix)
                 .anyMatch(suffix -> suffix.contains(taskMessage));
         }
-        
+
         /**
          * Checks if there's a suppression comment at the end of the try block that applies to this catch block.
          * This handles the common pattern where suppression is placed before the closing brace of try.
@@ -139,7 +139,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             }
             return false;
         }
-        
+
         private boolean checkSuppressionInTryBody(J.Block tryBody, Cursor cursor) {
             // First check comments in the try body's end space (before the closing brace)
             var endComments = tryBody.getEnd().getComments();
@@ -148,7 +148,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                     return true;
                 }
             }
-            
+
             // Also check if the last statement in the try block has trailing comments
             // This handles cases where the comment is attached to the last statement
             if (!tryBody.getStatements().isEmpty()) {
@@ -161,10 +161,10 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             }
             return false;
         }
-        
+
         private boolean hasSuppressionComment(String text) {
-            return text.contains(SUPPRESSION_COMMENT) && 
-                   (text.contains(RECIPE_NAME) || text.trim().endsWith(SUPPRESSION_COMMENT));
+            return text.contains(SUPPRESSION_COMMENT) &&
+                (text.contains(RECIPE_NAME) || text.trim().endsWith(SUPPRESSION_COMMENT));
         }
 
 
@@ -185,19 +185,19 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
                 return c;
             }
-            
+
             // Additional check: the comment before the catch might be in the catch's own prefix
             // This is because comments before "} catch" often attach to the catch block itself
             var catchComments = c.getPrefix().getComments();
             for (Comment comment : catchComments) {
                 String text = comment.printComment(getCursor());
-                if (text.contains(SUPPRESSION_COMMENT) && 
-                    (text.contains(RECIPE_NAME) || 
-                     text.trim().endsWith(SUPPRESSION_COMMENT))) {
+                if (text.contains(SUPPRESSION_COMMENT) &&
+                    (text.contains(RECIPE_NAME) ||
+                        text.trim().endsWith(SUPPRESSION_COMMENT))) {
                     return c;
                 }
             }
-            
+
             // Special case: Check if suppression comment is at the end of the try block body
             // This handles the case where the suppression is placed before the closing brace of try
             if (checkTryBlockEndSuppression()) {

@@ -229,17 +229,16 @@ public final class RecipeSuppressionUtil {
     /**
      * Logs the suppression event.
      */
-    // cui-rewrite:disable CuiLogRecordPatternRecipe
     private static void logSuppression(J element, String recipeName) {
         String elementType = getElementType(element);
         String elementName = getElementName(element);
 
         if (recipeName != null) {
-            LOG.info("Skipping {} '{}' for recipe '{}' due to {} comment",
+            LOG.debug("Skipping %s '%s' for recipe '%s' due to %s comment",
                 elementType, elementName, recipeName, SUPPRESSION_MARKER);
         } else {
-            LOG.info("Skipping {} '{}' due to {} comment",
-            elementType, elementName, SUPPRESSION_MARKER);
+            LOG.debug("Skipping %s '%s' due to %s comment",
+                elementType, elementName, SUPPRESSION_MARKER);
         }
     }
 

@@ -31,7 +31,7 @@ import static org.openrewrite.java.Assertions.java;
  * according to the CUI logging standards.
  * llm-rules: /Users/oliver/git/cui-llm-rules/standards/logging/testing-guide.adoc
  */
-@EnableTestLogger
+@EnableTestLogger(rootLevel = TestLogLevel.DEBUG)
 class AnnotationSuppressionLoggingTest implements RewriteTest {
 
     @Override public void defaults(RecipeSpec spec) {
@@ -54,7 +54,7 @@ class AnnotationSuppressionLoggingTest implements RewriteTest {
 
         // then - verify info level log message is present
         LogAsserts.assertLogMessagePresentContaining(
-            TestLogLevel.INFO,
+            TestLogLevel.DEBUG,
             "Skipping class 'TestClass' for recipe 'AnnotationNewlineFormat' due to cui-rewrite:disable comment"
         );
     }
@@ -76,7 +76,7 @@ class AnnotationSuppressionLoggingTest implements RewriteTest {
 
         // then - verify info level log message is present
         LogAsserts.assertLogMessagePresentContaining(
-            TestLogLevel.INFO,
+            TestLogLevel.DEBUG,
             "Skipping method 'toString' for recipe 'AnnotationNewlineFormat' due to cui-rewrite:disable comment"
         );
     }
@@ -96,7 +96,7 @@ class AnnotationSuppressionLoggingTest implements RewriteTest {
 
         // then - verify info level log message is present
         LogAsserts.assertLogMessagePresentContaining(
-            TestLogLevel.INFO,
+            TestLogLevel.DEBUG,
             "Skipping field"
         );
     }
