@@ -227,8 +227,8 @@ public class AnnotationNewlineFormat extends Recipe {
                 String currentWhitespace = firstMod.getPrefix().getWhitespace();
 
                 if (!currentWhitespace.contains("\n")) {
-                    // Get indentation from annotations
-                    String indent = getIndentationFromPrefix(cd.getLeadingAnnotations().getFirst().getPrefix());
+                    // Get proper indentation based on context
+                    String indent = getProperIndentation();
 
                     List<J.Modifier> newModifiers = new ArrayList<>(cd.getModifiers());
                     // Preserve comments when adding newline
@@ -245,8 +245,7 @@ public class AnnotationNewlineFormat extends Recipe {
                 J.Modifier firstMod = md.getModifiers().getFirst();
                 if (needsNewline(firstMod.getPrefix())) {
                     md = md.withModifiers(
-                        updateFirstModifierSpacing(md.getModifiers(),
-                            getIndentationFromPrefix(md.getLeadingAnnotations().getFirst().getPrefix()))
+                        updateFirstModifierSpacing(md.getModifiers(), getProperIndentation())
                     );
                 }
             } else {
@@ -256,7 +255,7 @@ public class AnnotationNewlineFormat extends Recipe {
                     String currentWhitespace = returnType.getPrefix().getWhitespace();
 
                     if (!currentWhitespace.contains("\n")) {
-                        String indent = getIndentationFromPrefix(md.getLeadingAnnotations().getFirst().getPrefix());
+                        String indent = getProperIndentation();
                         // Preserve comments when adding newline
                         Space currentPrefix = returnType.getPrefix();
                         md = md.withReturnTypeExpression(
@@ -273,8 +272,7 @@ public class AnnotationNewlineFormat extends Recipe {
                 J.Modifier firstMod = vd.getModifiers().getFirst();
                 if (needsNewline(firstMod.getPrefix())) {
                     vd = vd.withModifiers(
-                        updateFirstModifierSpacing(vd.getModifiers(),
-                            getIndentationFromPrefix(vd.getLeadingAnnotations().getFirst().getPrefix()))
+                        updateFirstModifierSpacing(vd.getModifiers(), getProperIndentation())
                     );
                 }
             } else {
@@ -284,7 +282,7 @@ public class AnnotationNewlineFormat extends Recipe {
                     String currentWhitespace = typeExpr.getPrefix().getWhitespace();
 
                     if (!currentWhitespace.contains("\n")) {
-                        String indent = getIndentationFromPrefix(vd.getLeadingAnnotations().getFirst().getPrefix());
+                        String indent = getProperIndentation();
                         // Preserve comments when adding newline
                         Space currentPrefix = typeExpr.getPrefix();
                         vd = vd.withTypeExpression(
@@ -326,6 +324,68 @@ public class AnnotationNewlineFormat extends Recipe {
                 return whitespace.substring(lastNewline + 1);
             }
             return whitespace;
+        }
+
+        /**
+         * Gets the proper indentation for the current element based on its context.
+         * This is cursor-aware and accounts for nested class/method indentation.
+         */
+        private String getProperIndentation() {
+            // Try to get indentation from the current element's prefix first
+            Cursor cursor = getCursor();
+            Object value = cursor.getValue();
+
+            if (value instanceof J) {
+                Space prefix = ((J) value).getPrefix();
+                String whitespace = prefix.getWhitespace();
+                int lastNewline = whitespace.lastIndexOf('\n');
+                if (lastNewline >= 0) {
+                    String indent = whitespace.substring(lastNewline + 1);
+                    // If we have actual indentation (not just from annotation), use it
+                    if (!indent.isEmpty()) {
+                        return indent;
+                    }
+                }
+            }
+
+            // Fall back to parent-based indentation calculation
+            return getParentIndentation(cursor);
+        }
+
+        /**
+         * Calculates indentation by looking at parent elements.
+         * Walks up the tree to find the first parent with proper indentation.
+         */
+        private String getParentIndentation(Cursor cursor) {
+            Cursor parent = cursor.getParent();
+            while (parent != null) {
+                Object parentValue = parent.getValue();
+                if (parentValue instanceof J.ClassDeclaration cd) {
+                    // Get indentation from the class declaration
+                    String whitespace = cd.getPrefix().getWhitespace();
+                    int lastNewline = whitespace.lastIndexOf('\n');
+                    if (lastNewline >= 0) {
+                        String parentIndent = whitespace.substring(lastNewline + 1);
+                        // Add one level of indentation (4 spaces by default)
+                        return parentIndent + "    ";
+                    }
+                } else if (parentValue instanceof J.MethodDeclaration md) {
+                    // Get indentation from the method declaration
+                    String whitespace = md.getPrefix().getWhitespace();
+                    int lastNewline = whitespace.lastIndexOf('\n');
+                    if (lastNewline >= 0) {
+                        return whitespace.substring(lastNewline + 1);
+                    }
+                }
+                try {
+                    parent = parent.getParent();
+                } catch (IllegalStateException e) {
+                    // Reached root
+                    break;
+                }
+            }
+            // No parent indentation found, return empty
+            return "";
         }
 
         private boolean needsNewline(@Nullable Space space) {

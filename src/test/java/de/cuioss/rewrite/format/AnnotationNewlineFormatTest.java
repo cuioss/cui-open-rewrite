@@ -134,7 +134,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                 """
                 class TestClass {
                     @Override
-                String toString() {
+                    String toString() {
                         return "test";
                     }
                 }
@@ -154,7 +154,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                 """
                 class TestClass {
                     @Deprecated
-                String field;
+                    String field;
                 }
                 """
             )
@@ -173,10 +173,10 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                 """
                 class TestClass {
                     @Deprecated
-                String field1;
+                    String field1;
                     @Deprecated
                 @SuppressWarnings("all")
-                Object field2;
+                    Object field2;
                 }
                 """
             )
@@ -212,7 +212,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                 class TestClass {
                     @Deprecated
                 @SuppressWarnings("all")
-                String getName() {
+                    String getName() {
                         return "name";
                     }
                 }
@@ -233,7 +233,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                 class TestClass {
                     @Deprecated
                 @SuppressWarnings("all")
-                String[] items;
+                    String[] items;
                 }
                 """
             )
@@ -271,9 +271,9 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                 """
                 public class Outer {
                     @Deprecated
-                public class Inner {
+                    public class Inner {
                         @Override
-                public String toString() {
+                        public String toString() {
                             return "inner";
                         }
                     }
@@ -319,7 +319,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                 """
                 public class TestClass {
                     @SuppressWarnings("squid:S00107")
-                // This comment explains why
+                    // This comment explains why
                     public void methodWithManyParams(int a, int b, int c, int d, int e, int f, int g, int h) {
                         // method body
                     }
@@ -348,7 +348,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                 """
                 public class AccessTokenCache {
                     @SuppressWarnings("java:S3776")
-                // owolff: 16 instead of 15 is acceptable here due to complexity of cache logic
+                    // owolff: 16 instead of 15 is acceptable here due to complexity of cache logic
                     public String computeIfAbsent(String key) {
                         return null;
                     }
