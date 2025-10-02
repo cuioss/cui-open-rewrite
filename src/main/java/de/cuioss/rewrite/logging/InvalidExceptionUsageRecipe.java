@@ -119,12 +119,13 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
         /**
          * Checks if a Space contains a comment with the given message.
+         * Uses printComment() to get the full comment text, similar to suppression checking.
          */
         private boolean containsTaskInSpace(Space space, String taskMessage) {
             return space.getComments().stream()
                 .filter(Comment::isMultiline)
-                .map(Comment::getSuffix)
-                .anyMatch(suffix -> suffix.contains(taskMessage));
+                .map(comment -> comment.printComment(getCursor()))
+                .anyMatch(text -> text.contains(taskMessage));
         }
 
         /**
