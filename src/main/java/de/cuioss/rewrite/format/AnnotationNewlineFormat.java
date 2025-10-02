@@ -209,8 +209,10 @@ public class AnnotationNewlineFormat extends Recipe {
 
                 // Only change if not already on new line
                 if (!currentWhitespace.contains("\n")) {
+                    // Preserve existing comments when reformatting
+                    Space currentPrefix = annotation.getPrefix();
                     annotation = annotation.withPrefix(
-                        Space.format("\n" + baseIndent)
+                        Space.build("\n" + baseIndent, currentPrefix.getComments())
                     );
                 }
                 result.add(annotation);
@@ -229,7 +231,9 @@ public class AnnotationNewlineFormat extends Recipe {
                     String indent = getIndentationFromPrefix(cd.getLeadingAnnotations().getFirst().getPrefix());
 
                     List<J.Modifier> newModifiers = new ArrayList<>(cd.getModifiers());
-                    newModifiers.set(0, firstMod.withPrefix(Space.format("\n" + indent)));
+                    // Preserve comments when adding newline
+                    Space currentPrefix = firstMod.getPrefix();
+                    newModifiers.set(0, firstMod.withPrefix(Space.build("\n" + indent, currentPrefix.getComments())));
                     cd = cd.withModifiers(newModifiers);
                 }
             }
@@ -253,8 +257,10 @@ public class AnnotationNewlineFormat extends Recipe {
 
                     if (!currentWhitespace.contains("\n")) {
                         String indent = getIndentationFromPrefix(md.getLeadingAnnotations().getFirst().getPrefix());
+                        // Preserve comments when adding newline
+                        Space currentPrefix = returnType.getPrefix();
                         md = md.withReturnTypeExpression(
-                            returnType.withPrefix(Space.format("\n" + indent))
+                            returnType.withPrefix(Space.build("\n" + indent, currentPrefix.getComments()))
                         );
                     }
                 }
@@ -279,8 +285,10 @@ public class AnnotationNewlineFormat extends Recipe {
 
                     if (!currentWhitespace.contains("\n")) {
                         String indent = getIndentationFromPrefix(vd.getLeadingAnnotations().getFirst().getPrefix());
+                        // Preserve comments when adding newline
+                        Space currentPrefix = typeExpr.getPrefix();
                         vd = vd.withTypeExpression(
-                            typeExpr.withPrefix(Space.format("\n" + indent))
+                            typeExpr.withPrefix(Space.build("\n" + indent, currentPrefix.getComments()))
                         );
                     }
                 }
@@ -302,7 +310,9 @@ public class AnnotationNewlineFormat extends Recipe {
 
             if (!currentWhitespace.contains("\n")) {
                 List<J.Modifier> newModifiers = new ArrayList<>(modifiers);
-                newModifiers.set(0, firstMod.withPrefix(Space.format("\n" + indent)));
+                // Preserve comments when adding newline
+                Space currentPrefix = firstMod.getPrefix();
+                newModifiers.set(0, firstMod.withPrefix(Space.build("\n" + indent, currentPrefix.getComments())));
                 return newModifiers;
             }
 

@@ -246,7 +246,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                 """
                 public class TestClass {
                     private String field;
-                    
+
                     public void method() {
                         // method body
                     }
@@ -301,8 +301,9 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    // Known limitation: Trailing comments on annotations are removed
-    // This is due to OpenRewrite's AST model not preserving inline comments during transformation
+    // Known limitation: Trailing comments on annotations are preserved but moved to next line
+    // This is due to OpenRewrite's AST model where inline comments are stored in the prefix
+    // of the NEXT element. When reformatting adds a newline, the comment moves with it.
     // See README.adoc for workarounds
     @Test void knownLimitation_trailingCommentsOnAnnotationsAreRemoved() {
         rewriteRun(
@@ -318,8 +319,38 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                 """
                 public class TestClass {
                     @SuppressWarnings("squid:S00107")
-                public void methodWithManyParams(int a, int b, int c, int d, int e, int f, int g, int h) {
+                // This comment explains why
+                    public void methodWithManyParams(int a, int b, int c, int d, int e, int f, int g, int h) {
                         // method body
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    // LIMITATION: Trailing inline comments are preserved but moved to next line
+    // This is due to OpenRewrite's AST model where inline comments are stored in the prefix
+    // of the NEXT element, not the current one. When we add newline formatting to the next
+    // element (e.g., method modifier), the comment comes with it.
+    // The comment is NOT lost, just repositioned.
+    @Test void knownLimitation_trailingCommentMovedToNextLine() {
+        rewriteRun(
+            java(
+                """
+                public class AccessTokenCache {
+                    @SuppressWarnings("java:S3776") // owolff: 16 instead of 15 is acceptable here due to complexity of cache logic
+                    public String computeIfAbsent(String key) {
+                        return null;
+                    }
+                }
+                """,
+                """
+                public class AccessTokenCache {
+                    @SuppressWarnings("java:S3776")
+                // owolff: 16 instead of 15 is acceptable here due to complexity of cache logic
+                    public String computeIfAbsent(String key) {
+                        return null;
                     }
                 }
                 """
