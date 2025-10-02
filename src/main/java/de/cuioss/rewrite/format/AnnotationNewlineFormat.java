@@ -144,6 +144,13 @@ public class AnnotationNewlineFormat extends Recipe {
                 }
             }
 
+            // For single annotation: if there's an inline comment, don't reformat
+            if (cd.getLeadingAnnotations().size() == 1 && !cd.getModifiers().isEmpty()) {
+                if (hasInlineComment(cd.getModifiers().getFirst().getPrefix())) {
+                    return false;
+                }
+            }
+
             // Check if there needs to be a newline after annotations
             if (!cd.getModifiers().isEmpty()) {
                 return !cd.getModifiers().getFirst().getPrefix().getWhitespace().contains("\n");
@@ -159,6 +166,20 @@ public class AnnotationNewlineFormat extends Recipe {
                     if (!md.getLeadingAnnotations().get(i).getPrefix().getWhitespace().contains("\n")) {
                         return true;
                     }
+                }
+            }
+
+            // For single annotation: if there's an inline comment, don't reformat
+            if (md.getLeadingAnnotations().size() == 1) {
+                Space nextElementPrefix = null;
+                if (!md.getModifiers().isEmpty()) {
+                    nextElementPrefix = md.getModifiers().getFirst().getPrefix();
+                } else if (md.getReturnTypeExpression() != null) {
+                    nextElementPrefix = md.getReturnTypeExpression().getPrefix();
+                }
+
+                if (nextElementPrefix != null && hasInlineComment(nextElementPrefix)) {
+                    return false;
                 }
             }
 
@@ -178,6 +199,20 @@ public class AnnotationNewlineFormat extends Recipe {
                     if (!vd.getLeadingAnnotations().get(i).getPrefix().getWhitespace().contains("\n")) {
                         return true;
                     }
+                }
+            }
+
+            // For single annotation: if there's an inline comment, don't reformat
+            if (vd.getLeadingAnnotations().size() == 1) {
+                Space nextElementPrefix = null;
+                if (!vd.getModifiers().isEmpty()) {
+                    nextElementPrefix = vd.getModifiers().getFirst().getPrefix();
+                } else if (vd.getTypeExpression() != null) {
+                    nextElementPrefix = vd.getTypeExpression().getPrefix();
+                }
+
+                if (nextElementPrefix != null && hasInlineComment(nextElementPrefix)) {
+                    return false;
                 }
             }
 
@@ -390,6 +425,24 @@ public class AnnotationNewlineFormat extends Recipe {
 
         private boolean needsNewline(@Nullable Space space) {
             return space == null || !space.getWhitespace().contains("\n");
+        }
+
+        /**
+         * Checks if the given Space contains an inline comment.
+         * An inline comment is one that appears on the same line (no newline before it in whitespace).
+         *
+         * @param space the Space to check
+         * @return true if there's an inline comment, false otherwise
+         */
+        private boolean hasInlineComment(Space space) {
+            if (space.getComments().isEmpty()) {
+                return false;
+            }
+
+            // Check if whitespace before any comment contains a newline
+            // If the whitespace doesn't contain \n, then the first comment is inline
+            String whitespace = space.getWhitespace();
+            return !whitespace.contains("\n");
         }
 
         private boolean isFieldDeclaration() {
