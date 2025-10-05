@@ -17,8 +17,11 @@ package de.cuioss.rewrite.logging;
 
 import org.junit.jupiter.api.Test;
 import org.openrewrite.java.JavaParser;
+import org.openrewrite.java.marker.JavaSourceSet;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
+
+import java.util.List;
 
 import static org.openrewrite.java.Assertions.java;
 
@@ -572,16 +575,37 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
             java(
                 """
                 import de.cuioss.tools.logging.CuiLogger;
-                
+
                 public class Example {
                     private static final CuiLogger LOGGER = new CuiLogger(Example.class);
-                    
+
                     public void test() {
                         // cui-rewrite:disable
                         LOGGER.info("Message without LogRecord");
                     }
                 }
                 """
+            )
+        );
+    }
+
+    @Test void shouldSkipTestSources() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                public class MyTest {
+                    private static final CuiLogger LOGGER = new CuiLogger(MyTest.class);
+
+                    void testMethod() {
+                        // This would normally trigger the recipe, but should be skipped for test sources
+                        LOGGER.info("Test message without LogRecord");
+                    }
+                }
+                """,
+                s -> s.path("src/test/java/MyTest.java")
+                    .markers(JavaSourceSet.build("test", List.of()))
             )
         );
     }
