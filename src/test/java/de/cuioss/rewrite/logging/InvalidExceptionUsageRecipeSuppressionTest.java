@@ -95,7 +95,7 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
                     void method() {
                         try {
                             doSomething();
-                        } /*~~(TODO: Catch specific not RuntimeException)~~>*/catch (RuntimeException e) {
+                        } /*~~(TODO: Catch specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (RuntimeException e) {
                             handleException(e);
                         }
                     }
@@ -222,7 +222,7 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
                         try {
                             doSomething();
                             // cui-rewrite:disable SomeOtherRecipe
-                        } /*~~(TODO: Catch specific not Exception)~~>*/catch (Exception e) {
+                        } /*~~(TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (Exception e) {
                             handleException(e);
                         }
                     }

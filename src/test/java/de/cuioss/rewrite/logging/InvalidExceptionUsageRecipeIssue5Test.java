@@ -47,7 +47,7 @@ class InvalidExceptionUsageRecipeIssue5Test implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~(TODO: Catch specific not Exception)~~>*/catch (Exception e) {
+                        } /*~~(TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
@@ -79,7 +79,7 @@ class InvalidExceptionUsageRecipeIssue5Test implements RewriteTest {
                 """
                 class Test {
                     void test() throws Exception {
-                        /*~~(TODO: Throw specific not Exception)~~>*/throw new Exception("test");
+                        /*~~(TODO: Throw specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/throw new Exception("test");
                     }
                 }
                 """
