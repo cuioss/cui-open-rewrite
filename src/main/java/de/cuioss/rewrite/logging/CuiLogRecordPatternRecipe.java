@@ -17,8 +17,10 @@ package de.cuioss.rewrite.logging;
 
 import de.cuioss.rewrite.util.BaseSuppressionVisitor;
 import org.openrewrite.ExecutionContext;
+import org.openrewrite.Preconditions;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
+import org.openrewrite.java.search.IsLikelyNotTest;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JLeftPadded;
@@ -66,7 +68,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
     }
 
     @Override public TreeVisitor<?, ExecutionContext> getVisitor() {
-        return new CuiLogRecordPatternVisitor();
+        return Preconditions.check(new IsLikelyNotTest(), new CuiLogRecordPatternVisitor());
     }
 
     @Override public List<Recipe> getRecipeList() {
