@@ -444,6 +444,29 @@ class RecipeSuppressionUtilTest {
         LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Skipping method 'toString'");
     }
 
+    @Test
+    void shouldSuppressMethodInvocationViaParentClass() {
+        // Tests isParentClassSuppressed (line 343-345) - method invocation inherits parent class suppression
+        String source = """
+            // cui-rewrite:disable
+            public class TestClass {
+                private static final de.cuioss.tools.logging.CuiLogger LOGGER = null;
+
+                public void method() {
+                    LOGGER.info("test");
+                }
+            }
+            """;
+
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+
+        MethodInvocationVisitor visitor = new MethodInvocationVisitor();
+        visitor.visit(cu, ctx);
+
+        assertTrue(visitor.methodInvocationWasSuppressed);
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Found class-level suppression on class TestClass");
+    }
+
     private static class MethodInvocationVisitor extends JavaIsoVisitor<@NonNull ExecutionContext> {
         boolean methodInvocationWasSuppressed;
 
