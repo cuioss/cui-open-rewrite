@@ -104,11 +104,11 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                 return templateCheck;
             }
 
-            // Check for zero-parameter format() calls and convert them to method references
-            J.MethodInvocation converted = convertZeroParamFormatToMethodReference(mi);
-            if (converted != mi) {
-                // Return the converted version (auto-fix)
-                return converted;
+            // Transform .format() calls to direct LogRecord usage
+            J.MethodInvocation transformed = transformFormatCallToDirectLogRecord(mi);
+            if (transformed != mi) {
+                // Return the transformed version (auto-fix)
+                return transformed;
             }
 
             // Check if this is a CuiLogger method invocation
@@ -192,13 +192,13 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                 TypeUtils.isOfClassType(type, "de.cuioss.tools.logging.LogRecordModel.Builder");
         }
 
-        private J.MethodInvocation convertZeroParamFormatToMethodReference(J.MethodInvocation mi) {
+        private J.MethodInvocation transformFormatCallToDirectLogRecord(J.MethodInvocation mi) {
             // Check if this is a CuiLogger method invocation
             if (isNotLoggerMethod(mi)) {
                 return mi;
             }
 
-            // Don't convert if this is DEBUG or TRACE (they shouldn't use LogRecord at all)
+            // Don't transform if this is DEBUG or TRACE (they shouldn't use LogRecord at all)
             String methodName = mi.getSimpleName();
             if ("debug".equals(methodName) || "trace".equals(methodName)) {
                 return mi;  // Will be flagged by LogRecord validation instead
@@ -211,66 +211,66 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
             Expression firstArg = args.getFirst();
 
-            // Check if first argument is a zero-parameter format() call
-            if (firstArg instanceof J.MethodInvocation formatCall && isZeroParamFormatCall(formatCall)) {
-                J.MemberReference methodRef = createFormatMethodReference(formatCall, true);
-                List<Expression> newArgs = new ArrayList<>(args);
-                newArgs.set(0, methodRef);
-                return mi.withArguments(newArgs);
+            // Check if first argument is a .format() call
+            if (firstArg instanceof J.MethodInvocation formatCall && isFormatCall(formatCall)) {
+                return transformFormatCall(mi, formatCall, 0);
             }
 
-            // Check for exception followed by zero-parameter format() call
+            // Check for exception followed by .format() call
             if (isExceptionType(firstArg) && args.size() > 1) {
                 Expression secondArg = args.get(1);
-                if (secondArg instanceof J.MethodInvocation formatCall && isZeroParamFormatCall(formatCall)) {
-                    J.MemberReference methodRef = createFormatMethodReference(formatCall, false);
-                    List<Expression> newArgs = new ArrayList<>(args);
-                    newArgs.set(1, methodRef);
-                    return mi.withArguments(newArgs);
+                if (secondArg instanceof J.MethodInvocation formatCall && isFormatCall(formatCall)) {
+                    return transformFormatCall(mi, formatCall, 1);
                 }
             }
 
             return mi;
         }
 
-        private boolean isZeroParamFormatCall(J.MethodInvocation formatCall) {
-            boolean hasNoArgs = formatCall.getArguments().isEmpty() ||
-                (formatCall.getArguments().size() == 1 && formatCall.getArguments().getFirst() instanceof J.Empty);
-            return FORMAT_METHOD_NAME.equals(formatCall.getSimpleName()) &&
-                hasNoArgs &&
-                formatCall.getSelect() != null;
+        private boolean isFormatCall(J.MethodInvocation methodInvocation) {
+            return FORMAT_METHOD_NAME.equals(methodInvocation.getSimpleName()) &&
+                methodInvocation.getSelect() != null &&
+                isLogRecordExpression(methodInvocation.getSelect());
         }
 
-        private J.MemberReference createFormatMethodReference(J.MethodInvocation formatCall, boolean preservePrefix) {
-            Expression selectBase = formatCall.getSelect();
-            // We already checked that getSelect() != null in isZeroParamFormatCall
-            // but add null check to satisfy static analysis
-            if (selectBase == null) {
-                throw new IllegalStateException("formatCall.getSelect() should not be null");
+        private J.MethodInvocation transformFormatCall(J.MethodInvocation loggerCall,
+                                                       J.MethodInvocation formatCall,
+                                                       int formatCallIndex) {
+            // Extract the LogRecord from format() call's select
+            Expression logRecord = formatCall.getSelect();
+            if (logRecord == null) {
+                return loggerCall;
             }
-            Expression select = preservePrefix ?
-                selectBase.withPrefix(formatCall.getPrefix()) :
-                selectBase;
 
-            return new J.MemberReference(
-                UUID.randomUUID(),
-                formatCall.getPrefix(),
-                formatCall.getMarkers(),
-                JRightPadded.build(select),
-                null, // No type parameters
-                JLeftPadded.build(new J.Identifier(
-                    UUID.randomUUID(),
-                    Space.EMPTY,
-                    Markers.EMPTY,
-                    Collections.emptyList(),
-                    FORMAT_METHOD_NAME,
-                    null,
-                    null
-                )),
-                formatCall.getType(),
-                formatCall.getMethodType(),
-                null // No variable
-            );
+            // Preserve the prefix from the format call on the LogRecord
+            logRecord = logRecord.withPrefix(formatCall.getPrefix());
+
+            // Get format() method's arguments
+            List<Expression> formatArgs = formatCall.getArguments();
+            // Filter out J.Empty instances
+            List<Expression> actualFormatArgs = formatArgs.stream()
+                .filter(arg -> !(arg instanceof J.Empty))
+                .toList();
+
+            // Build new argument list for logger call
+            List<Expression> newLoggerArgs = new ArrayList<>(loggerCall.getArguments());
+            newLoggerArgs.set(formatCallIndex, logRecord);
+
+            // Append format() arguments to logger call, ensuring proper spacing
+            if (!actualFormatArgs.isEmpty()) {
+                // Ensure the first appended argument has a space prefix if it doesn't already
+                List<Expression> argsToAdd = new ArrayList<>();
+                for (int i = 0; i < actualFormatArgs.size(); i++) {
+                    Expression arg = actualFormatArgs.get(i);
+                    if (i == 0 && arg.getPrefix().getWhitespace().isEmpty()) {
+                        arg = arg.withPrefix(Space.build(" ", Collections.emptyList()));
+                    }
+                    argsToAdd.add(arg);
+                }
+                newLoggerArgs.addAll(formatCallIndex + 1, argsToAdd);
+            }
+
+            return loggerCall.withArguments(newLoggerArgs);
         }
 
 
@@ -322,6 +322,12 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                 if (select != null) {
                     return isLogRecordExpression(select);
                 }
+            }
+
+            // Check for plain LogRecord reference (new direct pattern)
+            // e.g., LOGGER.info(INFO.SOME_MESSAGE, param1, param2)
+            if (isLogRecordExpression(expr)) {
+                return true;
             }
 
             return false;
