@@ -16,6 +16,7 @@
 package de.cuioss.rewrite.logging;
 
 import de.cuioss.rewrite.util.BaseSuppressionVisitor;
+import de.cuioss.rewrite.util.RecipeMarkerUtil;
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
@@ -41,30 +42,37 @@ public class CuiLoggerStandardsRecipe extends Recipe {
     private static final String LOGGER_NAME = "LOGGER";
     public static final String RECIPE_NAME = "CuiLoggerStandardsRecipe";
 
-    @Override public String getDisplayName() {
+    @Override
+    public String getDisplayName() {
         return "CUI logger standards";
     }
 
-    @Override public String getDescription() {
-        return "Enforces CUI-specific logging standards including proper logger naming, " +
-            "string substitution patterns, exception parameter position, parameter validation, " +
-            "LogRecord pattern usage for INFO/WARN/ERROR levels, " +
-            "and detection of System.out/System.err usage.";
+    @Override
+    public String getDescription() {
+        return """
+            Enforces CUI-specific logging standards including proper logger naming, \
+            string substitution patterns, exception parameter position, parameter validation, \
+            LogRecord pattern usage for INFO/WARN/ERROR levels, \
+            and detection of System.out/System.err usage.""";
     }
 
-    @Override public Set<String> getTags() {
+    @Override
+    public Set<String> getTags() {
         return Set.of("CUI", "logging", "standards");
     }
 
-    @Override public Duration getEstimatedEffortPerOccurrence() {
+    @Override
+    public Duration getEstimatedEffortPerOccurrence() {
         return Duration.ofMinutes(5);
     }
 
-    @Override public TreeVisitor<?, ExecutionContext> getVisitor() {
+    @Override
+    public TreeVisitor<?, ExecutionContext> getVisitor() {
         return new CuiLoggerStandardsVisitor();
     }
 
-    @Override public List<Recipe> getRecipeList() {
+    @Override
+    public List<Recipe> getRecipeList() {
         return List.of();
     }
 
@@ -78,7 +86,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             return UUID.randomUUID();
         }
 
-        @Override public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations variableDecls, ExecutionContext ctx) {
+        @Override
+        public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations variableDecls, ExecutionContext ctx) {
             J.VariableDeclarations vd = super.visitVariableDeclarations(variableDecls, ctx);
 
             // Only process field declarations, not local variables
@@ -206,7 +215,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         }
 
 
-        @Override public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
+        @Override
+        public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
             J.MethodInvocation mi = super.visitMethodInvocation(method, ctx);
 
             if (isSuppressed()) {
@@ -215,7 +225,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
             // Check for System.out/err usage
             mi = checkSystemStreams(mi);
-            if (mi.getMarkers().findFirst(SearchResult.class).isPresent()) {
+            if (RecipeMarkerUtil.hasSearchResultMarker(mi)) {
                 return mi;
             }
 
@@ -236,7 +246,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
         private J.MethodInvocation checkSystemStreams(J.MethodInvocation mi) {
             if (isSystemOutOrErr(mi)) {
-                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(randomId(), "TODO: Use CuiLogger. Suppress: // cui-rewrite:disable " + RECIPE_NAME)));
+                String message = RecipeMarkerUtil.createTaskMessage("Use CuiLogger", RECIPE_NAME);
+                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(randomId(), message)));
             }
             return mi;
         }
@@ -254,7 +265,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
             // Validate parameter count
             mi = validateParameterCount(mi, context);
-            if (mi.getMarkers().findFirst(SearchResult.class).isPresent()) {
+            if (RecipeMarkerUtil.hasSearchResultMarker(mi)) {
                 return mi;
             }
 
@@ -346,7 +357,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             }
 
             if (placeholderCount != paramCount) {
-                String message = "%d placeholders, %d params".formatted(placeholderCount, paramCount);
+                String action = "%d placeholders, %d params".formatted(placeholderCount, paramCount);
+                String message = RecipeMarkerUtil.createTaskMessage(action, RECIPE_NAME);
                 return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(randomId(), message)));
             }
 
@@ -423,10 +435,12 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
 
         private static class LoggerCallContext {
-            @Nullable Expression messageArg;
+            @Nullable
+            Expression messageArg;
             int messageArgIndex;
             boolean hasException;
-            @Nullable String message;
+            @Nullable
+            String message;
 
             LoggerCallContext(@Nullable Expression messageArg, int messageArgIndex, boolean hasException, @Nullable String message) {
                 this.messageArg = messageArg;

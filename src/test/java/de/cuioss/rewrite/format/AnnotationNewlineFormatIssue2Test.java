@@ -52,7 +52,7 @@ class AnnotationNewlineFormatIssue2Test implements RewriteTest {
                     }
                 }
                 """
-                // Expected: NO CHANGE - this code should remain exactly as is
+            // Expected: NO CHANGE - this code should remain exactly as is
             )
         );
     }
@@ -71,7 +71,7 @@ class AnnotationNewlineFormatIssue2Test implements RewriteTest {
                     }
                 }
                 """
-                // Expected: NO CHANGE
+            // Expected: NO CHANGE
             )
         );
     }
@@ -89,7 +89,7 @@ class AnnotationNewlineFormatIssue2Test implements RewriteTest {
                     private String legacyLogger;
                 }
                 """
-                // Expected: NO CHANGE
+            // Expected: NO CHANGE
             )
         );
     }

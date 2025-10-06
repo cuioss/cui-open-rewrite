@@ -45,14 +45,16 @@ public abstract class BaseSuppressionVisitor extends JavaIsoVisitor<ExecutionCon
         return RecipeSuppressionUtil.isSuppressed(getCursor(), recipeName);
     }
 
-    @Override public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
+    @Override
+    public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
         if (isSuppressed()) {
             return classDecl; // Skip entire class and children - this pattern is always the same
         }
         return super.visitClassDeclaration(classDecl, ctx);
     }
 
-    @Override public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
+    @Override
+    public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
         if (isSuppressed()) {
             return method; // Skip entire method and children - this pattern is always the same
         }

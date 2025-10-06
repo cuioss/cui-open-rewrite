@@ -23,6 +23,8 @@ import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.JavaIsoVisitor;
+import org.openrewrite.java.style.IntelliJ;
+import org.openrewrite.java.style.TabsAndIndentsStyle;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Space;
 
@@ -35,23 +37,28 @@ public class AnnotationNewlineFormat extends Recipe {
 
     public static final String RECIPE_NAME = "AnnotationNewlineFormat";
 
-    @Override public String getDisplayName() {
+    @Override
+    public String getDisplayName() {
         return "Format annotations with newlines";
     }
 
-    @Override public String getDescription() {
+    @Override
+    public String getDescription() {
         return "Ensures type-level and method-level annotations are on separate lines.";
     }
 
-    @Override public Set<String> getTags() {
+    @Override
+    public Set<String> getTags() {
         return Set.of("CUI", "format", "annotation");
     }
 
-    @Override public Duration getEstimatedEffortPerOccurrence() {
+    @Override
+    public Duration getEstimatedEffortPerOccurrence() {
         return Duration.ofMinutes(1);
     }
 
-    @Override public TreeVisitor<?, ExecutionContext> getVisitor() {
+    @Override
+    public TreeVisitor<?, ExecutionContext> getVisitor() {
         return new AnnotationNewlineFormatVisitor();
     }
 
@@ -59,10 +66,11 @@ public class AnnotationNewlineFormat extends Recipe {
 
         private static final CuiLogger LOGGER = new CuiLogger(AnnotationNewlineFormatVisitor.class);
 
-        @Override public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
+        @Override
+        public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
             // Check for suppression comments
             if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
-                LOGGER.debug("Skipping class {} due to suppression", classDecl.getSimpleName());
+                LOGGER.debug("Skipping class %s due to suppression", classDecl.getSimpleName());
                 return classDecl;
             }
 
@@ -73,7 +81,7 @@ public class AnnotationNewlineFormat extends Recipe {
                 return cd;
             }
 
-            LOGGER.debug("Formatting annotations for class: {}", cd.getSimpleName());
+            LOGGER.debug("Formatting annotations for class: %s", cd.getSimpleName());
             // Format annotations - ensure each on separate line
             cd = cd.withLeadingAnnotations(formatAnnotationList(cd.getLeadingAnnotations()));
 
@@ -83,10 +91,11 @@ public class AnnotationNewlineFormat extends Recipe {
             return cd;
         }
 
-        @Override public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
+        @Override
+        public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
             // Check for suppression comments
             if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
-                LOGGER.debug("Skipping method {} due to suppression", method.getSimpleName());
+                LOGGER.debug("Skipping method %s due to suppression", method.getSimpleName());
                 return method;
             }
 
@@ -97,7 +106,7 @@ public class AnnotationNewlineFormat extends Recipe {
                 return md;
             }
 
-            LOGGER.debug("Formatting annotations for method: {}", md.getSimpleName());
+            LOGGER.debug("Formatting annotations for method: %s", md.getSimpleName());
             // Format annotations - ensure each on separate line
             md = md.withLeadingAnnotations(formatAnnotationList(md.getLeadingAnnotations()));
 
@@ -107,7 +116,8 @@ public class AnnotationNewlineFormat extends Recipe {
             return md;
         }
 
-        @Override public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations multiVariable, ExecutionContext ctx) {
+        @Override
+        public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations multiVariable, ExecutionContext ctx) {
             // Check for suppression only on fields
             if (isFieldDeclaration() && RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
                 return multiVariable;
@@ -144,12 +154,12 @@ public class AnnotationNewlineFormat extends Recipe {
                 }
             }
 
-            // For single annotation: if there's an inline comment, don't reformat
-            if (cd.getLeadingAnnotations().size() == 1 && !cd.getModifiers().isEmpty()) {
-                if (hasInlineComment(cd.getModifiers().getFirst().getPrefix())) {
-                    return false;
-                }
+            // Check if the last annotation has a trailing inline comment
+            // If so, we should not reformat to preserve the comment position
+            if (!cd.getLeadingAnnotations().isEmpty() && !cd.getModifiers().isEmpty() && hasInlineComment(cd.getModifiers().getFirst().getPrefix())) {
+                return false;
             }
+
 
             // Check if there needs to be a newline after annotations
             if (!cd.getModifiers().isEmpty()) {
@@ -159,6 +169,7 @@ public class AnnotationNewlineFormat extends Recipe {
             return false;
         }
 
+        @SuppressWarnings("java:S3776")
         private boolean needsMethodFormatting(J.MethodDeclaration md) {
             // Check if annotations need to be on separate lines
             if (md.getLeadingAnnotations().size() > 1) {
@@ -169,8 +180,9 @@ public class AnnotationNewlineFormat extends Recipe {
                 }
             }
 
-            // For single annotation: if there's an inline comment, don't reformat
-            if (md.getLeadingAnnotations().size() == 1) {
+            // Check if the last annotation has a trailing inline comment
+            // If so, we should not reformat to preserve the comment position
+            if (!md.getLeadingAnnotations().isEmpty()) {
                 Space nextElementPrefix = null;
                 if (!md.getModifiers().isEmpty()) {
                     nextElementPrefix = md.getModifiers().getFirst().getPrefix();
@@ -192,6 +204,7 @@ public class AnnotationNewlineFormat extends Recipe {
             }
         }
 
+        @SuppressWarnings("java:S3776")
         private boolean needsFieldFormatting(J.VariableDeclarations vd) {
             // Check if annotations need to be on separate lines
             if (vd.getLeadingAnnotations().size() > 1) {
@@ -202,8 +215,9 @@ public class AnnotationNewlineFormat extends Recipe {
                 }
             }
 
-            // For single annotation: if there's an inline comment, don't reformat
-            if (vd.getLeadingAnnotations().size() == 1) {
+            // Check if the last annotation has a trailing inline comment
+            // If so, we should not reformat to preserve the comment position
+            if (!vd.getLeadingAnnotations().isEmpty()) {
                 Space nextElementPrefix = null;
                 if (!vd.getModifiers().isEmpty()) {
                     nextElementPrefix = vd.getModifiers().getFirst().getPrefix();
@@ -230,12 +244,13 @@ public class AnnotationNewlineFormat extends Recipe {
                 return annotations;
             }
 
-            LOGGER.debug("Formatting {} annotations to ensure each is on a separate line", annotations.size());
+            LOGGER.debug("Formatting %s annotations to ensure each is on a separate line", annotations.size());
             List<J.Annotation> result = new ArrayList<>();
             result.add(annotations.getFirst()); // Keep first annotation as-is
 
-            // Get base indentation from first annotation
-            String baseIndent = getIndentationFromPrefix(annotations.getFirst().getPrefix());
+            // Get base indentation from parent context, not from first annotation
+            // This is critical: inline annotations don't have parent indentation in their prefix
+            String baseIndent = getProperIndentation();
 
             // Format subsequent annotations
             for (int i = 1; i < annotations.size(); i++) {
@@ -352,15 +367,6 @@ public class AnnotationNewlineFormat extends Recipe {
             return modifiers;
         }
 
-        private String getIndentationFromPrefix(Space space) {
-            String whitespace = space.getWhitespace();
-            int lastNewline = whitespace.lastIndexOf('\n');
-            if (lastNewline >= 0) {
-                return whitespace.substring(lastNewline + 1);
-            }
-            return whitespace;
-        }
-
         /**
          * Gets the proper indentation for the current element based on its context.
          * This is cursor-aware and accounts for nested class/method indentation.
@@ -370,8 +376,8 @@ public class AnnotationNewlineFormat extends Recipe {
             Cursor cursor = getCursor();
             Object value = cursor.getValue();
 
-            if (value instanceof J) {
-                Space prefix = ((J) value).getPrefix();
+            if (value instanceof J j) {
+                Space prefix = j.getPrefix();
                 String whitespace = prefix.getWhitespace();
                 int lastNewline = whitespace.lastIndexOf('\n');
                 if (lastNewline >= 0) {
@@ -390,6 +396,7 @@ public class AnnotationNewlineFormat extends Recipe {
         /**
          * Calculates indentation by looking at parent elements.
          * Walks up the tree to find the first parent with proper indentation.
+         * Respects project-specific indentation style (spaces vs tabs, indent size).
          */
         private String getParentIndentation(Cursor cursor) {
             Cursor parent = cursor.getParent();
@@ -401,8 +408,9 @@ public class AnnotationNewlineFormat extends Recipe {
                     int lastNewline = whitespace.lastIndexOf('\n');
                     if (lastNewline >= 0) {
                         String parentIndent = whitespace.substring(lastNewline + 1);
-                        // Add one level of indentation (4 spaces by default)
-                        return parentIndent + "    ";
+                        // Add one level of indentation using project's style
+                        String singleIndent = getIndentString();
+                        return parentIndent + singleIndent;
                     }
                 } else if (parentValue instanceof J.MethodDeclaration md) {
                     // Get indentation from the method declaration
@@ -421,6 +429,24 @@ public class AnnotationNewlineFormat extends Recipe {
             }
             // No parent indentation found, return empty
             return "";
+        }
+
+        /**
+         * Gets the indentation string based on the project's style configuration.
+         * Respects both tab vs space preference and indent size.
+         *
+         * @return the indentation string (e.g., "    " for 4 spaces, "\t" for tabs, "  " for 2 spaces)
+         */
+        private String getIndentString() {
+            J.CompilationUnit cu = getCursor().firstEnclosingOrThrow(J.CompilationUnit.class);
+            TabsAndIndentsStyle style = cu.getStyle(TabsAndIndentsStyle.class, IntelliJ.tabsAndIndents());
+
+            if (style.getUseTabCharacter()) {
+                return "\t";
+            } else {
+                int indentSize = style.getIndentSize();
+                return " ".repeat(indentSize);
+            }
         }
 
         private boolean needsNewline(@Nullable Space space) {

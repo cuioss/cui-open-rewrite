@@ -23,10 +23,12 @@ import org.openrewrite.test.TypeValidation;
 
 import static org.openrewrite.java.Assertions.java;
 
+// cui-rewrite:disable CuiLoggerStandardsRecipe
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class CuiLoggerStandardsRecipeTest implements RewriteTest {
 
-    @Override public void defaults(RecipeSpec spec) {
+    @Override
+    public void defaults(RecipeSpec spec) {
         spec.recipe(new CuiLoggerStandardsRecipe())
             .typeValidationOptions(TypeValidation.none())
             .parser(JavaParser.fromJavaVersion()
@@ -59,7 +61,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                 ));
     }
 
-    @Test void detectIncorrectLoggerName() {
+    @Test
+    void detectIncorrectLoggerName() {
         rewriteRun(
             java(
                 """
@@ -80,7 +83,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectIncorrectLoggerModifiers() {
+    @Test
+    void detectIncorrectLoggerModifiers() {
         rewriteRun(
             java(
                 """
@@ -101,7 +105,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectIncorrectPlaceholderPatterns() {
+    @Test
+    void detectIncorrectPlaceholderPatterns() {
         rewriteRun(
             java(
                 """
@@ -134,7 +139,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectParameterCountMismatch() {
+    @Test
+    void detectParameterCountMismatch() {
         rewriteRun(
             java(
                 """
@@ -157,7 +163,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
 
                     void method() {
                         String value1 = "test";
-                        /*~~(2 placeholders, 1 params)~~>*/LOGGER.info("Message with %s and %s", value1);
+                        /*~~(TODO: 2 placeholders, 1 params. Suppress: // cui-rewrite:disable CuiLoggerStandardsRecipe)~~>*/LOGGER.info("Message with %s and %s", value1);
                     }
                 }
                 """
@@ -165,7 +171,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectWrongExceptionPosition() {
+    @Test
+    void detectWrongExceptionPosition() {
         rewriteRun(
             java(
                 """
@@ -194,7 +201,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectSystemOutUsage() {
+    @Test
+    void detectSystemOutUsage() {
         rewriteRun(
             java(
                 """
@@ -217,7 +225,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void suppressionWorks() {
+    @Test
+    void suppressionWorks() {
         rewriteRun(
             java(
                 """
@@ -237,7 +246,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void correctLoggerUsageNotFlagged() {
+    @Test
+    void correctLoggerUsageNotFlagged() {
         rewriteRun(
             java(
                 """
@@ -257,7 +267,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void shouldHandleLoggerWithPublicModifier() {
+    @Test
+    void shouldHandleLoggerWithPublicModifier() {
         rewriteRun(
             java(
                 """
@@ -278,7 +289,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void shouldHandleLoggerWithProtectedModifier() {
+    @Test
+    void shouldHandleLoggerWithProtectedModifier() {
         rewriteRun(
             java(
                 """
@@ -299,7 +311,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void shouldHandleLoggerWithoutFinalModifier() {
+    @Test
+    void shouldHandleLoggerWithoutFinalModifier() {
         rewriteRun(
             java(
                 """
@@ -320,7 +333,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void shouldHandleLoggerWithoutStaticModifier() {
+    @Test
+    void shouldHandleLoggerWithoutStaticModifier() {
         rewriteRun(
             java(
                 """
@@ -341,7 +355,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void shouldHandleExceptionFirstWithPlaceholders() {
+    @Test
+    void shouldHandleExceptionFirstWithPlaceholders() {
         rewriteRun(
             java(
                 """
@@ -362,7 +377,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void shouldDetectParameterMismatchWithExceptionFirst() {
+    @Test
+    void shouldDetectParameterMismatchWithExceptionFirst() {
         rewriteRun(
             java(
                 """
@@ -387,7 +403,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                     void method(Exception e) {
                         String value = "test";
                         // Exception first, then message with 2 placeholders but only 1 param
-                        /*~~(2 placeholders, 1 params)~~>*/LOGGER.error(e, "Error with %s and %s", value);
+                        /*~~(TODO: 2 placeholders, 1 params. Suppress: // cui-rewrite:disable CuiLoggerStandardsRecipe)~~>*/LOGGER.error(e, "Error with %s and %s", value);
                     }
                 }
                 """
@@ -395,7 +411,8 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void shouldNotModifyLocalVariableLoggers() {
+    @Test
+    void shouldNotModifyLocalVariableLoggers() {
         rewriteRun(
             java(
                 """

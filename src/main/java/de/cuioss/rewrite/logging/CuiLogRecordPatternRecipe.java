@@ -48,30 +48,36 @@ public class CuiLogRecordPatternRecipe extends Recipe {
         "https://gitingest.com/github.com/cuioss/cui-llm-rules/tree/main/standards/logging/implementation-guide.adoc";
     public static final String RECIPE_NAME = "CuiLogRecordPatternRecipe";
 
-    @Override public String getDisplayName() {
+    @Override
+    public String getDisplayName() {
         return "CUI LogRecord pattern validation";
     }
 
-    @Override public String getDescription() {
+    @Override
+    public String getDescription() {
         return "Enforces proper usage of LogRecord pattern: " +
             "mandatory for INFO/WARN/ERROR/FATAL levels, " +
             "forbidden for DEBUG/TRACE levels. " +
             "See: " + PATTERN_DOC_URL + ".";
     }
 
-    @Override public Set<String> getTags() {
+    @Override
+    public Set<String> getTags() {
         return Set.of("CUI", "logging", "LogRecord", "standards");
     }
 
-    @Override public Duration getEstimatedEffortPerOccurrence() {
+    @Override
+    public Duration getEstimatedEffortPerOccurrence() {
         return Duration.ofMinutes(3);
     }
 
-    @Override public TreeVisitor<?, ExecutionContext> getVisitor() {
+    @Override
+    public TreeVisitor<?, ExecutionContext> getVisitor() {
         return Preconditions.check(new IsLikelyNotTest(), new CuiLogRecordPatternVisitor());
     }
 
-    @Override public List<Recipe> getRecipeList() {
+    @Override
+    public List<Recipe> getRecipeList() {
         return List.of();
     }
 
@@ -83,7 +89,8 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             super(RECIPE_NAME);
         }
 
-        @Override public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
+        @Override
+        public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
             J.MethodInvocation mi = super.visitMethodInvocation(method, ctx);
 
             // Check if suppressed

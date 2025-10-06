@@ -17,6 +17,7 @@ package de.cuioss.rewrite.format;
 
 import org.junit.jupiter.api.Test;
 import org.openrewrite.java.JavaParser;
+import org.openrewrite.java.format.AutoFormat;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
@@ -25,12 +26,14 @@ import static org.openrewrite.java.Assertions.java;
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class AnnotationNewlineFormatTest implements RewriteTest {
 
-    @Override public void defaults(RecipeSpec spec) {
+    @Override
+    public void defaults(RecipeSpec spec) {
         spec.recipe(new AnnotationNewlineFormat())
             .parser(JavaParser.fromJavaVersion());
     }
 
-    @Test void formatSingleClassAnnotation() {
+    @Test
+    void formatSingleClassAnnotation() {
         rewriteRun(
             java(
                 """
@@ -48,7 +51,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatMultipleClassAnnotations() {
+    @Test
+    void formatMultipleClassAnnotations() {
         rewriteRun(
             java(
                 """
@@ -69,7 +73,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void preserveExistingNewlines() {
+    @Test
+    void preserveExistingNewlines() {
         rewriteRun(
             java(
                 """
@@ -85,7 +90,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatInterfaceAnnotations() {
+    @Test
+    void formatInterfaceAnnotations() {
         rewriteRun(
             java(
                 """
@@ -103,7 +109,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatEnumAnnotations() {
+    @Test
+    void formatEnumAnnotations() {
         rewriteRun(
             java(
                 """
@@ -121,7 +128,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatPackagePrivateMethodWithAnnotation() {
+    @Test
+    void formatPackagePrivateMethodWithAnnotation() {
         rewriteRun(
             java(
                 """
@@ -143,7 +151,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatPackagePrivateFieldWithAnnotation() {
+    @Test
+    void formatPackagePrivateFieldWithAnnotation() {
         rewriteRun(
             java(
                 """
@@ -161,7 +170,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatMultiplePackagePrivateFieldsWithAnnotations() {
+    @Test
+    void formatMultiplePackagePrivateFieldsWithAnnotations() {
         rewriteRun(
             java(
                 """
@@ -175,7 +185,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     @Deprecated
                     String field1;
                     @Deprecated
-                @SuppressWarnings("all")
+                    @SuppressWarnings("all")
                     Object field2;
                 }
                 """
@@ -183,7 +193,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatPackagePrivateClassWithAnnotation() {
+    @Test
+    void formatPackagePrivateClassWithAnnotation() {
         // This test expects no change since package-private classes at top level
         // already have the correct formatting
         rewriteRun(
@@ -198,7 +209,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatMethodWithoutModifiersButWithReturnType() {
+    @Test
+    void formatMethodWithoutModifiersButWithReturnType() {
         rewriteRun(
             java(
                 """
@@ -211,7 +223,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                 """
                 class TestClass {
                     @Deprecated
-                @SuppressWarnings("all")
+                    @SuppressWarnings("all")
                     String getName() {
                         return "name";
                     }
@@ -221,7 +233,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatFieldWithoutModifiersButWithType() {
+    @Test
+    void formatFieldWithoutModifiersButWithType() {
         rewriteRun(
             java(
                 """
@@ -232,7 +245,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                 """
                 class TestClass {
                     @Deprecated
-                @SuppressWarnings("all")
+                    @SuppressWarnings("all")
                     String[] items;
                 }
                 """
@@ -240,7 +253,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void preserveFormattingWhenNoAnnotations() {
+    @Test
+    void preserveFormattingWhenNoAnnotations() {
         rewriteRun(
             java(
                 """
@@ -256,7 +270,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatNestedClassAnnotations() {
+    @Test
+    void formatNestedClassAnnotations() {
         rewriteRun(
             java(
                 """
@@ -283,7 +298,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatAnnotationWithArrayValues() {
+    @Test
+    void formatAnnotationWithArrayValues() {
         rewriteRun(
             java(
                 """
@@ -301,10 +317,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    // FIXED: Trailing comments on annotations are now preserved on the same line
-    // This was previously a known limitation, but has been resolved.
-    // Single annotations with inline comments are now left untouched.
-    @Test void preserveTrailingCommentsOnSingleAnnotation() {
+    @Test
+    void preserveTrailingCommentOnSingleAnnotation() {
         rewriteRun(
             java(
                 """
@@ -315,26 +329,183 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     }
                 }
                 """
-                // Expected: NO CHANGE - inline comment is preserved
             )
         );
     }
 
-    // FIXED: Trailing inline comments are now preserved on the same line
-    // This was previously a known limitation, but has been resolved.
-    // Single annotations with inline comments are now left untouched.
-    @Test void preserveTrailingCommentOnSingleAnnotation() {
+    @Test
+    void preserveTrailingCommentOnPackagePrivateMethod() {
         rewriteRun(
             java(
                 """
-                public class AccessTokenCache {
-                    @SuppressWarnings("java:S3776") // owolff: 16 instead of 15 is acceptable here due to complexity of cache logic
-                    public String computeIfAbsent(String key) {
-                        return null;
+                public class TestClass {
+                    @SuppressWarnings("java:S1612") // Cannot use method reference due to ambiguous get() methods
+                    void concurrentAccess() {
+                        // method body
                     }
                 }
                 """
-                // Expected: NO CHANGE - inline comment is preserved
+            )
+        );
+    }
+
+    @Test
+    void preserveTrailingCommentOnMultipleAnnotations() {
+        rewriteRun(
+            java(
+                """
+                public class TestClass {
+                    @Deprecated
+                    @SuppressWarnings("java:S1612") // Cannot use method reference due to ambiguous get() methods
+                    void concurrentAccess() {
+                        // method body
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void preserveTrailingCommentWithOverrideAnnotation() {
+        rewriteRun(
+            java(
+                """
+                public class HttpJwksLoader {
+                    @Override
+                    @SuppressWarnings("java:S3776") // Cognitive complexity - initialization logic requires these checks
+                    public void initJWKSLoader() {
+                        // method body
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void preserveTrailingCommentOnFieldAnnotations() {
+        rewriteRun(
+            java(
+                """
+                import java.util.List;
+
+                public class ClaimValue {
+                    @SuppressWarnings("unused")
+                    @Deprecated // Must not be null, but may be empty
+                    private final List<String> asList = null;
+                }
+                """
+            )
+        );
+    }
+
+    /**
+     * Test that single method annotation is separated from modifiers.
+     * Issue: @SafeVarargs private static boolean -> should be @SafeVarargs\nprivate static boolean
+     */
+    @Test
+    void shouldSeparateSingleMethodAnnotationFromModifiers() {
+        rewriteRun(
+            java(
+                """
+                class TestClass {
+                    @SafeVarargs private static boolean check(Class<?>... types) {
+                        return true;
+                    }
+                }
+                """,
+                """
+                class TestClass {
+                    @SafeVarargs
+                    private static boolean check(Class<?>... types) {
+                        return true;
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    /**
+     * Test that method annotations maintain proper indentation when split.
+     * Both annotations should have 4-space indentation to match the method's context.
+     * This is critical because AutoFormat will recombine annotations with inconsistent indentation.
+     */
+    @Test
+    void shouldPreserveIndentationForMethodAnnotations() {
+        rewriteRun(
+            java(
+                """
+                @Deprecated @SuppressWarnings("all") public class TestClass {
+                    @Deprecated @Override public void method() {}
+                }
+                """,
+                """
+                @Deprecated
+                @SuppressWarnings("all")
+                public class TestClass {
+                    @Deprecated
+                    @Override
+                    public void method() {}
+                }
+                """
+            )
+        );
+    }
+
+    /**
+     * Reproduces the AutoFormat issue: After AnnotationNewlineFormat splits class-level annotations,
+     * AutoFormat should NOT recombine them. This test verifies the formatting persists through AutoFormat.
+     */
+    @Test
+    void classAnnotationsShouldPersistThroughAutoFormat() {
+        rewriteRun(
+            spec -> spec.recipe(new AnnotationNewlineFormat())
+                .recipe(new AutoFormat())
+                .parser(JavaParser.fromJavaVersion()
+                    .dependsOn(
+                        """
+                        package de.cuioss.test.juli.junit5;
+                        public @interface EnableTestLogger {
+                            de.cuioss.test.juli.TestLogLevel rootLevel();
+                        }
+                        """,
+                        """
+                        package de.cuioss.test.juli;
+                        public enum TestLogLevel { DEBUG }
+                        """
+                    )),
+            java(
+                """
+                import de.cuioss.test.juli.TestLogLevel;
+                import de.cuioss.test.juli.junit5.EnableTestLogger;
+
+                @EnableTestLogger(rootLevel = TestLogLevel.DEBUG) @SuppressWarnings({
+                    "java:S2699",
+                    "java:S5976"
+                })
+                class RecipeSuppressionUtilTest {
+                    void testMethod() {
+                        // body
+                    }
+                }
+                """,
+                """
+                import de.cuioss.test.juli.TestLogLevel;
+                import de.cuioss.test.juli.junit5.EnableTestLogger;
+
+                @EnableTestLogger(rootLevel = TestLogLevel.DEBUG)
+                @SuppressWarnings({
+                        "java:S2699",
+                        "java:S5976"
+                })
+                class RecipeSuppressionUtilTest {
+                    void testMethod() {
+                        // body
+                    }
+                }
+                """
             )
         );
     }

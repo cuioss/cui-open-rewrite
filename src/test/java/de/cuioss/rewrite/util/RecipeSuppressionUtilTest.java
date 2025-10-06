@@ -27,8 +27,9 @@ import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.tree.J;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.lang.reflect.InvocationTargetException;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @EnableTestLogger(rootLevel = TestLogLevel.DEBUG) @SuppressWarnings({
     "java:S2699", // Tests use assertions via LogAsserts
@@ -39,7 +40,8 @@ class RecipeSuppressionUtilTest {
     private final JavaParser parser = JavaParser.fromJavaVersion().build();
     private final ExecutionContext ctx = new InMemoryExecutionContext();
 
-    @Test void shouldDetectClassSuppressionWithGeneralComment() {
+    @Test
+    void shouldDetectClassSuppressionWithGeneralComment() {
         String source = """
             // cui-rewrite:disable
             public class TestClass {
@@ -57,7 +59,8 @@ class RecipeSuppressionUtilTest {
             "Skipping class 'TestClass' due to cui-rewrite:disable comment");
     }
 
-    @Test void shouldDetectMethodSuppressionWithGeneralComment() {
+    @Test
+    void shouldDetectMethodSuppressionWithGeneralComment() {
         String source = """
             public class TestClass {
                 // cui-rewrite:disable
@@ -75,7 +78,8 @@ class RecipeSuppressionUtilTest {
             "Skipping method 'testMethod' due to cui-rewrite:disable comment");
     }
 
-    @Test void shouldNotSuppressWithoutComment() {
+    @Test
+    void shouldNotSuppressWithoutComment() {
         String source = """
             public class TestClass {
                 public void method() {}
@@ -93,7 +97,8 @@ class RecipeSuppressionUtilTest {
         assertFalse(visitor.fieldWasSuppressed);
     }
 
-    @Test void shouldSuppressSpecificRecipeBySimpleName() {
+    @Test
+    void shouldSuppressSpecificRecipeBySimpleName() {
         String source = """
             // cui-rewrite:disable TestRecipe
             public class TestClass {}
@@ -109,7 +114,8 @@ class RecipeSuppressionUtilTest {
             "Skipping class 'TestClass' for recipe 'TestRecipe'");
     }
 
-    @Test void shouldSuppressSpecificRecipeByFullyQualifiedName() {
+    @Test
+    void shouldSuppressSpecificRecipeByFullyQualifiedName() {
         String source = """
             // cui-rewrite:disable de.cuioss.rewrite.TestRecipe
             public class TestClass {}
@@ -125,7 +131,8 @@ class RecipeSuppressionUtilTest {
             "Skipping class 'TestClass' for recipe 'de.cuioss.rewrite.TestRecipe'");
     }
 
-    @Test void shouldNotSuppressDifferentRecipe() {
+    @Test
+    void shouldNotSuppressDifferentRecipe() {
         String source = """
             // cui-rewrite:disable OtherRecipe
             public class TestClass {}
@@ -139,7 +146,8 @@ class RecipeSuppressionUtilTest {
         assertFalse(visitor.classWasSuppressed);
     }
 
-    @Test void shouldSuppressWithAnnotationPrefix() {
+    @Test
+    void shouldSuppressWithAnnotationPrefix() {
         String source = """
             // cui-rewrite:disable
             @Deprecated
@@ -154,7 +162,8 @@ class RecipeSuppressionUtilTest {
         assertTrue(visitor.classWasSuppressed);
     }
 
-    @Test void shouldHandleRecipeNameWithoutPackage() {
+    @Test
+    void shouldHandleRecipeNameWithoutPackage() {
         String source = """
             // cui-rewrite:disable SimpleRecipe
             public class TestClass {}
@@ -170,7 +179,8 @@ class RecipeSuppressionUtilTest {
             "Skipping class 'TestClass' for recipe 'SimpleRecipe'");
     }
 
-    @Test void shouldMatchSimpleNameFromFullyQualifiedRecipe() {
+    @Test
+    void shouldMatchSimpleNameFromFullyQualifiedRecipe() {
         String source = """
             // cui-rewrite:disable TestRecipe
             public class TestClass {}
@@ -186,7 +196,8 @@ class RecipeSuppressionUtilTest {
             "Skipping class 'TestClass' for recipe 'com.example.TestRecipe'");
     }
 
-    @Test void shouldNotSuppressWhenRecipeNameMismatch() {
+    @Test
+    void shouldNotSuppressWhenRecipeNameMismatch() {
         String source = """
             // cui-rewrite:disable SimpleRecipe
             public class TestClass {}
@@ -200,7 +211,8 @@ class RecipeSuppressionUtilTest {
         assertFalse(visitor.classWasSuppressed);
     }
 
-    @Test void shouldHandleMultipleSuppressionComments() {
+    @Test
+    void shouldHandleMultipleSuppressionComments() {
         String source = """
             public class TestClass {
                 // cui-rewrite:disable
@@ -224,7 +236,8 @@ class RecipeSuppressionUtilTest {
         assertTrue(visitor.methodWasSuppressed);
     }
 
-    @Test void shouldSuppressWithTrailingComment() {
+    @Test
+    void shouldSuppressWithTrailingComment() {
         String source = """
             public class TestClass {
                 // cui-rewrite:disable
@@ -240,19 +253,19 @@ class RecipeSuppressionUtilTest {
         assertTrue(visitor.methodWasSuppressed);
     }
 
-    @Test void shouldTestPrivateConstructor() {
-        try {
-            var constructor = RecipeSuppressionUtil.class.getDeclaredConstructor();
-            constructor.setAccessible(true);
-            constructor.newInstance();
-            assertFalse(true, "Should have thrown UnsupportedOperationException");
-        } catch (Exception e) {
-            assertTrue(e.getCause() instanceof UnsupportedOperationException);
-            assertTrue(e.getCause().getMessage().contains("Utility class"));
-        }
+    @Test
+    void shouldTestPrivateConstructor() throws Exception {
+        var constructor = RecipeSuppressionUtil.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+
+        var exception = assertThrows(InvocationTargetException.class, constructor::newInstance);
+
+        assertTrue(exception.getCause() instanceof UnsupportedOperationException);
+        assertTrue(exception.getCause().getMessage().contains("Utility class"));
     }
 
-    @Test void shouldSuppressWithAnnotationsBetweenComments() {
+    @Test
+    void shouldSuppressWithAnnotationsBetweenComments() {
         String source = """
             // cui-rewrite:disable
             @Deprecated
@@ -270,7 +283,8 @@ class RecipeSuppressionUtilTest {
         assertTrue(visitor.classWasSuppressed);
     }
 
-    @Test void shouldHandleNullRecipeName() {
+    @Test
+    void shouldHandleNullRecipeName() {
         String source = """
             // cui-rewrite:disable SpecificRecipe
             public class TestClass {
@@ -287,7 +301,8 @@ class RecipeSuppressionUtilTest {
         assertTrue(visitor.classWasSuppressed);
     }
 
-    @Test void shouldHandleComplexRecipeMatching() {
+    @Test
+    void shouldHandleComplexRecipeMatching() {
         String source = """
             // cui-rewrite:disable com.example.MyRecipe
             public class TestClass {}
@@ -302,7 +317,8 @@ class RecipeSuppressionUtilTest {
         assertTrue(visitor.classWasSuppressed);
     }
 
-    @Test void shouldHandleUnknownElementTypes() {
+    @Test
+    void shouldHandleUnknownElementTypes() {
         // This test creates a scenario that exercises the getElementType/getElementName default cases
         // The logic is already tested indirectly through the existing tests
         // This test serves to document that behavior and ensure coverage
@@ -324,11 +340,165 @@ class RecipeSuppressionUtilTest {
         LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Skipping class 'TestClass'");
     }
 
+    @Test
+    void shouldSuppressMethodInvocationFromParentMethod() {
+        // Tests logger method call suppression from parent method (line 114-115)
+        String source = """
+            public class LoggerTest {
+                private static final de.cuioss.tools.logging.CuiLogger LOGGER = null;
+
+                // cui-rewrite:disable
+                public void method() {
+                    LOGGER.info("test");
+                }
+            }
+            """;
+
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+
+        MethodInvocationVisitor visitor = new MethodInvocationVisitor();
+        visitor.visit(cu, ctx);
+
+        assertTrue(visitor.methodInvocationWasSuppressed);
+    }
+
+    @Test
+    void shouldSuppressNewClassFromParentField() {
+        // Tests exception instantiation in field initialization (line 107-108)
+        String source = """
+            public class ExceptionTest {
+                // cui-rewrite:disable
+                private final RuntimeException exception = new RuntimeException("test");
+            }
+            """;
+
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+
+        NewClassVisitor visitor = new NewClassVisitor();
+        visitor.visit(cu, ctx);
+
+        assertTrue(visitor.newClassWasSuppressed);
+    }
+
+    @Test
+    void shouldSuppressClassWithCommentBetweenAnnotations() {
+        // Tests suppression comment attached to annotation prefix (line 140-142)
+        String source = """
+            @Deprecated
+            // cui-rewrite:disable
+            @SuppressWarnings("unused")
+            public class TestClass {
+                public void method() {}
+            }
+            """;
+
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+
+        TestVisitor visitor = new TestVisitor();
+        visitor.visit(cu, ctx);
+
+        assertTrue(visitor.classWasSuppressed);
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Skipping class 'TestClass'");
+    }
+
+    @Test
+    void shouldSuppressClassWithCommentBeforeBody() {
+        // Tests comment before class body opening brace (line 148-150)
+        String source = """
+            @Deprecated
+            public class TestClass
+            // cui-rewrite:disable
+            {
+                public void method() {}
+            }
+            """;
+
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+
+        TestVisitor visitor = new TestVisitor();
+        visitor.visit(cu, ctx);
+
+        assertTrue(visitor.classWasSuppressed);
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Skipping class 'TestClass'");
+    }
+
+    @Test
+    void shouldSuppressMethodWithCommentOnAnnotation() {
+        // Tests suppression comment on method annotation (line 158-160)
+        String source = """
+            public class TestClass {
+                // cui-rewrite:disable
+                @Override
+                public String toString() {
+                    return "test";
+                }
+            }
+            """;
+
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+
+        TestVisitor visitor = new TestVisitor();
+        visitor.visit(cu, ctx);
+
+        assertTrue(visitor.methodWasSuppressed);
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Skipping method 'toString'");
+    }
+
+    @Test
+    void shouldSuppressMethodInvocationViaParentClass() {
+        // Tests isParentClassSuppressed (line 343-345) - method invocation inherits parent class suppression
+        String source = """
+            // cui-rewrite:disable
+            public class TestClass {
+                private static final de.cuioss.tools.logging.CuiLogger LOGGER = null;
+
+                public void method() {
+                    LOGGER.info("test");
+                }
+            }
+            """;
+
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+
+        MethodInvocationVisitor visitor = new MethodInvocationVisitor();
+        visitor.visit(cu, ctx);
+
+        assertTrue(visitor.methodInvocationWasSuppressed);
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Found class-level suppression on class TestClass");
+    }
+
+    private static class MethodInvocationVisitor extends JavaIsoVisitor<@NonNull ExecutionContext> {
+        boolean methodInvocationWasSuppressed;
+
+        @Override
+        public J.@NonNull MethodInvocation visitMethodInvocation(J.@NonNull MethodInvocation method, @NonNull ExecutionContext ctx) {
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), null)) {
+                methodInvocationWasSuppressed = true;
+                return method;
+            }
+            return super.visitMethodInvocation(method, ctx);
+        }
+    }
+
+    private static class NewClassVisitor extends JavaIsoVisitor<@NonNull ExecutionContext> {
+        boolean newClassWasSuppressed;
+
+        @Override
+        public J.@NonNull NewClass visitNewClass(J.@NonNull NewClass newClass, @NonNull ExecutionContext ctx) {
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), null)) {
+                newClassWasSuppressed = true;
+                return newClass;
+            }
+            return super.visitNewClass(newClass, ctx);
+        }
+    }
+
     private static class TestVisitor extends JavaIsoVisitor<@NonNull ExecutionContext> {
         boolean classWasSuppressed;
         boolean methodWasSuppressed;
         boolean fieldWasSuppressed;
-        @Nullable final String recipeName;
+        @Nullable
+        final String recipeName;
 
         TestVisitor() {
             this(null);
@@ -338,7 +508,8 @@ class RecipeSuppressionUtilTest {
             this.recipeName = recipeName;
         }
 
-        @Override public J.@NonNull ClassDeclaration visitClassDeclaration(J.@NonNull ClassDeclaration classDecl, @NonNull ExecutionContext ctx) {
+        @Override
+        public J.@NonNull ClassDeclaration visitClassDeclaration(J.@NonNull ClassDeclaration classDecl, @NonNull ExecutionContext ctx) {
             if (RecipeSuppressionUtil.isSuppressed(getCursor(), recipeName)) {
                 classWasSuppressed = true;
                 return classDecl;
@@ -346,7 +517,8 @@ class RecipeSuppressionUtilTest {
             return super.visitClassDeclaration(classDecl, ctx);
         }
 
-        @Override public J.@NonNull MethodDeclaration visitMethodDeclaration(J.@NonNull MethodDeclaration method, @NonNull ExecutionContext ctx) {
+        @Override
+        public J.@NonNull MethodDeclaration visitMethodDeclaration(J.@NonNull MethodDeclaration method, @NonNull ExecutionContext ctx) {
             if (RecipeSuppressionUtil.isSuppressed(getCursor(), recipeName)) {
                 methodWasSuppressed = true;
                 return method;
@@ -354,7 +526,8 @@ class RecipeSuppressionUtilTest {
             return super.visitMethodDeclaration(method, ctx);
         }
 
-        @Override public J.@NonNull VariableDeclarations visitVariableDeclarations(J.@NonNull VariableDeclarations multiVariable, @NonNull ExecutionContext ctx) {
+        @Override
+        public J.@NonNull VariableDeclarations visitVariableDeclarations(J.@NonNull VariableDeclarations multiVariable, @NonNull ExecutionContext ctx) {
             if (isFieldDeclaration() && RecipeSuppressionUtil.isSuppressed(getCursor(), recipeName)) {
                 fieldWasSuppressed = true;
                 return multiVariable;

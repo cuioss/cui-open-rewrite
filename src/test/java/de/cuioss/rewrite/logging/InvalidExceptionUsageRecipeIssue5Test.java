@@ -26,10 +26,12 @@ import static org.openrewrite.java.Assertions.java;
  * Test to reproduce and verify the fix for GitHub Issue #5:
  * TODO markers are added repeatedly on every build run
  */
+// cui-rewrite:disable InvalidExceptionUsageRecipe
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions
 class InvalidExceptionUsageRecipeIssue5Test implements RewriteTest {
 
-    @Override public void defaults(RecipeSpec spec) {
+    @Override
+    public void defaults(RecipeSpec spec) {
         spec.recipe(new InvalidExceptionUsageRecipe())
             .parser(JavaParser.fromJavaVersion());
     }
@@ -38,7 +40,8 @@ class InvalidExceptionUsageRecipeIssue5Test implements RewriteTest {
      * Test scenario: Code already has the TODO marker comment in source.
      * The recipe should recognize it and NOT add another marker.
      */
-    @Test void shouldNotAddDuplicateWhenCommentAlreadyExists() {
+    @Test
+    void shouldNotAddDuplicateWhenCommentAlreadyExists() {
         rewriteRun(
             spec -> spec.expectedCyclesThatMakeChanges(0).cycles(1),
             java(
@@ -65,7 +68,8 @@ class InvalidExceptionUsageRecipeIssue5Test implements RewriteTest {
      * Test scenario similar to issue description - run recipe multiple times (3 cycles).
      * Should only make changes in first cycle.
      */
-    @Test void shouldBeIdempotentAcrossMultipleCycles() {
+    @Test
+    void shouldBeIdempotentAcrossMultipleCycles() {
         rewriteRun(
             spec -> spec.expectedCyclesThatMakeChanges(1).cycles(3),
             java(

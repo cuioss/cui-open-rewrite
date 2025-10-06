@@ -22,15 +22,18 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.java.Assertions.java;
 
+// cui-rewrite:disable InvalidExceptionUsageRecipe
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class InvalidExceptionUsageRecipeTest implements RewriteTest {
 
-    @Override public void defaults(RecipeSpec spec) {
+    @Override
+    public void defaults(RecipeSpec spec) {
         spec.recipe(new InvalidExceptionUsageRecipe())
             .parser(JavaParser.fromJavaVersion());
     }
 
-    @Test void detectCatchingException() {
+    @Test
+    void detectCatchingException() {
         rewriteRun(
             java(
                 """
@@ -67,7 +70,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectCatchingRuntimeException() {
+    @Test
+    void detectCatchingRuntimeException() {
         rewriteRun(
             java(
                 """
@@ -104,7 +108,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectCatchingThrowable() {
+    @Test
+    void detectCatchingThrowable() {
         rewriteRun(
             java(
                 """
@@ -141,7 +146,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectThrowingException() {
+    @Test
+    void detectThrowingException() {
         rewriteRun(
             java(
                 """
@@ -162,7 +168,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectThrowingRuntimeException() {
+    @Test
+    void detectThrowingRuntimeException() {
         rewriteRun(
             java(
                 """
@@ -183,7 +190,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectCreatingGenericException() {
+    @Test
+    void detectCreatingGenericException() {
         rewriteRun(
             java(
                 """
@@ -206,7 +214,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void allowSpecificExceptions() {
+    @Test
+    void allowSpecificExceptions() {
         rewriteRun(
             java(
                 """
@@ -230,7 +239,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void allowMultipleCatchWithSpecificFirst() {
+    @Test
+    void allowMultipleCatchWithSpecificFirst() {
         rewriteRun(
             java(
                 """
@@ -275,7 +285,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void respectSuppressionComment() {
+    @Test
+    void respectSuppressionComment() {
         rewriteRun(
             java(
                 """
@@ -300,7 +311,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void respectGeneralSuppressionComment() {
+    @Test
+    void respectGeneralSuppressionComment() {
         rewriteRun(
             java(
                 """
@@ -325,7 +337,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectNestedExceptionUsage() {
+    @Test
+    void detectNestedExceptionUsage() {
         rewriteRun(
             java(
                 """
@@ -370,7 +383,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectExceptionInLambda() {
+    @Test
+    void detectExceptionInLambda() {
         rewriteRun(
             java(
                 """
@@ -415,7 +429,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void allowCustomExceptionExtendingGeneric() {
+    @Test
+    void allowCustomExceptionExtendingGeneric() {
         rewriteRun(
             java(
                 """
@@ -443,7 +458,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void respectClassLevelSuppression() {
+    @Test
+    void respectClassLevelSuppression() {
         rewriteRun(
             java(
                 """
@@ -466,7 +482,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectDuplicateMarkersNotAdded() {
+    @Test
+    void detectDuplicateMarkersNotAdded() {
         rewriteRun(
             spec -> spec.expectedCyclesThatMakeChanges(1),
             java(
@@ -488,7 +505,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectExceptionInAssignment() {
+    @Test
+    void detectExceptionInAssignment() {
         rewriteRun(
             java(
                 """
@@ -509,7 +527,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectExceptionPassedAsParameter() {
+    @Test
+    void detectExceptionPassedAsParameter() {
         rewriteRun(
             java(
                 """
@@ -538,7 +557,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void respectMethodLevelSuppression() {
+    @Test
+    void respectMethodLevelSuppression() {
         rewriteRun(
             java(
                 """
@@ -569,7 +589,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void handleThrowableType() {
+    @Test
+    void handleThrowableType() {
         rewriteRun(
             java(
                 """
@@ -606,7 +627,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void handleExceptionInStaticContext() {
+    @Test
+    void handleExceptionInStaticContext() {
         rewriteRun(
             java(
                 """
@@ -643,7 +665,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void preventDuplicateMarkersOnCatch() {
+    @Test
+    void preventDuplicateMarkersOnCatch() {
         rewriteRun(
             spec -> spec.expectedCyclesThatMakeChanges(1).cycles(2),
             java(
@@ -681,7 +704,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void preventDuplicateMarkersOnThrow() {
+    @Test
+    void preventDuplicateMarkersOnThrow() {
         rewriteRun(
             spec -> spec.expectedCyclesThatMakeChanges(1).cycles(2),
             java(
@@ -703,7 +727,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void preventDuplicateMarkersOnNewClass() {
+    @Test
+    void preventDuplicateMarkersOnNewClass() {
         rewriteRun(
             spec -> spec.expectedCyclesThatMakeChanges(1).cycles(2),
             java(
@@ -725,7 +750,8 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void handleExceptionInTryWithResources() {
+    @Test
+    void handleExceptionInTryWithResources() {
         rewriteRun(
             java(
                 """

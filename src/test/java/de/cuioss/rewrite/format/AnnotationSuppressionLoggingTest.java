@@ -34,12 +34,14 @@ import static org.openrewrite.java.Assertions.java;
 @EnableTestLogger(rootLevel = TestLogLevel.DEBUG)
 class AnnotationSuppressionLoggingTest implements RewriteTest {
 
-    @Override public void defaults(RecipeSpec spec) {
+    @Override
+    public void defaults(RecipeSpec spec) {
         spec.recipe(new AnnotationNewlineFormat())
             .parser(JavaParser.fromJavaVersion());
     }
 
-    @Test void shouldLogWhenClassSuppressionIsTriggered() {
+    @Test
+    void shouldLogWhenClassSuppressionIsTriggered() {
         // when
         rewriteRun(
             java(
@@ -59,7 +61,8 @@ class AnnotationSuppressionLoggingTest implements RewriteTest {
         );
     }
 
-    @Test void shouldLogWhenMethodSuppressionIsTriggered() {
+    @Test
+    void shouldLogWhenMethodSuppressionIsTriggered() {
         // when
         rewriteRun(
             java(
@@ -81,7 +84,8 @@ class AnnotationSuppressionLoggingTest implements RewriteTest {
         );
     }
 
-    @Test void shouldLogWhenFieldSuppressionIsTriggered() {
+    @Test
+    void shouldLogWhenFieldSuppressionIsTriggered() {
         // when
         rewriteRun(
             java(
@@ -101,7 +105,8 @@ class AnnotationSuppressionLoggingTest implements RewriteTest {
         );
     }
 
-    @Test void shouldNotLogWhenNoSuppressionPresent() {
+    @Test
+    void shouldNotLogWhenNoSuppressionPresent() {
         // when - format without suppression comment
         rewriteRun(
             java(
@@ -128,7 +133,8 @@ class AnnotationSuppressionLoggingTest implements RewriteTest {
         );
     }
 
-    @Test void shouldNotLogWarningsOrErrors() {
+    @Test
+    void shouldNotLogWarningsOrErrors() {
         // when - execute any recipe operation
         rewriteRun(
             java(
