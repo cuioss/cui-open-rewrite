@@ -438,6 +438,7 @@ public class AnnotationNewlineFormat extends Recipe {
          *
          * @return the indentation string (e.g., "    " for 4 spaces, "\t" for tabs, "  " for 2 spaces)
          */
+        @SuppressWarnings("java:S5411") // owolff: Strange warning: If fixed using quick-fix sonar complains the code should be simplified
         private String getIndentString() {
             J.CompilationUnit cu = getCursor().firstEnclosingOrThrow(J.CompilationUnit.class);
             TabsAndIndentsStyle style = Style.from(TabsAndIndentsStyle.class, cu, IntelliJ::tabsAndIndents);

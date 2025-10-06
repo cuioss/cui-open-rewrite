@@ -328,10 +328,6 @@ public class CuiLogRecordPatternRecipe extends Recipe {
         }
 
         private boolean isLogRecordExpression(Expression expr) {
-            // Defensive null check for safety
-            if (expr == null) {
-                return false;
-            }
 
             // This checks if the expression is accessing a LogRecord constant
             // It could be a field access like INFO.SOME_MESSAGE
