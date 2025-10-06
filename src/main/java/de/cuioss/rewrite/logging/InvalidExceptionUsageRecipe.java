@@ -15,6 +15,7 @@
  */
 package de.cuioss.rewrite.logging;
 
+import de.cuioss.rewrite.util.RecipeMarkerUtil;
 import de.cuioss.rewrite.util.RecipeSuppressionUtil;
 import org.openrewrite.Cursor;
 import org.openrewrite.ExecutionContext;
@@ -99,53 +100,11 @@ public class InvalidExceptionUsageRecipe extends Recipe {
          * @return the complete task message with suppression hint
          */
         private String createTaskMessage(String action, String simpleType) {
-            return "TODO: %s specific not %s. Suppress: // cui-rewrite:disable %s".formatted(
-                action, simpleType, RECIPE_NAME);
+            String actionMessage = "%s specific not %s".formatted(action, simpleType);
+            return RecipeMarkerUtil.createTaskMessage(actionMessage, RECIPE_NAME);
         }
 
-        /**
-         * Checks if a comment with the given message already exists near the element.
-         * This prevents duplicate markers when recipes run multiple times.
-         * We check for the specific format that OpenRewrite uses: "/*~~(...)~~>* /"
-         */
-        private boolean hasTaskComment(J element, String taskMessage) {
-            return switch (element) {
-                case J.Try.Catch catchBlock -> hasTaskCommentInCatchBlock(catchBlock, taskMessage);
-                case J.Throw throwStmt -> hasTaskCommentInThrowStatement(throwStmt, taskMessage);
-                case J.NewClass newClass -> containsTaskInSpace(newClass.getPrefix(), taskMessage);
-                default -> false;
-            };
-        }
 
-        private boolean hasTaskCommentInCatchBlock(J.Try.Catch catchBlock, String taskMessage) {
-            if (containsTaskInSpace(catchBlock.getPrefix(), taskMessage)) {
-                return true;
-            }
-            // Also check the body prefix
-            return containsTaskInSpace(catchBlock.getBody().getPrefix(), taskMessage);
-        }
-
-        private boolean hasTaskCommentInThrowStatement(J.Throw throwStmt, String taskMessage) {
-            if (containsTaskInSpace(throwStmt.getPrefix(), taskMessage)) {
-                return true;
-            }
-            // Also check exception prefix if it's a NewClass
-            if (throwStmt.getException() instanceof J.NewClass nc) {
-                return containsTaskInSpace(nc.getPrefix(), taskMessage);
-            }
-            return false;
-        }
-
-        /**
-         * Checks if a Space contains a comment with the given message.
-         * Uses printComment() to get the full comment text, similar to suppression checking.
-         */
-        private boolean containsTaskInSpace(Space space, String taskMessage) {
-            return space.getComments().stream()
-                .filter(Comment::isMultiline)
-                .map(comment -> comment.printComment(getCursor()))
-                .anyMatch(text -> text.contains(taskMessage));
-        }
 
         /**
          * Checks if there's a suppression comment at the end of the try block that applies to this catch block.
@@ -239,7 +198,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                     String taskMessage = createTaskMessage("Catch", simpleType);
 
                     // Check if this comment already exists (from a previous run)
-                    if (hasTaskComment(c, taskMessage) || c.getMarkers().findFirst(SearchResult.class).isPresent()) {
+                    if (RecipeMarkerUtil.hasTaskComment(c, taskMessage, getCursor()) || RecipeMarkerUtil.hasSearchResultMarker(c)) {
                         return c;
                     }
                     return SearchResult.found(c, taskMessage);
@@ -270,7 +229,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                     String taskMessage = createTaskMessage("Throw", simpleType);
 
                     // Check if this comment already exists (from a previous run)
-                    if (hasTaskComment(t, taskMessage) || t.getMarkers().findFirst(SearchResult.class).isPresent()) {
+                    if (RecipeMarkerUtil.hasTaskComment(t, taskMessage, getCursor()) || RecipeMarkerUtil.hasSearchResultMarker(t)) {
                         return t;
                     }
                     return SearchResult.found(t, taskMessage);
@@ -305,7 +264,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                 String taskMessage = createTaskMessage("Use", simpleType);
 
                 // Check if this comment already exists (from a previous run)
-                if (hasTaskComment(nc, taskMessage) || nc.getMarkers().findFirst(SearchResult.class).isPresent()) {
+                if (RecipeMarkerUtil.hasTaskComment(nc, taskMessage, getCursor()) || RecipeMarkerUtil.hasSearchResultMarker(nc)) {
                     return nc;
                 }
                 return SearchResult.found(nc, taskMessage);

@@ -16,6 +16,7 @@
 package de.cuioss.rewrite.logging;
 
 import de.cuioss.rewrite.util.BaseSuppressionVisitor;
+import de.cuioss.rewrite.util.RecipeMarkerUtil;
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
@@ -224,7 +225,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
             // Check for System.out/err usage
             mi = checkSystemStreams(mi);
-            if (mi.getMarkers().findFirst(SearchResult.class).isPresent()) {
+            if (RecipeMarkerUtil.hasSearchResultMarker(mi)) {
                 return mi;
             }
 
@@ -245,7 +246,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
         private J.MethodInvocation checkSystemStreams(J.MethodInvocation mi) {
             if (isSystemOutOrErr(mi)) {
-                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(randomId(), "TODO: Use CuiLogger. Suppress: // cui-rewrite:disable " + RECIPE_NAME)));
+                String message = RecipeMarkerUtil.createTaskMessage("Use CuiLogger", RECIPE_NAME);
+                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(randomId(), message)));
             }
             return mi;
         }
@@ -263,7 +265,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
             // Validate parameter count
             mi = validateParameterCount(mi, context);
-            if (mi.getMarkers().findFirst(SearchResult.class).isPresent()) {
+            if (RecipeMarkerUtil.hasSearchResultMarker(mi)) {
                 return mi;
             }
 
@@ -355,8 +357,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             }
 
             if (placeholderCount != paramCount) {
-                String message = "TODO: %d placeholders, %d params. Suppress: // cui-rewrite:disable %s"
-                    .formatted(placeholderCount, paramCount, RECIPE_NAME);
+                String action = "%d placeholders, %d params".formatted(placeholderCount, paramCount);
+                String message = RecipeMarkerUtil.createTaskMessage(action, RECIPE_NAME);
                 return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(randomId(), message)));
             }
 
