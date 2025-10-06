@@ -258,11 +258,11 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
             // Append format() arguments to logger call, ensuring proper spacing
             if (!actualFormatArgs.isEmpty()) {
-                // Ensure the first appended argument has a space prefix if it doesn't already
+                // Ensure the first appended argument has a space prefix
                 List<Expression> argsToAdd = new ArrayList<>();
                 for (int i = 0; i < actualFormatArgs.size(); i++) {
                     Expression arg = actualFormatArgs.get(i);
-                    if (i == 0 && arg.getPrefix().getWhitespace().isEmpty()) {
+                    if (i == 0) {
                         arg = arg.withPrefix(Space.build(" ", Collections.emptyList()));
                     }
                     argsToAdd.add(arg);
