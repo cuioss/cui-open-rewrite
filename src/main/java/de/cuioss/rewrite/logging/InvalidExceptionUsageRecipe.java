@@ -25,7 +25,6 @@ import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.tree.Comment;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
-import org.openrewrite.java.tree.Space;
 import org.openrewrite.java.tree.TypeUtils;
 import org.openrewrite.marker.SearchResult;
 
@@ -103,7 +102,6 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             String actionMessage = "%s specific not %s".formatted(action, simpleType);
             return RecipeMarkerUtil.createTaskMessage(actionMessage, RECIPE_NAME);
         }
-
 
 
         /**

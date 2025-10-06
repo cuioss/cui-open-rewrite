@@ -16,12 +16,12 @@
 package de.cuioss.rewrite.util;
 
 import org.junit.jupiter.api.Test;
-import org.openrewrite.Cursor;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.marker.SearchResult;
+
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -58,7 +58,7 @@ class RecipeMarkerUtilTest {
         new JavaIsoVisitor<ExecutionContext>() {
             @Override
             public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
-                if (method.getSimpleName().equals("println")) {
+                if ("println".equals(method.getSimpleName())) {
                     // Test without marker
                     foundWithoutMarker.set(!RecipeMarkerUtil.hasSearchResultMarker(method));
 
@@ -93,7 +93,7 @@ class RecipeMarkerUtilTest {
         new JavaIsoVisitor<ExecutionContext>() {
             @Override
             public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
-                if (method.getSimpleName().equals("println")) {
+                if ("println".equals(method.getSimpleName())) {
                     boolean hasTask = RecipeMarkerUtil.hasTaskComment(method, "TODO: Test message", getCursor());
                     found.set(hasTask);
                 }
@@ -315,7 +315,7 @@ class RecipeMarkerUtilTest {
         new JavaIsoVisitor<ExecutionContext>() {
             @Override
             public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
-                if (method.getSimpleName().equals("println")) {
+                if ("println".equals(method.getSimpleName())) {
                     boolean hasTask = RecipeMarkerUtil.hasTaskComment(method, "nonexistent message", getCursor());
                     found.set(!hasTask);
                 }

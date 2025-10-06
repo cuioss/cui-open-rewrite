@@ -32,7 +32,7 @@ public final class RecipeMarkerUtil {
     }
 
     /**
-     * Creates a TODO task message with suppression hint.
+     * Creates a TO-DO task message with suppression hint.
      *
      * @param action the action description (e.g., "Use CuiLogger", "Fix parameter count")
      * @param recipeName the name of the recipe for suppression

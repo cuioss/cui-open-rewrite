@@ -154,11 +154,10 @@ public class AnnotationNewlineFormat extends Recipe {
 
             // Check if the last annotation has a trailing inline comment
             // If so, we should not reformat to preserve the comment position
-            if (!cd.getLeadingAnnotations().isEmpty() && !cd.getModifiers().isEmpty()) {
-                if (hasInlineComment(cd.getModifiers().getFirst().getPrefix())) {
-                    return false;
-                }
+            if (!cd.getLeadingAnnotations().isEmpty() && !cd.getModifiers().isEmpty() && hasInlineComment(cd.getModifiers().getFirst().getPrefix())) {
+                return false;
             }
+
 
             // Check if there needs to be a newline after annotations
             if (!cd.getModifiers().isEmpty()) {
@@ -168,6 +167,7 @@ public class AnnotationNewlineFormat extends Recipe {
             return false;
         }
 
+        @SuppressWarnings("java:S3776")
         private boolean needsMethodFormatting(J.MethodDeclaration md) {
             // Check if annotations need to be on separate lines
             if (md.getLeadingAnnotations().size() > 1) {
@@ -202,6 +202,7 @@ public class AnnotationNewlineFormat extends Recipe {
             }
         }
 
+        @SuppressWarnings("java:S3776")
         private boolean needsFieldFormatting(J.VariableDeclarations vd) {
             // Check if annotations need to be on separate lines
             if (vd.getLeadingAnnotations().size() > 1) {
@@ -362,15 +363,6 @@ public class AnnotationNewlineFormat extends Recipe {
             }
 
             return modifiers;
-        }
-
-        private String getIndentationFromPrefix(Space space) {
-            String whitespace = space.getWhitespace();
-            int lastNewline = whitespace.lastIndexOf('\n');
-            if (lastNewline >= 0) {
-                return whitespace.substring(lastNewline + 1);
-            }
-            return whitespace;
         }
 
         /**
