@@ -21,6 +21,7 @@ import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.java.Assertions.java;
 
+// cui-rewrite:disable CuiLogRecordPatternRecipe
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class CuiLogRecordPatternRecipeReproduceTest implements RewriteTest {
 

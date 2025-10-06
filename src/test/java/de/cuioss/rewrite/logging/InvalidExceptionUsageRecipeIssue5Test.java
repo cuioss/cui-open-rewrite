@@ -26,6 +26,7 @@ import static org.openrewrite.java.Assertions.java;
  * Test to reproduce and verify the fix for GitHub Issue #5:
  * TODO markers are added repeatedly on every build run
  */
+// cui-rewrite:disable InvalidExceptionUsageRecipe
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions
 class InvalidExceptionUsageRecipeIssue5Test implements RewriteTest {
 

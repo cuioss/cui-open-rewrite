@@ -27,8 +27,9 @@ import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.tree.J;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.lang.reflect.InvocationTargetException;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @EnableTestLogger(rootLevel = TestLogLevel.DEBUG) @SuppressWarnings({
     "java:S2699", // Tests use assertions via LogAsserts
@@ -240,16 +241,14 @@ class RecipeSuppressionUtilTest {
         assertTrue(visitor.methodWasSuppressed);
     }
 
-    @Test void shouldTestPrivateConstructor() {
-        try {
-            var constructor = RecipeSuppressionUtil.class.getDeclaredConstructor();
-            constructor.setAccessible(true);
-            constructor.newInstance();
-            assertFalse(true, "Should have thrown UnsupportedOperationException");
-        } /*~~(TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (Exception e) {
-            assertTrue(e.getCause() instanceof UnsupportedOperationException);
-            assertTrue(e.getCause().getMessage().contains("Utility class"));
-        }
+    @Test void shouldTestPrivateConstructor() throws Exception {
+        var constructor = RecipeSuppressionUtil.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+
+        var exception = assertThrows(InvocationTargetException.class, constructor::newInstance);
+
+        assertTrue(exception.getCause() instanceof UnsupportedOperationException);
+        assertTrue(exception.getCause().getMessage().contains("Utility class"));
     }
 
     @Test void shouldSuppressWithAnnotationsBetweenComments() {
