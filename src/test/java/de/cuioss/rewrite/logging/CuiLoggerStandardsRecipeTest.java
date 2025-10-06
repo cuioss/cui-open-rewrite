@@ -157,7 +157,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
 
                     void method() {
                         String value1 = "test";
-                        /*~~(2 placeholders, 1 params)~~>*/LOGGER.info("Message with %s and %s", value1);
+                        /*~~(TODO: 2 placeholders, 1 params. Suppress: // cui-rewrite:disable CuiLoggerStandardsRecipe)~~>*/LOGGER.info("Message with %s and %s", value1);
                     }
                 }
                 """
@@ -387,7 +387,7 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                     void method(Exception e) {
                         String value = "test";
                         // Exception first, then message with 2 placeholders but only 1 param
-                        /*~~(2 placeholders, 1 params)~~>*/LOGGER.error(e, "Error with %s and %s", value);
+                        /*~~(TODO: 2 placeholders, 1 params. Suppress: // cui-rewrite:disable CuiLoggerStandardsRecipe)~~>*/LOGGER.error(e, "Error with %s and %s", value);
                     }
                 }
                 """

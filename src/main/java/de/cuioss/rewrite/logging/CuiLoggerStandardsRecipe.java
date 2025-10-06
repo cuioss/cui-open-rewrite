@@ -346,7 +346,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             }
 
             if (placeholderCount != paramCount) {
-                String message = "%d placeholders, %d params".formatted(placeholderCount, paramCount);
+                String message = "TODO: %d placeholders, %d params. Suppress: // cui-rewrite:disable %s"
+                    .formatted(placeholderCount, paramCount, RECIPE_NAME);
                 return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(randomId(), message)));
             }
 
