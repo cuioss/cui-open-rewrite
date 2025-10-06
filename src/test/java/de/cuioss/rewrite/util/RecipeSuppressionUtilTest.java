@@ -327,7 +327,8 @@ class RecipeSuppressionUtilTest {
         boolean classWasSuppressed;
         boolean methodWasSuppressed;
         boolean fieldWasSuppressed;
-        @Nullable final String recipeName;
+        @Nullable
+        final String recipeName;
 
         TestVisitor() {
             this(null);

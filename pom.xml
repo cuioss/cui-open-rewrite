@@ -34,6 +34,7 @@
         <maven.jar.plugin.automatic.module.name>de.cuioss.rewrite</maven.jar.plugin.automatic.module.name>
         <openrewrite.version>8.61.2</openrewrite.version>
         <openrewrite.maven.version>6.17.0</openrewrite.maven.version>
+        <cui-open-rewrite.version>1.1.0-SNAPSHOT</cui-open-rewrite.version>
     </properties>
     <dependencies>
         <!-- OpenRewrite Core -->

@@ -237,8 +237,9 @@ public class AnnotationNewlineFormat extends Recipe {
             List<J.Annotation> result = new ArrayList<>();
             result.add(annotations.getFirst()); // Keep first annotation as-is
 
-            // Get base indentation from first annotation
-            String baseIndent = getIndentationFromPrefix(annotations.getFirst().getPrefix());
+            // Get base indentation from parent context, not from first annotation
+            // This is critical: inline annotations don't have parent indentation in their prefix
+            String baseIndent = getProperIndentation();
 
             // Format subsequent annotations
             for (int i = 1; i < annotations.size(); i++) {

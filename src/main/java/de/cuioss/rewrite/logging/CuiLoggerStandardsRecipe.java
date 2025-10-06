@@ -425,10 +425,12 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
 
         private static class LoggerCallContext {
-            @Nullable Expression messageArg;
+            @Nullable
+            Expression messageArg;
             int messageArgIndex;
             boolean hasException;
-            @Nullable String message;
+            @Nullable
+            String message;
 
             LoggerCallContext(@Nullable Expression messageArg, int messageArgIndex, boolean hasException, @Nullable String message) {
                 this.messageArg = messageArg;

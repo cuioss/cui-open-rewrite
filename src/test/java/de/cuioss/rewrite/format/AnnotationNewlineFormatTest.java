@@ -17,6 +17,7 @@ package de.cuioss.rewrite.format;
 
 import org.junit.jupiter.api.Test;
 import org.openrewrite.java.JavaParser;
+import org.openrewrite.java.format.AutoFormat;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
@@ -175,7 +176,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     @Deprecated
                     String field1;
                     @Deprecated
-                @SuppressWarnings("all")
+                    @SuppressWarnings("all")
                     Object field2;
                 }
                 """
@@ -211,7 +212,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                 """
                 class TestClass {
                     @Deprecated
-                @SuppressWarnings("all")
+                    @SuppressWarnings("all")
                     String getName() {
                         return "name";
                     }
@@ -232,7 +233,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                 """
                 class TestClass {
                     @Deprecated
-                @SuppressWarnings("all")
+                    @SuppressWarnings("all")
                     String[] items;
                 }
                 """
@@ -486,6 +487,87 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                 }
                 """
             // Expected: NO CHANGE - trailing comment is preserved
+            )
+        );
+    }
+
+    /**
+     * Test that method annotations maintain proper indentation when split.
+     * Both annotations should have 4-space indentation to match the method's context.
+     * This is critical because AutoFormat will recombine annotations with inconsistent indentation.
+     */
+    @Test void shouldPreserveIndentationForMethodAnnotations() {
+        rewriteRun(
+            java(
+                """
+                @Deprecated @SuppressWarnings("all") public class TestClass {
+                    @Deprecated @Override public void method() {}
+                }
+                """,
+                """
+                @Deprecated
+                @SuppressWarnings("all")
+                public class TestClass {
+                    @Deprecated
+                    @Override
+                    public void method() {}
+                }
+                """
+            )
+        );
+    }
+
+    /**
+     * Reproduces the AutoFormat issue: After AnnotationNewlineFormat splits class-level annotations,
+     * AutoFormat should NOT recombine them. This test verifies the formatting persists through AutoFormat.
+     */
+    @Test void classAnnotationsShouldPersistThroughAutoFormat() {
+        rewriteRun(
+            spec -> spec.recipe(new AnnotationNewlineFormat())
+                .recipe(new AutoFormat())
+                .parser(JavaParser.fromJavaVersion()
+                    .dependsOn(
+                        """
+                        package de.cuioss.test.juli.junit5;
+                        public @interface EnableTestLogger {
+                            de.cuioss.test.juli.TestLogLevel rootLevel();
+                        }
+                        """,
+                        """
+                        package de.cuioss.test.juli;
+                        public enum TestLogLevel { DEBUG }
+                        """
+                    )),
+            java(
+                """
+                import de.cuioss.test.juli.TestLogLevel;
+                import de.cuioss.test.juli.junit5.EnableTestLogger;
+
+                @EnableTestLogger(rootLevel = TestLogLevel.DEBUG) @SuppressWarnings({
+                    "java:S2699",
+                    "java:S5976"
+                })
+                class RecipeSuppressionUtilTest {
+                    void testMethod() {
+                        // body
+                    }
+                }
+                """,
+                """
+                import de.cuioss.test.juli.TestLogLevel;
+                import de.cuioss.test.juli.junit5.EnableTestLogger;
+
+                @EnableTestLogger(rootLevel = TestLogLevel.DEBUG)
+                @SuppressWarnings({
+                        "java:S2699",
+                        "java:S5976"
+                })
+                class RecipeSuppressionUtilTest {
+                    void testMethod() {
+                        // body
+                    }
+                }
+                """
             )
         );
     }
