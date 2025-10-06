@@ -144,8 +144,9 @@ public class AnnotationNewlineFormat extends Recipe {
                 }
             }
 
-            // For single annotation: if there's an inline comment, don't reformat
-            if (cd.getLeadingAnnotations().size() == 1 && !cd.getModifiers().isEmpty()) {
+            // Check if the last annotation has a trailing inline comment
+            // If so, we should not reformat to preserve the comment position
+            if (!cd.getLeadingAnnotations().isEmpty() && !cd.getModifiers().isEmpty()) {
                 if (hasInlineComment(cd.getModifiers().getFirst().getPrefix())) {
                     return false;
                 }
@@ -169,8 +170,9 @@ public class AnnotationNewlineFormat extends Recipe {
                 }
             }
 
-            // For single annotation: if there's an inline comment, don't reformat
-            if (md.getLeadingAnnotations().size() == 1) {
+            // Check if the last annotation has a trailing inline comment
+            // If so, we should not reformat to preserve the comment position
+            if (!md.getLeadingAnnotations().isEmpty()) {
                 Space nextElementPrefix = null;
                 if (!md.getModifiers().isEmpty()) {
                     nextElementPrefix = md.getModifiers().getFirst().getPrefix();
@@ -202,8 +204,9 @@ public class AnnotationNewlineFormat extends Recipe {
                 }
             }
 
-            // For single annotation: if there's an inline comment, don't reformat
-            if (vd.getLeadingAnnotations().size() == 1) {
+            // Check if the last annotation has a trailing inline comment
+            // If so, we should not reformat to preserve the comment position
+            if (!vd.getLeadingAnnotations().isEmpty()) {
                 Space nextElementPrefix = null;
                 if (!vd.getModifiers().isEmpty()) {
                     nextElementPrefix = vd.getModifiers().getFirst().getPrefix();
