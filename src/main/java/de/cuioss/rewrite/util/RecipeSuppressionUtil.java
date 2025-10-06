@@ -273,7 +273,8 @@ public final class RecipeSuppressionUtil {
     /**
      * Helper method: checks parents within a boundary.
      */
-    @SafeVarargs private static boolean checkParentsWithinBoundary(Cursor cursor, String recipeName,
+    @SafeVarargs
+    private static boolean checkParentsWithinBoundary(Cursor cursor, String recipeName,
         Class<? extends J> stopAtType, Class<? extends J>... parentTypes) {
         Cursor parentCursor = cursor.getParentTreeCursor();
         while (true) {
@@ -302,7 +303,8 @@ public final class RecipeSuppressionUtil {
     /**
      * Helper method: finds first parent of any of the specified types and checks suppression.
      */
-    @SafeVarargs private static boolean checkFirstParentOfTypes(Cursor cursor, String recipeName, Class<? extends J>... parentTypes) {
+    @SafeVarargs
+    private static boolean checkFirstParentOfTypes(Cursor cursor, String recipeName, Class<? extends J>... parentTypes) {
         Cursor parentCursor = cursor.getParentTreeCursor();
         while (true) {
             Object value = parentCursor.getValue();
@@ -329,7 +331,8 @@ public final class RecipeSuppressionUtil {
      * @return true if a parent class has suppression
      */
     // owolff: Refactoring would introduce complexity - hence suppressing
-    @SuppressWarnings("java:S3776") private static boolean isParentClassSuppressed(Cursor cursor, String recipeName) {
+    @SuppressWarnings("java:S3776")
+    private static boolean isParentClassSuppressed(Cursor cursor, String recipeName) {
         // Walk up the cursor tree looking for class declarations
         Cursor current = cursor;
         while (current != null) {

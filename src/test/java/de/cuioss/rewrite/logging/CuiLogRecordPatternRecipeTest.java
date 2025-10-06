@@ -29,7 +29,8 @@ import static org.openrewrite.java.Assertions.java;
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class CuiLogRecordPatternRecipeTest implements RewriteTest {
 
-    @Override public void defaults(RecipeSpec spec) {
+    @Override
+    public void defaults(RecipeSpec spec) {
         spec.recipe(new CuiLogRecordPatternRecipe())
             .parser(JavaParser.fromJavaVersion()
                 .dependsOn(
@@ -86,7 +87,8 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                 ));
     }
 
-    @Test void detectMissingLogRecordForInfo() {
+    @Test
+    void detectMissingLogRecordForInfo() {
         rewriteRun(
             java(
                 """
@@ -117,7 +119,8 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectMissingLogRecordForError() {
+    @Test
+    void detectMissingLogRecordForError() {
         rewriteRun(
             java(
                 """
@@ -146,7 +149,8 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectMissingLogRecordForWarn() {
+    @Test
+    void detectMissingLogRecordForWarn() {
         rewriteRun(
             java(
                 """
@@ -175,7 +179,8 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectLogRecordUsageInDebug() {
+    @Test
+    void detectLogRecordUsageInDebug() {
         rewriteRun(
             java(
                 """
@@ -214,7 +219,8 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectLogRecordUsageInTrace() {
+    @Test
+    void detectLogRecordUsageInTrace() {
         rewriteRun(
             java(
                 """
@@ -253,7 +259,8 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void acceptCorrectLogRecordUsageForInfo() {
+    @Test
+    void acceptCorrectLogRecordUsageForInfo() {
         rewriteRun(
             java(
                 """
@@ -280,7 +287,8 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectZeroParamFormatCallForError() {
+    @Test
+    void detectZeroParamFormatCallForError() {
         rewriteRun(
             java(
                 """
@@ -325,7 +333,8 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void acceptCorrectDebugWithoutLogRecord() {
+    @Test
+    void acceptCorrectDebugWithoutLogRecord() {
         rewriteRun(
             java(
                 """
@@ -344,7 +353,8 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void acceptCorrectTraceWithoutLogRecord() {
+    @Test
+    void acceptCorrectTraceWithoutLogRecord() {
         rewriteRun(
             java(
                 """
@@ -362,7 +372,8 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void suppressionWorks() {
+    @Test
+    void suppressionWorks() {
         rewriteRun(
             java(
                 """
@@ -381,7 +392,8 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void detectIncorrectPlaceholderInLogRecordTemplate() {
+    @Test
+    void detectIncorrectPlaceholderInLogRecordTemplate() {
         rewriteRun(
             java(
                 """
@@ -416,7 +428,8 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void acceptCorrectPlaceholderInLogRecordTemplate() {
+    @Test
+    void acceptCorrectPlaceholderInLogRecordTemplate() {
         rewriteRun(
             java(
                 """
@@ -437,7 +450,8 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void convertZeroParamFormatToMethodReference() {
+    @Test
+    void convertZeroParamFormatToMethodReference() {
         rewriteRun(
             java(
                 """
@@ -476,7 +490,8 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void convertZeroParamFormatWithExceptionToMethodReference() {
+    @Test
+    void convertZeroParamFormatWithExceptionToMethodReference() {
         rewriteRun(
             java(
                 """
@@ -521,7 +536,8 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void doNotConvertFormatWithParameters() {
+    @Test
+    void doNotConvertFormatWithParameters() {
         rewriteRun(
             java(
                 """
@@ -548,7 +564,8 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void acceptExistingMethodReference() {
+    @Test
+    void acceptExistingMethodReference() {
         rewriteRun(
             java(
                 """
@@ -571,7 +588,8 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void shouldWorkWithSuppressionComment() {
+    @Test
+    void shouldWorkWithSuppressionComment() {
         rewriteRun(
             java(
                 """
@@ -590,7 +608,8 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    @Test void shouldSkipTestSources() {
+    @Test
+    void shouldSkipTestSources() {
         rewriteRun(
             java(
                 """

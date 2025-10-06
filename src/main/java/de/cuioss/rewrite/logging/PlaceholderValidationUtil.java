@@ -67,7 +67,8 @@ public final class PlaceholderValidationUtil {
      * @param message the message to correct
      * @return the corrected message with all placeholders replaced by %s
      */
-    @Nullable public static String correctPlaceholders(@Nullable String message) {
+    @Nullable
+    public static String correctPlaceholders(@Nullable String message) {
         if (message == null) {
             return null;
         }

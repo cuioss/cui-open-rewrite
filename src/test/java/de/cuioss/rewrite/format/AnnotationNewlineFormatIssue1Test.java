@@ -29,7 +29,8 @@ import static org.openrewrite.java.Assertions.java;
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions
 class AnnotationNewlineFormatIssue1Test implements RewriteTest {
 
-    @Override public void defaults(RecipeSpec spec) {
+    @Override
+    public void defaults(RecipeSpec spec) {
         spec.recipe(new AnnotationNewlineFormat())
             .parser(JavaParser.fromJavaVersion());
     }
@@ -38,7 +39,8 @@ class AnnotationNewlineFormatIssue1Test implements RewriteTest {
      * Test proper indentation for nested class annotations.
      * The formatted annotation should maintain the parent class indentation (4 spaces).
      */
-    @Test void nestedClassShouldPreserveIndentation() {
+    @Test
+    void nestedClassShouldPreserveIndentation() {
         rewriteRun(
             java(
                 """
@@ -68,7 +70,8 @@ class AnnotationNewlineFormatIssue1Test implements RewriteTest {
     /**
      * Test deeply nested class indentation.
      */
-    @Test void deeplyNestedClassShouldPreserveIndentation() {
+    @Test
+    void deeplyNestedClassShouldPreserveIndentation() {
         rewriteRun(
             java(
                 """
@@ -97,7 +100,8 @@ class AnnotationNewlineFormatIssue1Test implements RewriteTest {
     /**
      * Test method annotation indentation in nested class.
      */
-    @Test void methodInNestedClassShouldPreserveIndentation() {
+    @Test
+    void methodInNestedClassShouldPreserveIndentation() {
         rewriteRun(
             java(
                 """

@@ -25,11 +25,13 @@ import static org.openrewrite.java.Assertions.java;
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class CuiLogRecordPatternRecipeReproduceTest implements RewriteTest {
 
-    @Override public void defaults(RecipeSpec spec) {
+    @Override
+    public void defaults(RecipeSpec spec) {
         spec.recipe(new CuiLogRecordPatternRecipe());
     }
 
-    @Test void shouldNotFailOnGetNameMethod() {
+    @Test
+    void shouldNotFailOnGetNameMethod() {
         rewriteRun(
             java(
                 """
@@ -53,7 +55,8 @@ class CuiLogRecordPatternRecipeReproduceTest implements RewriteTest {
         );
     }
 
-    @Test void shouldNotFailOnNonLoggerMethods() {
+    @Test
+    void shouldNotFailOnNonLoggerMethods() {
         rewriteRun(
             java(
                 """

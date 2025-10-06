@@ -33,7 +33,8 @@ import static org.openrewrite.java.Assertions.java;
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class BaseSuppressionVisitorTest implements RewriteTest {
 
-    @Test void classLevelSuppressionSkipsEntireClass() {
+    @Test
+    void classLevelSuppressionSkipsEntireClass() {
         rewriteRun(
             spec -> spec.recipe(new TestRecipe()),
             java(
@@ -49,7 +50,8 @@ class BaseSuppressionVisitorTest implements RewriteTest {
         );
     }
 
-    @Test void methodLevelSuppressionSkipsMethod() {
+    @Test
+    void methodLevelSuppressionSkipsMethod() {
         rewriteRun(
             spec -> spec.recipe(new TestRecipe()),
             java(
@@ -81,7 +83,8 @@ class BaseSuppressionVisitorTest implements RewriteTest {
         );
     }
 
-    @Test void elementLevelSuppressionWorksWhenHelperMethodUsed() {
+    @Test
+    void elementLevelSuppressionWorksWhenHelperMethodUsed() {
         rewriteRun(
             spec -> spec.recipe(new TestRecipe()),
             java(
@@ -107,7 +110,8 @@ class BaseSuppressionVisitorTest implements RewriteTest {
         );
     }
 
-    @Test void helperMethodWorksCorrectly() {
+    @Test
+    void helperMethodWorksCorrectly() {
         rewriteRun(
             spec -> spec.recipe(new TestRecipe()),
             java(
@@ -135,27 +139,33 @@ class BaseSuppressionVisitorTest implements RewriteTest {
     public static class TestRecipe extends Recipe {
         static final String RECIPE_NAME = "TestRecipe";
 
-        @Override public String getDisplayName() {
+        @Override
+        public String getDisplayName() {
             return "Test Recipe for BaseSuppressionVisitor";
         }
 
-        @Override public String getDescription() {
+        @Override
+        public String getDescription() {
             return "Marks System.out.println calls for testing suppression behavior.";
         }
 
-        @Override public Set<String> getTags() {
+        @Override
+        public Set<String> getTags() {
             return Set.of("test");
         }
 
-        @Override public Duration getEstimatedEffortPerOccurrence() {
+        @Override
+        public Duration getEstimatedEffortPerOccurrence() {
             return Duration.ofMinutes(1);
         }
 
-        @Override public TreeVisitor<?, ExecutionContext> getVisitor() {
+        @Override
+        public TreeVisitor<?, ExecutionContext> getVisitor() {
             return new TestVisitor();
         }
 
-        @Override public List<Recipe> getRecipeList() {
+        @Override
+        public List<Recipe> getRecipeList() {
             return List.of();
         }
 
@@ -165,7 +175,8 @@ class BaseSuppressionVisitorTest implements RewriteTest {
                 super(RECIPE_NAME);
             }
 
-            @Override public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
+            @Override
+            public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
                 J.MethodInvocation mi = super.visitMethodInvocation(method, ctx);
 
                 // Check element-level suppression using the convenient helper

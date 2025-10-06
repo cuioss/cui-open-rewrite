@@ -25,11 +25,13 @@ import static org.openrewrite.java.Assertions.java;
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
 
-    @Override public void defaults(RecipeSpec spec) {
+    @Override
+    public void defaults(RecipeSpec spec) {
         spec.recipe(new InvalidExceptionUsageRecipe());
     }
 
-    @Test void shouldSuppressCatchBlockWithCommentBeforeCatch() {
+    @Test
+    void shouldSuppressCatchBlockWithCommentBeforeCatch() {
         rewriteRun(
             spec -> spec.expectedCyclesThatMakeChanges(0),
             java(
@@ -52,7 +54,8 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
         );
     }
 
-    @Test void shouldSuppressCatchBlockWithCommentDirectlyBeforeCatch() {
+    @Test
+    void shouldSuppressCatchBlockWithCommentDirectlyBeforeCatch() {
         rewriteRun(
             java(
                 """
@@ -74,7 +77,8 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
         );
     }
 
-    @Test void shouldFlagUnsuppressedCatchBlock() {
+    @Test
+    void shouldFlagUnsuppressedCatchBlock() {
         rewriteRun(
             java(
                 """
@@ -109,7 +113,8 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
         );
     }
 
-    @Test void shouldSuppressCatchBlockFromMoreStringsExample() {
+    @Test
+    void shouldSuppressCatchBlockFromMoreStringsExample() {
         rewriteRun(
             java(
                 """
@@ -135,7 +140,8 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
         );
     }
 
-    @Test void shouldSuppressWithGeneralDisableComment() {
+    @Test
+    void shouldSuppressWithGeneralDisableComment() {
         rewriteRun(
             java(
                 """
@@ -157,7 +163,8 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
         );
     }
 
-    @Test void shouldHandleEmptyTryBlockSuppression() {
+    @Test
+    void shouldHandleEmptyTryBlockSuppression() {
         rewriteRun(
             java(
                 """
@@ -178,7 +185,8 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
         );
     }
 
-    @Test void shouldHandleTryBlockWithOnlyComments() {
+    @Test
+    void shouldHandleTryBlockWithOnlyComments() {
         rewriteRun(
             java(
                 """
@@ -199,7 +207,8 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
         );
     }
 
-    @Test void shouldNotSuppressWithWrongRecipeName() {
+    @Test
+    void shouldNotSuppressWithWrongRecipeName() {
         rewriteRun(
             java(
                 """
@@ -236,7 +245,8 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
         );
     }
 
-    @Test void shouldSuppressWithSpecificRecipeNameInComment() {
+    @Test
+    void shouldSuppressWithSpecificRecipeNameInComment() {
         rewriteRun(
             java(
                 """

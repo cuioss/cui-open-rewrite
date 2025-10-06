@@ -26,12 +26,14 @@ import static org.openrewrite.java.Assertions.java;
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class AnnotationNewlineFormatTest implements RewriteTest {
 
-    @Override public void defaults(RecipeSpec spec) {
+    @Override
+    public void defaults(RecipeSpec spec) {
         spec.recipe(new AnnotationNewlineFormat())
             .parser(JavaParser.fromJavaVersion());
     }
 
-    @Test void formatSingleClassAnnotation() {
+    @Test
+    void formatSingleClassAnnotation() {
         rewriteRun(
             java(
                 """
@@ -49,7 +51,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatMultipleClassAnnotations() {
+    @Test
+    void formatMultipleClassAnnotations() {
         rewriteRun(
             java(
                 """
@@ -70,7 +73,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void preserveExistingNewlines() {
+    @Test
+    void preserveExistingNewlines() {
         rewriteRun(
             java(
                 """
@@ -86,7 +90,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatInterfaceAnnotations() {
+    @Test
+    void formatInterfaceAnnotations() {
         rewriteRun(
             java(
                 """
@@ -104,7 +109,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatEnumAnnotations() {
+    @Test
+    void formatEnumAnnotations() {
         rewriteRun(
             java(
                 """
@@ -122,7 +128,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatPackagePrivateMethodWithAnnotation() {
+    @Test
+    void formatPackagePrivateMethodWithAnnotation() {
         rewriteRun(
             java(
                 """
@@ -144,7 +151,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatPackagePrivateFieldWithAnnotation() {
+    @Test
+    void formatPackagePrivateFieldWithAnnotation() {
         rewriteRun(
             java(
                 """
@@ -162,7 +170,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatMultiplePackagePrivateFieldsWithAnnotations() {
+    @Test
+    void formatMultiplePackagePrivateFieldsWithAnnotations() {
         rewriteRun(
             java(
                 """
@@ -184,7 +193,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatPackagePrivateClassWithAnnotation() {
+    @Test
+    void formatPackagePrivateClassWithAnnotation() {
         // This test expects no change since package-private classes at top level
         // already have the correct formatting
         rewriteRun(
@@ -199,7 +209,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatMethodWithoutModifiersButWithReturnType() {
+    @Test
+    void formatMethodWithoutModifiersButWithReturnType() {
         rewriteRun(
             java(
                 """
@@ -222,7 +233,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatFieldWithoutModifiersButWithType() {
+    @Test
+    void formatFieldWithoutModifiersButWithType() {
         rewriteRun(
             java(
                 """
@@ -241,7 +253,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void preserveFormattingWhenNoAnnotations() {
+    @Test
+    void preserveFormattingWhenNoAnnotations() {
         rewriteRun(
             java(
                 """
@@ -257,7 +270,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatNestedClassAnnotations() {
+    @Test
+    void formatNestedClassAnnotations() {
         rewriteRun(
             java(
                 """
@@ -284,7 +298,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test void formatAnnotationWithArrayValues() {
+    @Test
+    void formatAnnotationWithArrayValues() {
         rewriteRun(
             java(
                 """
@@ -305,7 +320,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
     // FIXED: Trailing comments on annotations are now preserved on the same line
     // This was previously a known limitation, but has been resolved.
     // Single annotations with inline comments are now left untouched.
-    @Test void preserveTrailingCommentsOnSingleAnnotation() {
+    @Test
+    void preserveTrailingCommentsOnSingleAnnotation() {
         rewriteRun(
             java(
                 """
@@ -324,7 +340,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
     // FIXED: Trailing inline comments are now preserved on the same line
     // This was previously a known limitation, but has been resolved.
     // Single annotations with inline comments are now left untouched.
-    @Test void preserveTrailingCommentOnSingleAnnotation() {
+    @Test
+    void preserveTrailingCommentOnSingleAnnotation() {
         rewriteRun(
             java(
                 """
@@ -342,7 +359,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
 
     // Reproducing Issue: Trailing comments are being moved to separate line
     // when method has no modifiers (package-private)
-    @Test void preserveTrailingCommentOnAnnotationWithPackagePrivateMethod() {
+    @Test
+    void preserveTrailingCommentOnAnnotationWithPackagePrivateMethod() {
         rewriteRun(
             java(
                 """
@@ -360,7 +378,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
 
     // Test if the recipe is incorrectly transforming trailing comments
     // This test expects the WRONG behavior (if it happens)
-    @Test void shouldNotMoveTrailingCommentToNewLine() {
+    @Test
+    void shouldNotMoveTrailingCommentToNewLine() {
         rewriteRun(
             java(
                 """
@@ -381,7 +400,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
 
     // Test with method that already has the annotation on a separate line
     // to ensure the recipe skips it
-    @Test void skipWhenAnnotationAlreadyOnSeparateLine() {
+    @Test
+    void skipWhenAnnotationAlreadyOnSeparateLine() {
         rewriteRun(
             java(
                 """
@@ -399,7 +419,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
 
     // Test with annotation already on separate line BUT with trailing comment
     // The comment should stay on the annotation's line
-    @Test void annotationOnSeparateLineWithTrailingComment() {
+    @Test
+    void annotationOnSeparateLineWithTrailingComment() {
         rewriteRun(
             java(
                 """
@@ -416,7 +437,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
     }
 
     // Test the EXACT scenario from the user's example with proper indentation
-    @Test void exactUserScenarioWithTrailingComment() {
+    @Test
+    void exactUserScenarioWithTrailingComment() {
         rewriteRun(
             java(
                 """
@@ -438,7 +460,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
 
     // FIXED: Multiple annotations with trailing comment on last annotation
     // The recipe now correctly preserves trailing comments
-    @Test void multipleAnnotationsWithTrailingCommentOnLast_ShouldPreserveComment() {
+    @Test
+    void multipleAnnotationsWithTrailingCommentOnLast_ShouldPreserveComment() {
         rewriteRun(
             java(
                 """
@@ -456,7 +479,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
     }
 
     // FIXED: @Override with trailing comment
-    @Test void overrideAnnotationWithTrailingComment_ShouldPreserveComment() {
+    @Test
+    void overrideAnnotationWithTrailingComment_ShouldPreserveComment() {
         rewriteRun(
             java(
                 """
@@ -474,7 +498,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
     }
 
     // FIXED: Field with multiple annotations and trailing comment on last
-    @Test void fieldWithMultipleAnnotationsAndTrailingComment_ShouldPreserveComment() {
+    @Test
+    void fieldWithMultipleAnnotationsAndTrailingComment_ShouldPreserveComment() {
         rewriteRun(
             java(
                 """
@@ -492,11 +517,39 @@ class AnnotationNewlineFormatTest implements RewriteTest {
     }
 
     /**
+     * Test that single method annotation is separated from modifiers.
+     * Issue: @SafeVarargs private static boolean -> should be @SafeVarargs\nprivate static boolean
+     */
+    @Test
+    void shouldSeparateSingleMethodAnnotationFromModifiers() {
+        rewriteRun(
+            java(
+                """
+                class TestClass {
+                    @SafeVarargs private static boolean check(Class<?>... types) {
+                        return true;
+                    }
+                }
+                """,
+                """
+                class TestClass {
+                    @SafeVarargs
+                    private static boolean check(Class<?>... types) {
+                        return true;
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    /**
      * Test that method annotations maintain proper indentation when split.
      * Both annotations should have 4-space indentation to match the method's context.
      * This is critical because AutoFormat will recombine annotations with inconsistent indentation.
      */
-    @Test void shouldPreserveIndentationForMethodAnnotations() {
+    @Test
+    void shouldPreserveIndentationForMethodAnnotations() {
         rewriteRun(
             java(
                 """
@@ -521,7 +574,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
      * Reproduces the AutoFormat issue: After AnnotationNewlineFormat splits class-level annotations,
      * AutoFormat should NOT recombine them. This test verifies the formatting persists through AutoFormat.
      */
-    @Test void classAnnotationsShouldPersistThroughAutoFormat() {
+    @Test
+    void classAnnotationsShouldPersistThroughAutoFormat() {
         rewriteRun(
             spec -> spec.recipe(new AnnotationNewlineFormat())
                 .recipe(new AutoFormat())

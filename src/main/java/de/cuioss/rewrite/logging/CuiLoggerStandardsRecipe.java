@@ -41,11 +41,13 @@ public class CuiLoggerStandardsRecipe extends Recipe {
     private static final String LOGGER_NAME = "LOGGER";
     public static final String RECIPE_NAME = "CuiLoggerStandardsRecipe";
 
-    @Override public String getDisplayName() {
+    @Override
+    public String getDisplayName() {
         return "CUI logger standards";
     }
 
-    @Override public String getDescription() {
+    @Override
+    public String getDescription() {
         return """
             Enforces CUI-specific logging standards including proper logger naming, \
             string substitution patterns, exception parameter position, parameter validation, \
@@ -53,19 +55,23 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             and detection of System.out/System.err usage.""";
     }
 
-    @Override public Set<String> getTags() {
+    @Override
+    public Set<String> getTags() {
         return Set.of("CUI", "logging", "standards");
     }
 
-    @Override public Duration getEstimatedEffortPerOccurrence() {
+    @Override
+    public Duration getEstimatedEffortPerOccurrence() {
         return Duration.ofMinutes(5);
     }
 
-    @Override public TreeVisitor<?, ExecutionContext> getVisitor() {
+    @Override
+    public TreeVisitor<?, ExecutionContext> getVisitor() {
         return new CuiLoggerStandardsVisitor();
     }
 
-    @Override public List<Recipe> getRecipeList() {
+    @Override
+    public List<Recipe> getRecipeList() {
         return List.of();
     }
 
@@ -79,7 +85,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             return UUID.randomUUID();
         }
 
-        @Override public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations variableDecls, ExecutionContext ctx) {
+        @Override
+        public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations variableDecls, ExecutionContext ctx) {
             J.VariableDeclarations vd = super.visitVariableDeclarations(variableDecls, ctx);
 
             // Only process field declarations, not local variables
@@ -207,7 +214,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         }
 
 
-        @Override public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
+        @Override
+        public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
             J.MethodInvocation mi = super.visitMethodInvocation(method, ctx);
 
             if (isSuppressed()) {
