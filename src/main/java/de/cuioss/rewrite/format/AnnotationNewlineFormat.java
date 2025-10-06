@@ -23,6 +23,8 @@ import org.openrewrite.ExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.JavaIsoVisitor;
+import org.openrewrite.java.style.IntelliJ;
+import org.openrewrite.java.style.TabsAndIndentsStyle;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Space;
 
@@ -394,6 +396,7 @@ public class AnnotationNewlineFormat extends Recipe {
         /**
          * Calculates indentation by looking at parent elements.
          * Walks up the tree to find the first parent with proper indentation.
+         * Respects project-specific indentation style (spaces vs tabs, indent size).
          */
         private String getParentIndentation(Cursor cursor) {
             Cursor parent = cursor.getParent();
@@ -405,8 +408,9 @@ public class AnnotationNewlineFormat extends Recipe {
                     int lastNewline = whitespace.lastIndexOf('\n');
                     if (lastNewline >= 0) {
                         String parentIndent = whitespace.substring(lastNewline + 1);
-                        // Add one level of indentation (4 spaces by default)
-                        return parentIndent + "    ";
+                        // Add one level of indentation using project's style
+                        String singleIndent = getIndentString();
+                        return parentIndent + singleIndent;
                     }
                 } else if (parentValue instanceof J.MethodDeclaration md) {
                     // Get indentation from the method declaration
@@ -425,6 +429,24 @@ public class AnnotationNewlineFormat extends Recipe {
             }
             // No parent indentation found, return empty
             return "";
+        }
+
+        /**
+         * Gets the indentation string based on the project's style configuration.
+         * Respects both tab vs space preference and indent size.
+         *
+         * @return the indentation string (e.g., "    " for 4 spaces, "\t" for tabs, "  " for 2 spaces)
+         */
+        private String getIndentString() {
+            J.CompilationUnit cu = getCursor().firstEnclosingOrThrow(J.CompilationUnit.class);
+            TabsAndIndentsStyle style = cu.getStyle(TabsAndIndentsStyle.class, IntelliJ.tabsAndIndents());
+
+            if (style.getUseTabCharacter()) {
+                return "\t";
+            } else {
+                int indentSize = style.getIndentSize();
+                return " ".repeat(indentSize);
+            }
         }
 
         private boolean needsNewline(@Nullable Space space) {
