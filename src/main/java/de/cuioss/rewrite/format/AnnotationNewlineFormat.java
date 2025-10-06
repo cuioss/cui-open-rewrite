@@ -27,6 +27,7 @@ import org.openrewrite.java.style.IntelliJ;
 import org.openrewrite.java.style.TabsAndIndentsStyle;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Space;
+import org.openrewrite.style.Style;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -437,9 +438,10 @@ public class AnnotationNewlineFormat extends Recipe {
          *
          * @return the indentation string (e.g., "    " for 4 spaces, "\t" for tabs, "  " for 2 spaces)
          */
+        @SuppressWarnings("java:S5411") // owolff: Strange warning: If fixed using quick-fix sonar complains the code should be simplified
         private String getIndentString() {
             J.CompilationUnit cu = getCursor().firstEnclosingOrThrow(J.CompilationUnit.class);
-            TabsAndIndentsStyle style = cu.getStyle(TabsAndIndentsStyle.class, IntelliJ.tabsAndIndents());
+            TabsAndIndentsStyle style = Style.from(TabsAndIndentsStyle.class, cu, IntelliJ::tabsAndIndents);
 
             if (style.getUseTabCharacter()) {
                 return "\t";

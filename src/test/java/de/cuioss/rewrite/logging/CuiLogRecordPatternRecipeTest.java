@@ -39,30 +39,44 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                     import java.util.function.Supplier;
                     public class CuiLogger {
                         public CuiLogger(Class<?> clazz) {}
+                        // String-based logging
                         public void trace(String message, Object... args) {}
                         public void debug(String message, Object... args) {}
                         public void info(String message, Object... args) {}
                         public void warn(String message, Object... args) {}
                         public void error(String message, Object... args) {}
                         public void fatal(String message, Object... args) {}
+                        // String-based logging with exception
                         public void trace(Throwable t, String message, Object... args) {}
                         public void debug(Throwable t, String message, Object... args) {}
                         public void info(Throwable t, String message, Object... args) {}
                         public void warn(Throwable t, String message, Object... args) {}
                         public void error(Throwable t, String message, Object... args) {}
                         public void fatal(Throwable t, String message, Object... args) {}
+                        // Supplier-based logging
                         public void trace(Supplier<String> message) {}
                         public void debug(Supplier<String> message) {}
                         public void info(Supplier<String> message) {}
                         public void warn(Supplier<String> message) {}
                         public void error(Supplier<String> message) {}
                         public void fatal(Supplier<String> message) {}
+                        // Supplier-based logging with exception
                         public void trace(Throwable t, Supplier<String> message) {}
                         public void debug(Throwable t, Supplier<String> message) {}
                         public void info(Throwable t, Supplier<String> message) {}
                         public void warn(Throwable t, Supplier<String> message) {}
                         public void error(Throwable t, Supplier<String> message) {}
                         public void fatal(Throwable t, Supplier<String> message) {}
+                        // LogRecord-based logging (new direct pattern)
+                        public void info(LogRecord logRecord, Object... args) {}
+                        public void warn(LogRecord logRecord, Object... args) {}
+                        public void error(LogRecord logRecord, Object... args) {}
+                        public void fatal(LogRecord logRecord, Object... args) {}
+                        // LogRecord-based logging with exception (new direct pattern)
+                        public void info(Throwable t, LogRecord logRecord, Object... args) {}
+                        public void warn(Throwable t, LogRecord logRecord, Object... args) {}
+                        public void error(Throwable t, LogRecord logRecord, Object... args) {}
+                        public void fatal(Throwable t, LogRecord logRecord, Object... args) {}
                     }
                     """,
                     """
@@ -260,7 +274,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
     }
 
     @Test
-    void acceptCorrectLogRecordUsageForInfo() {
+    void transformFormatCallWithParameterToDirectLogRecord() {
         rewriteRun(
             java(
                 """
@@ -282,13 +296,33 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                         LOGGER.info(INFO.USER_LOGIN.format(username));
                     }
                 }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+                import de.cuioss.tools.logging.LogRecordModel;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+
+                    static class INFO {
+                        static final LogRecord USER_LOGIN = LogRecordModel.builder()
+                            .template("User %s logged in")
+                            .build();
+                    }
+
+                    void method() {
+                        String username = "john";
+                        LOGGER.info(INFO.USER_LOGIN, username);
+                    }
+                }
                 """
             )
         );
     }
 
     @Test
-    void detectZeroParamFormatCallForError() {
+    void transformZeroParamFormatCallToDirectLogRecord() {
         rewriteRun(
             java(
                 """
@@ -325,7 +359,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                     }
 
                     void method(Exception e) {
-                        LOGGER.error(e, ERROR.DATABASE_ERROR::format);
+                        LOGGER.error(e, ERROR.DATABASE_ERROR);
                     }
                 }
                 """
@@ -451,7 +485,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
     }
 
     @Test
-    void convertZeroParamFormatToMethodReference() {
+    void transformZeroParamFormatToDirectLogRecordWithoutException() {
         rewriteRun(
             java(
                 """
@@ -482,7 +516,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                         .build();
 
                     void method() {
-                        LOGGER.info(INFO_MESSAGE::format);
+                        LOGGER.info(INFO_MESSAGE);
                     }
                 }
                 """
@@ -491,7 +525,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
     }
 
     @Test
-    void convertZeroParamFormatWithExceptionToMethodReference() {
+    void transformZeroParamFormatWithExceptionToDirectLogRecord() {
         rewriteRun(
             java(
                 """
@@ -528,7 +562,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                     }
 
                     void method(Exception e) {
-                        LOGGER.error(e, ERROR.DATABASE_ERROR::format);
+                        LOGGER.error(e, ERROR.DATABASE_ERROR);
                     }
                 }
                 """
@@ -537,7 +571,83 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
     }
 
     @Test
-    void doNotConvertFormatWithParameters() {
+    void transformFormatWithMultipleParametersToDirectLogRecord() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+                import de.cuioss.tools.logging.LogRecordModel;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+
+                    static class WARN {
+                        static final LogRecord FIELD_READ_FAILED = LogRecordModel.builder()
+                            .template("Field %s read failed: %s, %s")
+                            .build();
+                    }
+
+                    void method(Exception e) {
+                        String field = "name";
+                        boolean initialAccessible = true;
+                        Object source = this;
+                        LOGGER.warn(e, WARN.FIELD_READ_FAILED.format(field, initialAccessible, source));
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+                import de.cuioss.tools.logging.LogRecordModel;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+
+                    static class WARN {
+                        static final LogRecord FIELD_READ_FAILED = LogRecordModel.builder()
+                            .template("Field %s read failed: %s, %s")
+                            .build();
+                    }
+
+                    void method(Exception e) {
+                        String field = "name";
+                        boolean initialAccessible = true;
+                        Object source = this;
+                        LOGGER.warn(e, WARN.FIELD_READ_FAILED, field, initialAccessible, source);
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void acceptDirectLogRecordWithoutParameters() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+                import de.cuioss.tools.logging.LogRecordModel;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                    private static final LogRecord INFO_MESSAGE = LogRecordModel.builder()
+                        .template("Application started")
+                        .build();
+
+                    void method() {
+                        LOGGER.info(INFO_MESSAGE);
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void acceptDirectLogRecordWithParameters() {
         rewriteRun(
             java(
                 """
@@ -556,7 +666,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
 
                     void method() {
                         String username = "john";
-                        LOGGER.info(INFO.USER_LOGIN.format(username));
+                        LOGGER.info(INFO.USER_LOGIN, username);
                     }
                 }
                 """
@@ -565,7 +675,7 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
     }
 
     @Test
-    void acceptExistingMethodReference() {
+    void acceptDirectLogRecordWithExceptionAndParameters() {
         rewriteRun(
             java(
                 """
@@ -575,12 +685,17 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
 
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
-                    private static final LogRecord INFO_MESSAGE = LogRecordModel.builder()
-                        .template("Application started")
-                        .build();
 
-                    void method() {
-                        LOGGER.info(INFO_MESSAGE::format);
+                    static class ERROR {
+                        static final LogRecord PROPERTY_WRITE_FAILED = LogRecordModel.builder()
+                            .template("Property %s write failed for %s")
+                            .build();
+                    }
+
+                    void method(Exception exception) {
+                        String name = "username";
+                        String className = "UserClass";
+                        LOGGER.error(exception, ERROR.PROPERTY_WRITE_FAILED, name, className);
                     }
                 }
                 """
