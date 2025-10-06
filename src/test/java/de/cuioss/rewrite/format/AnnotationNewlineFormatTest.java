@@ -317,11 +317,8 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    // FIXED: Trailing comments on annotations are now preserved on the same line
-    // This was previously a known limitation, but has been resolved.
-    // Single annotations with inline comments are now left untouched.
     @Test
-    void preserveTrailingCommentsOnSingleAnnotation() {
+    void preserveTrailingCommentOnSingleAnnotation() {
         rewriteRun(
             java(
                 """
@@ -332,35 +329,12 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     }
                 }
                 """
-            // Expected: NO CHANGE - inline comment is preserved
             )
         );
     }
 
-    // FIXED: Trailing inline comments are now preserved on the same line
-    // This was previously a known limitation, but has been resolved.
-    // Single annotations with inline comments are now left untouched.
     @Test
-    void preserveTrailingCommentOnSingleAnnotation() {
-        rewriteRun(
-            java(
-                """
-                public class AccessTokenCache {
-                    @SuppressWarnings("java:S3776") // owolff: 16 instead of 15 is acceptable here due to complexity of cache logic
-                    public String computeIfAbsent(String key) {
-                        return null;
-                    }
-                }
-                """
-            // Expected: NO CHANGE - inline comment is preserved
-            )
-        );
-    }
-
-    // Reproducing Issue: Trailing comments are being moved to separate line
-    // when method has no modifiers (package-private)
-    @Test
-    void preserveTrailingCommentOnAnnotationWithPackagePrivateMethod() {
+    void preserveTrailingCommentOnPackagePrivateMethod() {
         rewriteRun(
             java(
                 """
@@ -371,75 +345,12 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     }
                 }
                 """
-            // Expected: NO CHANGE - inline comment should be preserved
             )
         );
     }
 
-    // Test with method that already has the annotation on a separate line
-    // to ensure the recipe skips it
     @Test
-    void skipWhenAnnotationAlreadyOnSeparateLine() {
-        rewriteRun(
-            java(
-                """
-                public class TestClass {
-                    @SuppressWarnings("java:S1612")
-                    void concurrentAccess() {
-                        // method body
-                    }
-                }
-                """
-            // Expected: NO CHANGE - already properly formatted
-            )
-        );
-    }
-
-    // Test with annotation already on separate line BUT with trailing comment
-    // The comment should stay on the annotation's line
-    @Test
-    void annotationOnSeparateLineWithTrailingComment() {
-        rewriteRun(
-            java(
-                """
-                public class TestClass {
-                    @SuppressWarnings("java:S1612") // Cannot use method reference due to ambiguous get() methods
-                    void concurrentAccess() {
-                        // method body
-                    }
-                }
-                """
-            // Expected: NO CHANGE - inline comment should be preserved
-            )
-        );
-    }
-
-    // Test the EXACT scenario from the user's example with proper indentation
-    @Test
-    void exactUserScenarioWithTrailingComment() {
-        rewriteRun(
-            java(
-                """
-                public class ConcurrentAccessTest {
-                    @SuppressWarnings("java:S1612") // Cannot use method reference due to ambiguous get() methods
-                    void concurrentAccess() {
-                        // Test concurrent access patterns
-                    }
-                }
-                """
-            // Expected: NO CHANGE
-            // Should NOT transform to:
-            // @SuppressWarnings("java:S1612")
-            // // Cannot use method reference due to ambiguous get() methods
-            // void concurrentAccess() {
-            )
-        );
-    }
-
-    // FIXED: Multiple annotations with trailing comment on last annotation
-    // The recipe now correctly preserves trailing comments
-    @Test
-    void multipleAnnotationsWithTrailingCommentOnLast_ShouldPreserveComment() {
+    void preserveTrailingCommentOnMultipleAnnotations() {
         rewriteRun(
             java(
                 """
@@ -451,14 +362,12 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     }
                 }
                 """
-            // Expected: NO CHANGE - trailing comment is preserved
             )
         );
     }
 
-    // FIXED: @Override with trailing comment
     @Test
-    void overrideAnnotationWithTrailingComment_ShouldPreserveComment() {
+    void preserveTrailingCommentWithOverrideAnnotation() {
         rewriteRun(
             java(
                 """
@@ -470,14 +379,12 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     }
                 }
                 """
-            // Expected: NO CHANGE - trailing comment is preserved
             )
         );
     }
 
-    // FIXED: Field with multiple annotations and trailing comment on last
     @Test
-    void fieldWithMultipleAnnotationsAndTrailingComment_ShouldPreserveComment() {
+    void preserveTrailingCommentOnFieldAnnotations() {
         rewriteRun(
             java(
                 """
@@ -489,7 +396,6 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     private final List<String> asList = null;
                 }
                 """
-            // Expected: NO CHANGE - trailing comment is preserved
             )
         );
     }
