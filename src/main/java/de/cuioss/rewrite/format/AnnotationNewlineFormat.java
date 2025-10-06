@@ -27,6 +27,7 @@ import org.openrewrite.java.style.IntelliJ;
 import org.openrewrite.java.style.TabsAndIndentsStyle;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Space;
+import org.openrewrite.style.Style;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -439,7 +440,7 @@ public class AnnotationNewlineFormat extends Recipe {
          */
         private String getIndentString() {
             J.CompilationUnit cu = getCursor().firstEnclosingOrThrow(J.CompilationUnit.class);
-            TabsAndIndentsStyle style = cu.getStyle(TabsAndIndentsStyle.class, IntelliJ.tabsAndIndents());
+            TabsAndIndentsStyle style = Style.from(TabsAndIndentsStyle.class, cu, IntelliJ::tabsAndIndents);
 
             if (style.getUseTabCharacter()) {
                 return "\t";
