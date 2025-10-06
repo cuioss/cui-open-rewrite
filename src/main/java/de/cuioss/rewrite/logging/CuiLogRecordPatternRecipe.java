@@ -23,12 +23,9 @@ import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.search.IsLikelyNotTest;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
-import org.openrewrite.java.tree.JLeftPadded;
-import org.openrewrite.java.tree.JRightPadded;
 import org.openrewrite.java.tree.JavaType;
 import org.openrewrite.java.tree.Space;
 import org.openrewrite.java.tree.TypeUtils;
-import org.openrewrite.marker.Markers;
 import org.openrewrite.marker.SearchResult;
 
 import java.time.Duration;
@@ -228,14 +225,15 @@ public class CuiLogRecordPatternRecipe extends Recipe {
         }
 
         private boolean isFormatCall(J.MethodInvocation methodInvocation) {
+            Expression select = methodInvocation.getSelect();
             return FORMAT_METHOD_NAME.equals(methodInvocation.getSimpleName()) &&
-                methodInvocation.getSelect() != null &&
-                isLogRecordExpression(methodInvocation.getSelect());
+                select != null &&
+                isLogRecordExpression(select);
         }
 
         private J.MethodInvocation transformFormatCall(J.MethodInvocation loggerCall,
-                                                       J.MethodInvocation formatCall,
-                                                       int formatCallIndex) {
+            J.MethodInvocation formatCall,
+            int formatCallIndex) {
             // Extract the LogRecord from format() call's select
             Expression logRecord = formatCall.getSelect();
             if (logRecord == null) {
@@ -326,14 +324,15 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
             // Check for plain LogRecord reference (new direct pattern)
             // e.g., LOGGER.info(INFO.SOME_MESSAGE, param1, param2)
-            if (isLogRecordExpression(expr)) {
-                return true;
-            }
-
-            return false;
+            return isLogRecordExpression(expr);
         }
 
         private boolean isLogRecordExpression(Expression expr) {
+            // Defensive null check for safety
+            if (expr == null) {
+                return false;
+            }
+
             // This checks if the expression is accessing a LogRecord constant
             // It could be a field access like INFO.SOME_MESSAGE
             if (expr instanceof J.FieldAccess) {
