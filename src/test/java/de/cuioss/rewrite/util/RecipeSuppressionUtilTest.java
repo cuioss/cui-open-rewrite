@@ -340,6 +340,136 @@ class RecipeSuppressionUtilTest {
         LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Skipping class 'TestClass'");
     }
 
+    @Test
+    void shouldSuppressMethodInvocationFromParentMethod() {
+        // Tests logger method call suppression from parent method (line 114-115)
+        String source = """
+            public class LoggerTest {
+                private static final de.cuioss.tools.logging.CuiLogger LOGGER = null;
+
+                // cui-rewrite:disable
+                public void method() {
+                    LOGGER.info("test");
+                }
+            }
+            """;
+
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+
+        MethodInvocationVisitor visitor = new MethodInvocationVisitor();
+        visitor.visit(cu, ctx);
+
+        assertTrue(visitor.methodInvocationWasSuppressed);
+    }
+
+    @Test
+    void shouldSuppressNewClassFromParentField() {
+        // Tests exception instantiation in field initialization (line 107-108)
+        String source = """
+            public class ExceptionTest {
+                // cui-rewrite:disable
+                private final RuntimeException exception = new RuntimeException("test");
+            }
+            """;
+
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+
+        NewClassVisitor visitor = new NewClassVisitor();
+        visitor.visit(cu, ctx);
+
+        assertTrue(visitor.newClassWasSuppressed);
+    }
+
+    @Test
+    void shouldSuppressClassWithCommentBetweenAnnotations() {
+        // Tests suppression comment attached to annotation prefix (line 140-142)
+        String source = """
+            @Deprecated
+            // cui-rewrite:disable
+            @SuppressWarnings("unused")
+            public class TestClass {
+                public void method() {}
+            }
+            """;
+
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+
+        TestVisitor visitor = new TestVisitor();
+        visitor.visit(cu, ctx);
+
+        assertTrue(visitor.classWasSuppressed);
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Skipping class 'TestClass'");
+    }
+
+    @Test
+    void shouldSuppressClassWithCommentBeforeBody() {
+        // Tests comment before class body opening brace (line 148-150)
+        String source = """
+            @Deprecated
+            public class TestClass
+            // cui-rewrite:disable
+            {
+                public void method() {}
+            }
+            """;
+
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+
+        TestVisitor visitor = new TestVisitor();
+        visitor.visit(cu, ctx);
+
+        assertTrue(visitor.classWasSuppressed);
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Skipping class 'TestClass'");
+    }
+
+    @Test
+    void shouldSuppressMethodWithCommentOnAnnotation() {
+        // Tests suppression comment on method annotation (line 158-160)
+        String source = """
+            public class TestClass {
+                // cui-rewrite:disable
+                @Override
+                public String toString() {
+                    return "test";
+                }
+            }
+            """;
+
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+
+        TestVisitor visitor = new TestVisitor();
+        visitor.visit(cu, ctx);
+
+        assertTrue(visitor.methodWasSuppressed);
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG, "Skipping method 'toString'");
+    }
+
+    private static class MethodInvocationVisitor extends JavaIsoVisitor<@NonNull ExecutionContext> {
+        boolean methodInvocationWasSuppressed;
+
+        @Override
+        public J.@NonNull MethodInvocation visitMethodInvocation(J.@NonNull MethodInvocation method, @NonNull ExecutionContext ctx) {
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), null)) {
+                methodInvocationWasSuppressed = true;
+                return method;
+            }
+            return super.visitMethodInvocation(method, ctx);
+        }
+    }
+
+    private static class NewClassVisitor extends JavaIsoVisitor<@NonNull ExecutionContext> {
+        boolean newClassWasSuppressed;
+
+        @Override
+        public J.@NonNull NewClass visitNewClass(J.@NonNull NewClass newClass, @NonNull ExecutionContext ctx) {
+            if (RecipeSuppressionUtil.isSuppressed(getCursor(), null)) {
+                newClassWasSuppressed = true;
+                return newClass;
+            }
+            return super.visitNewClass(newClass, ctx);
+        }
+    }
+
     private static class TestVisitor extends JavaIsoVisitor<@NonNull ExecutionContext> {
         boolean classWasSuppressed;
         boolean methodWasSuppressed;
