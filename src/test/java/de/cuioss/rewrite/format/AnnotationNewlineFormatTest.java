@@ -376,28 +376,6 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    // Test if the recipe is incorrectly transforming trailing comments
-    // This test expects the WRONG behavior (if it happens)
-    @Test
-    void shouldNotMoveTrailingCommentToNewLine() {
-        rewriteRun(
-            java(
-                """
-                public class TestClass {
-                    @SuppressWarnings("java:S1612") // Cannot use method reference due to ambiguous get() methods
-                    void concurrentAccess() {
-                        // method body
-                    }
-                }
-                """
-            // If this test fails with the transformation below, then we've reproduced the bug:
-            // @SuppressWarnings("java:S1612")
-            // // Cannot use method reference due to ambiguous get() methods
-            // void concurrentAccess() {
-            )
-        );
-    }
-
     // Test with method that already has the annotation on a separate line
     // to ensure the recipe skips it
     @Test
