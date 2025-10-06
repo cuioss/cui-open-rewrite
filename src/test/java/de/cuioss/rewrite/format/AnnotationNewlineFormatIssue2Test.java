@@ -25,8 +25,7 @@ import static org.openrewrite.java.Assertions.java;
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class AnnotationNewlineFormatIssue2Test implements RewriteTest {
 
-    @Override
-    public void defaults(RecipeSpec spec) {
+    @Override public void defaults(RecipeSpec spec) {
         spec.recipe(new AnnotationNewlineFormat())
             .parser(JavaParser.fromJavaVersion());
     }
@@ -40,8 +39,7 @@ class AnnotationNewlineFormatIssue2Test implements RewriteTest {
      * 2. The comment is intentionally placed on the same line as the annotation
      * 3. There's no formatting issue to fix
      */
-    @Test
-    void shouldNotReformatAnnotationWithTrailingInlineComment() {
+    @Test void shouldNotReformatAnnotationWithTrailingInlineComment() {
         rewriteRun(
             java(
                 """
@@ -52,7 +50,7 @@ class AnnotationNewlineFormatIssue2Test implements RewriteTest {
                     }
                 }
                 """
-                // Expected: NO CHANGE - this code should remain exactly as is
+            // Expected: NO CHANGE - this code should remain exactly as is
             )
         );
     }
@@ -60,8 +58,7 @@ class AnnotationNewlineFormatIssue2Test implements RewriteTest {
     /**
      * Similar test case: Class-level annotation with trailing comment
      */
-    @Test
-    void shouldNotReformatClassAnnotationWithTrailingInlineComment() {
+    @Test void shouldNotReformatClassAnnotationWithTrailingInlineComment() {
         rewriteRun(
             java(
                 """
@@ -71,7 +68,7 @@ class AnnotationNewlineFormatIssue2Test implements RewriteTest {
                     }
                 }
                 """
-                // Expected: NO CHANGE
+            // Expected: NO CHANGE
             )
         );
     }
@@ -79,8 +76,7 @@ class AnnotationNewlineFormatIssue2Test implements RewriteTest {
     /**
      * Similar test case: Field-level annotation with trailing comment
      */
-    @Test
-    void shouldNotReformatFieldAnnotationWithTrailingInlineComment() {
+    @Test void shouldNotReformatFieldAnnotationWithTrailingInlineComment() {
         rewriteRun(
             java(
                 """
@@ -89,7 +85,7 @@ class AnnotationNewlineFormatIssue2Test implements RewriteTest {
                     private String legacyLogger;
                 }
                 """
-                // Expected: NO CHANGE
+            // Expected: NO CHANGE
             )
         );
     }

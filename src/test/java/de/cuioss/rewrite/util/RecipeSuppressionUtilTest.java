@@ -246,7 +246,7 @@ class RecipeSuppressionUtilTest {
             constructor.setAccessible(true);
             constructor.newInstance();
             assertFalse(true, "Should have thrown UnsupportedOperationException");
-        } catch (Exception e) {
+        } /*~~(TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (Exception e) {
             assertTrue(e.getCause() instanceof UnsupportedOperationException);
             assertTrue(e.getCause().getMessage().contains("Utility class"));
         }

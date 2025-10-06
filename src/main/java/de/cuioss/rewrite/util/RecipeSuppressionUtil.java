@@ -37,7 +37,7 @@ import java.util.List;
  */
 public final class RecipeSuppressionUtil {
 
-    private static final CuiLogger LOG = new CuiLogger(RecipeSuppressionUtil.class);
+    private static final CuiLogger LOGGER = new CuiLogger(RecipeSuppressionUtil.class);
     private static final String SUPPRESSION_MARKER = "cui-rewrite:disable";
 
     /**
@@ -234,10 +234,10 @@ public final class RecipeSuppressionUtil {
         String elementName = getElementName(element);
 
         if (recipeName != null) {
-            LOG.debug("Skipping %s '%s' for recipe '%s' due to %s comment",
+            LOGGER.debug("Skipping %s '%s' for recipe '%s' due to %s comment",
                 elementType, elementName, recipeName, SUPPRESSION_MARKER);
         } else {
-            LOG.debug("Skipping %s '%s' due to %s comment",
+            LOGGER.debug("Skipping %s '%s' due to %s comment",
                 elementType, elementName, SUPPRESSION_MARKER);
         }
     }
@@ -337,7 +337,7 @@ public final class RecipeSuppressionUtil {
             if (value instanceof J.ClassDeclaration cd) {
                 // Check if this class has suppression comment
                 if (hasSuppression(cd.getPrefix().getComments(), cursor, recipeName)) {
-                    LOG.debug("Found class-level suppression on class %s for recipe %s",
+                    LOGGER.debug("Found class-level suppression on class %s for recipe %s",
                         cd.getSimpleName(), recipeName);
                     return true;
                 }
@@ -346,7 +346,7 @@ public final class RecipeSuppressionUtil {
                 // Comments between annotations often get attached to the next annotation
                 for (J.Annotation annotation : cd.getLeadingAnnotations()) {
                     if (hasSuppression(annotation.getPrefix().getComments(), cursor, recipeName)) {
-                        LOG.debug("Found class-level suppression on class %s annotation for recipe %s",
+                        LOGGER.debug("Found class-level suppression on class %s annotation for recipe %s",
                             cd.getSimpleName(), recipeName);
                         return true;
                     }
@@ -354,7 +354,7 @@ public final class RecipeSuppressionUtil {
 
                 // Also check the class body prefix for trailing comments
                 if (hasSuppression(cd.getBody().getPrefix().getComments(), cursor, recipeName)) {
-                    LOG.debug("Found class-level suppression on class %s body for recipe %s",
+                    LOGGER.debug("Found class-level suppression on class %s body for recipe %s",
                         cd.getSimpleName(), recipeName);
                     return true;
                 }

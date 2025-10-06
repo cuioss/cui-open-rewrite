@@ -315,7 +315,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     }
                 }
                 """
-                // Expected: NO CHANGE - inline comment is preserved
+            // Expected: NO CHANGE - inline comment is preserved
             )
         );
     }
@@ -334,7 +334,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     }
                 }
                 """
-                // Expected: NO CHANGE - inline comment is preserved
+            // Expected: NO CHANGE - inline comment is preserved
             )
         );
     }
@@ -352,7 +352,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     }
                 }
                 """
-                // Expected: NO CHANGE - inline comment should be preserved
+            // Expected: NO CHANGE - inline comment should be preserved
             )
         );
     }
@@ -370,10 +370,10 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     }
                 }
                 """
-                // If this test fails with the transformation below, then we've reproduced the bug:
-                // @SuppressWarnings("java:S1612")
-                // // Cannot use method reference due to ambiguous get() methods
-                // void concurrentAccess() {
+            // If this test fails with the transformation below, then we've reproduced the bug:
+            // @SuppressWarnings("java:S1612")
+            // // Cannot use method reference due to ambiguous get() methods
+            // void concurrentAccess() {
             )
         );
     }
@@ -391,7 +391,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     }
                 }
                 """
-                // Expected: NO CHANGE - already properly formatted
+            // Expected: NO CHANGE - already properly formatted
             )
         );
     }
@@ -409,7 +409,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     }
                 }
                 """
-                // Expected: NO CHANGE - inline comment should be preserved
+            // Expected: NO CHANGE - inline comment should be preserved
             )
         );
     }
@@ -426,11 +426,11 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     }
                 }
                 """
-                // Expected: NO CHANGE
-                // Should NOT transform to:
-                // @SuppressWarnings("java:S1612")
-                // // Cannot use method reference due to ambiguous get() methods
-                // void concurrentAccess() {
+            // Expected: NO CHANGE
+            // Should NOT transform to:
+            // @SuppressWarnings("java:S1612")
+            // // Cannot use method reference due to ambiguous get() methods
+            // void concurrentAccess() {
             )
         );
     }
@@ -449,7 +449,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     }
                 }
                 """
-                // Expected: NO CHANGE - trailing comment is preserved
+            // Expected: NO CHANGE - trailing comment is preserved
             )
         );
     }
@@ -467,7 +467,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     }
                 }
                 """
-                // Expected: NO CHANGE - trailing comment is preserved
+            // Expected: NO CHANGE - trailing comment is preserved
             )
         );
     }
@@ -485,7 +485,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
                     private final List<String> asList = null;
                 }
                 """
-                // Expected: NO CHANGE - trailing comment is preserved
+            // Expected: NO CHANGE - trailing comment is preserved
             )
         );
     }

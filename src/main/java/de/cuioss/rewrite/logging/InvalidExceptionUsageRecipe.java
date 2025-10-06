@@ -62,8 +62,9 @@ public class InvalidExceptionUsageRecipe extends Recipe {
     }
 
     @Override public String getDescription() {
-        return "Flags usage of generic exception types (Exception, RuntimeException, Throwable) " +
-            "in catch blocks and throw statements. Code should use specific exception types instead.";
+        return """
+            Flags usage of generic exception types (Exception, RuntimeException, Throwable) \
+            in catch blocks and throw statements. Code should use specific exception types instead.""";
     }
 
     @Override public Set<String> getTags() {
@@ -92,7 +93,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
          * @return the complete task message with suppression hint
          */
         private String createTaskMessage(String action, String simpleType) {
-            return String.format("TODO: %s specific not %s. Suppress: // cui-rewrite:disable %s",
+            return "TODO: %s specific not %s. Suppress: // cui-rewrite:disable %s".formatted(
                 action, simpleType, RECIPE_NAME);
         }
 
@@ -190,7 +191,8 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             return super.visitClassDeclaration(classDecl, ctx);
         }
 
-        @Override @SuppressWarnings("java:S2637") // SearchResult.found() never returns null for non-null input
+        @Override @SuppressWarnings("java:S2637")
+        // SearchResult.found() never returns null for non-null input
         public J.Try.Catch visitCatch(J.Try.Catch catchBlock, ExecutionContext ctx) {
             J.Try.Catch c = super.visitCatch(catchBlock, ctx);
 
@@ -239,7 +241,8 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             return c;
         }
 
-        @Override @SuppressWarnings("java:S2637") // SearchResult.found() never returns null for non-null input
+        @Override @SuppressWarnings("java:S2637")
+        // SearchResult.found() never returns null for non-null input
         public J.Throw visitThrow(J.Throw thrown, ExecutionContext ctx) {
             J.Throw t = super.visitThrow(thrown, ctx);
 
@@ -268,7 +271,8 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             return t;
         }
 
-        @Override @SuppressWarnings("java:S2637") // SearchResult.found() never returns null for non-null input
+        @Override @SuppressWarnings("java:S2637")
+        // SearchResult.found() never returns null for non-null input
         public J.NewClass visitNewClass(J.NewClass newClass, ExecutionContext ctx) {
             J.NewClass nc = super.visitNewClass(newClass, ctx);
 

@@ -62,7 +62,7 @@ public class AnnotationNewlineFormat extends Recipe {
         @Override public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
             // Check for suppression comments
             if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
-                LOGGER.debug("Skipping class {} due to suppression", classDecl.getSimpleName());
+                LOGGER.debug("Skipping class %s due to suppression", classDecl.getSimpleName());
                 return classDecl;
             }
 
@@ -73,7 +73,7 @@ public class AnnotationNewlineFormat extends Recipe {
                 return cd;
             }
 
-            LOGGER.debug("Formatting annotations for class: {}", cd.getSimpleName());
+            LOGGER.debug("Formatting annotations for class: %s", cd.getSimpleName());
             // Format annotations - ensure each on separate line
             cd = cd.withLeadingAnnotations(formatAnnotationList(cd.getLeadingAnnotations()));
 
@@ -86,7 +86,7 @@ public class AnnotationNewlineFormat extends Recipe {
         @Override public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
             // Check for suppression comments
             if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
-                LOGGER.debug("Skipping method {} due to suppression", method.getSimpleName());
+                LOGGER.debug("Skipping method %s due to suppression", method.getSimpleName());
                 return method;
             }
 
@@ -97,7 +97,7 @@ public class AnnotationNewlineFormat extends Recipe {
                 return md;
             }
 
-            LOGGER.debug("Formatting annotations for method: {}", md.getSimpleName());
+            LOGGER.debug("Formatting annotations for method: %s", md.getSimpleName());
             // Format annotations - ensure each on separate line
             md = md.withLeadingAnnotations(formatAnnotationList(md.getLeadingAnnotations()));
 
@@ -233,7 +233,7 @@ public class AnnotationNewlineFormat extends Recipe {
                 return annotations;
             }
 
-            LOGGER.debug("Formatting {} annotations to ensure each is on a separate line", annotations.size());
+            LOGGER.debug("Formatting %s annotations to ensure each is on a separate line", annotations.size());
             List<J.Annotation> result = new ArrayList<>();
             result.add(annotations.getFirst()); // Keep first annotation as-is
 
@@ -373,8 +373,8 @@ public class AnnotationNewlineFormat extends Recipe {
             Cursor cursor = getCursor();
             Object value = cursor.getValue();
 
-            if (value instanceof J) {
-                Space prefix = ((J) value).getPrefix();
+            if (value instanceof J j) {
+                Space prefix = j.getPrefix();
                 String whitespace = prefix.getWhitespace();
                 int lastNewline = whitespace.lastIndexOf('\n');
                 if (lastNewline >= 0) {

@@ -46,10 +46,11 @@ public class CuiLoggerStandardsRecipe extends Recipe {
     }
 
     @Override public String getDescription() {
-        return "Enforces CUI-specific logging standards including proper logger naming, " +
-            "string substitution patterns, exception parameter position, parameter validation, " +
-            "LogRecord pattern usage for INFO/WARN/ERROR levels, " +
-            "and detection of System.out/System.err usage.";
+        return """
+            Enforces CUI-specific logging standards including proper logger naming, \
+            string substitution patterns, exception parameter position, parameter validation, \
+            LogRecord pattern usage for INFO/WARN/ERROR levels, \
+            and detection of System.out/System.err usage.""";
     }
 
     @Override public Set<String> getTags() {
