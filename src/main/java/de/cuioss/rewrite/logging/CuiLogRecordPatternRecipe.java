@@ -256,10 +256,8 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             J.MemberReference memberRef,
             int memberRefIndex) {
             // Extract the LogRecord from method reference's containing expression
+            // Note: getContaining() is guaranteed non-null by isFormatMethodReference() check
             Expression logRecord = memberRef.getContaining();
-            if (logRecord == null) {
-                return loggerCall;
-            }
 
             // Preserve the prefix from the member reference on the LogRecord
             logRecord = logRecord.withPrefix(memberRef.getPrefix());
@@ -453,7 +451,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                     JavaType leftType = binary.getLeft().getType();
                     JavaType rightType = binary.getRight().getType();
 
-                    if (isStringType(leftType) || isStringType(rightType)) {
+                    if (TypeUtils.isString(leftType) || TypeUtils.isString(rightType)) {
                         return true;
                     }
                 }
@@ -464,10 +462,6 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             }
 
             return false;
-        }
-
-        private boolean isStringType(JavaType type) {
-            return TypeUtils.isString(type);
         }
 
         private enum LogLevel {
