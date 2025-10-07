@@ -744,4 +744,232 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
             )
         );
     }
+
+    /**
+     * Issue #1: Method reference ::format should be transformed to direct LogRecord usage
+     * LOGGER.info(INFO.GENERATING_REPORTS::format) -> LOGGER.info(INFO.GENERATING_REPORTS)
+     */
+    @Test
+    void shouldTransformMethodReferenceFormatToDirectLogRecord() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+
+                class ReportGenerator {
+                    private static final CuiLogger LOGGER = new CuiLogger(ReportGenerator.class);
+
+                    static class INFO {
+                        static final LogRecord GENERATING_REPORTS = null;
+                    }
+
+                    void generateDetailedPage() {
+                        LOGGER.info(INFO.GENERATING_REPORTS::format);
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+
+                class ReportGenerator {
+                    private static final CuiLogger LOGGER = new CuiLogger(ReportGenerator.class);
+
+                    static class INFO {
+                        static final LogRecord GENERATING_REPORTS = null;
+                    }
+
+                    void generateDetailedPage() {
+                        LOGGER.info(INFO.GENERATING_REPORTS);
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    /**
+     * Issue #2: Method reference ::format with exception should be transformed
+     * LOGGER.error(e, ERROR.WRK_PROCESSOR_FAILED::format) -> LOGGER.error(e, ERROR.WRK_PROCESSOR_FAILED)
+     */
+    @Test
+    void shouldTransformMethodReferenceFormatWithExceptionToDirectLogRecord() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+                import java.io.IOException;
+
+                class WrkResultPostProcessor {
+                    private static final CuiLogger LOGGER = new CuiLogger(WrkResultPostProcessor.class);
+
+                    static class ERROR {
+                        static final LogRecord WRK_PROCESSOR_FAILED = null;
+                    }
+
+                    void process() {
+                        try {
+                            // some code
+                        } catch (IOException e) {
+                            LOGGER.error(e, ERROR.WRK_PROCESSOR_FAILED::format);
+                        }
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+                import java.io.IOException;
+
+                class WrkResultPostProcessor {
+                    private static final CuiLogger LOGGER = new CuiLogger(WrkResultPostProcessor.class);
+
+                    static class ERROR {
+                        static final LogRecord WRK_PROCESSOR_FAILED = null;
+                    }
+
+                    void process() {
+                        try {
+                            // some code
+                        } catch (IOException e) {
+                            LOGGER.error(e, ERROR.WRK_PROCESSOR_FAILED);
+                        }
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    /**
+     * Issue #3: String concatenation with LogRecord should be flagged as a bug
+     * LOGGER.info(INFO.GENERATING_REPORTS, "text" + variable) is ALWAYS wrong
+     */
+    @Test
+    void shouldFlagStringConcatenationWithLogRecordAsBug() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+
+                class BadgeGenerator {
+                    private static final CuiLogger LOGGER = new CuiLogger(BadgeGenerator.class);
+
+                    static class INFO {
+                        static final LogRecord GENERATING_REPORTS = null;
+                    }
+
+                    void generateBadges(String perfBadgePath) {
+                        LOGGER.info(INFO.GENERATING_REPORTS, "Performance badge written to " + perfBadgePath);
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+
+                class BadgeGenerator {
+                    private static final CuiLogger LOGGER = new CuiLogger(BadgeGenerator.class);
+
+                    static class INFO {
+                        static final LogRecord GENERATING_REPORTS = null;
+                    }
+
+                    void generateBadges(String perfBadgePath) {
+                        /*~~(TODO: String concatenation with LogRecord parameter is always wrong. Use separate parameters instead. Suppress: // cui-rewrite:disable CuiLogRecordPatternRecipe)~~>*/LOGGER.info(INFO.GENERATING_REPORTS, "Performance badge written to " + perfBadgePath);
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void shouldFlagNestedStringConcatenationWithLogRecord() {
+        // Tests recursive checking in containsStringConcatenation()
+        // String concat is buried in a nested expression: count + ("text" + name)
+        // This exercises the recursive path at lines 461-462
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+
+                class Example {
+                    private static final CuiLogger LOGGER = new CuiLogger(Example.class);
+
+                    static class INFO {
+                        static final LogRecord MESSAGE = null;
+                    }
+
+                    void logWithNestedExpression(int count, String name) {
+                        // Nested expression: outer binary is int+obj, inner binary is string concat
+                        LOGGER.info(INFO.MESSAGE, count + ("prefix" + name));
+                    }
+                }
+                """,
+                """
+                      import de.cuioss.tools.logging.CuiLogger;
+                      import de.cuioss.tools.logging.LogRecord;
+
+                      class Example {
+                          private static final CuiLogger LOGGER = new CuiLogger(Example.class);
+
+                          static class INFO {
+                              static final LogRecord MESSAGE = null;
+                          }
+
+                          void logWithNestedExpression(int count, String name) {
+                              // Nested expression: outer binary is int+obj, inner binary is string concat
+                              /*~~(TODO: String concatenation with LogRecord parameter is always wrong. Use separate parameters instead. Suppress: // cui-rewrite:disable CuiLogRecordPatternRecipe)~~>*/LOGGER.info(INFO.MESSAGE, count + ("prefix" + name));
+                          }
+                      }
+                """
+            )
+        );
+    }
+
+    @Test
+    void shouldIgnoreTemplateCallOnNonLogRecordBuilder() {
+        // Corner case: .template() method on a different class (not LogRecordModel.Builder)
+        // Should be ignored by the recipe
+        rewriteRun(
+            java(
+                """
+                class Example {
+                    interface TemplateBuilder {
+                        void template(String s);
+                    }
+
+                    void doSomething(TemplateBuilder builder) {
+                        builder.template("Some text");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void shouldIgnoreTemplateCallWithWrongArgumentCount() {
+        // Corner case: .template() with 0 or 2+ arguments
+        // Should be ignored by the recipe
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.LogRecordModel;
+
+                class Example {
+                    void doSomething() {
+                        // This would be a compile error, but recipe should handle gracefully
+                        LogRecordModel.builder().build();
+                    }
+                }
+                """
+            )
+        );
+    }
 }

@@ -34,7 +34,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 public class CuiLogRecordPatternRecipe extends Recipe {
 
@@ -78,7 +77,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
         return List.of();
     }
 
-    private static class CuiLogRecordPatternVisitor extends BaseSuppressionVisitor {
+    static class CuiLogRecordPatternVisitor extends BaseSuppressionVisitor {
 
         private static final String SUPPRESSION_HINT = ". Suppress: // cui-rewrite:disable " + RECIPE_NAME;
 
@@ -123,19 +122,27 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
             boolean usesLogRecord = checkUsesLogRecord(mi);
 
+            // Check for string concatenation with LogRecord (always wrong)
+            if (usesLogRecord) {
+                J.MethodInvocation flagged = flagStringConcatenationWithLogRecord(method, mi);
+                if (flagged != mi) {
+                    return flagged;
+                }
+            }
+
             // Validate based on level
             switch (level) {
                 case INFO, WARN, ERROR, FATAL:
                     if (!usesLogRecord) {
                         String message = "TODO: " + level + " needs LogRecord" + SUPPRESSION_HINT;
-                        return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), message)));
+                        return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(mi.getId(), message)));
                     }
                     break;
 
                 case DEBUG, TRACE:
                     if (usesLogRecord) {
                         String message = "TODO: " + level + " no LogRecord" + SUPPRESSION_HINT;
-                        return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), message)));
+                        return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(mi.getId(), message)));
                     }
                     break;
             }
@@ -189,6 +196,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                 TypeUtils.isOfClassType(type, "de.cuioss.tools.logging.LogRecordModel.Builder");
         }
 
+        @SuppressWarnings("java:S3776") // Cognitive Complexity of 16 is ok here
         private J.MethodInvocation transformFormatCallToDirectLogRecord(J.MethodInvocation mi) {
             // Check if this is a CuiLogger method invocation
             if (isNotLoggerMethod(mi)) {
@@ -208,14 +216,22 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
             Expression firstArg = args.getFirst();
 
+            // Check if first argument is a method reference ::format
+            if (firstArg instanceof J.MemberReference memberRef && isFormatMethodReference(memberRef)) {
+                return transformMethodReference(mi, memberRef, 0);
+            }
+
             // Check if first argument is a .format() call
             if (firstArg instanceof J.MethodInvocation formatCall && isFormatCall(formatCall)) {
                 return transformFormatCall(mi, formatCall, 0);
             }
 
-            // Check for exception followed by .format() call
+            // Check for exception followed by method reference ::format
             if (isExceptionType(firstArg) && args.size() > 1) {
                 Expression secondArg = args.get(1);
+                if (secondArg instanceof J.MemberReference memberRef && isFormatMethodReference(memberRef)) {
+                    return transformMethodReference(mi, memberRef, 1);
+                }
                 if (secondArg instanceof J.MethodInvocation formatCall && isFormatCall(formatCall)) {
                     return transformFormatCall(mi, formatCall, 1);
                 }
@@ -231,14 +247,34 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                 isLogRecordExpression(select);
         }
 
+        private boolean isFormatMethodReference(J.MemberReference memberRef) {
+            return FORMAT_METHOD_NAME.equals(memberRef.getReference().getSimpleName()) &&
+                isLogRecordExpression(memberRef.getContaining());
+        }
+
+        private J.MethodInvocation transformMethodReference(J.MethodInvocation loggerCall,
+            J.MemberReference memberRef,
+            int memberRefIndex) {
+            // Extract the LogRecord from method reference's containing expression
+            // Note: getContaining() is guaranteed non-null by isFormatMethodReference() check
+            Expression logRecord = memberRef.getContaining();
+
+            // Preserve the prefix from the member reference on the LogRecord
+            logRecord = logRecord.withPrefix(memberRef.getPrefix());
+
+            // Build new argument list for logger call
+            List<Expression> newLoggerArgs = new ArrayList<>(loggerCall.getArguments());
+            newLoggerArgs.set(memberRefIndex, logRecord);
+
+            return loggerCall.withArguments(newLoggerArgs);
+        }
+
         private J.MethodInvocation transformFormatCall(J.MethodInvocation loggerCall,
             J.MethodInvocation formatCall,
             int formatCallIndex) {
             // Extract the LogRecord from format() call's select
+            // Note: select is guaranteed non-null by isFormatCall() check
             Expression logRecord = formatCall.getSelect();
-            if (logRecord == null) {
-                return loggerCall;
-            }
 
             // Preserve the prefix from the format call on the LogRecord
             logRecord = logRecord.withPrefix(formatCall.getPrefix());
@@ -331,21 +367,15 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
             // This checks if the expression is accessing a LogRecord constant
             // It could be a field access like INFO.SOME_MESSAGE
-            if (expr instanceof J.FieldAccess) {
-                JavaType type = expr.getType();
-                if (type != null) {
-                    return TypeUtils.isAssignableTo(LOG_RECORD_TYPE, type);
-                }
+            if (expr instanceof J.FieldAccess fieldAccess) {
+                return TypeUtils.isAssignableTo(LOG_RECORD_TYPE, fieldAccess.getType());
             }
 
             // For identifier access (when imported statically or local variable)
-            if (expr instanceof J.Identifier) {
-                JavaType type = expr.getType();
-                if (type != null) {
-                    // Check both LogRecord interface and LogRecordModel implementation
-                    return TypeUtils.isAssignableTo(LOG_RECORD_TYPE, type) ||
-                        TypeUtils.isAssignableTo("de.cuioss.tools.logging.LogRecordModel", type);
-                }
+            if (expr instanceof J.Identifier identifier) {
+                // Check both LogRecord interface and LogRecordModel implementation
+                return TypeUtils.isAssignableTo(LOG_RECORD_TYPE, identifier.getType()) ||
+                    TypeUtils.isAssignableTo("de.cuioss.tools.logging.LogRecordModel", identifier.getType());
             }
 
             return false;
@@ -353,10 +383,101 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
         private boolean isExceptionType(Expression expr) {
             JavaType type = expr.getType();
-            return type != null && TypeUtils.isAssignableTo("java.lang.Throwable", type);
+            return TypeUtils.isAssignableTo("java.lang.Throwable", type);
         }
 
-        private enum LogLevel {
+        /**
+         * Flags string concatenation when used with LogRecord parameters.
+         * String concatenation with LogRecord is ALWAYS wrong because:
+         * - LogRecord parameters should be passed separately for proper formatting
+         * - Concatenation defeats the purpose of parameterized logging
+         *
+         * Example of WRONG usage:
+         * LOGGER.info(INFO.MESSAGE, "text" + variable)
+         *
+         * Should be:
+         * LOGGER.info(INFO.MESSAGE, "text", variable)
+         *
+         * @param original The original method invocation (to check for existing markers)
+         * @param mi The potentially modified method invocation (to analyze and flag)
+         */
+        private J.MethodInvocation flagStringConcatenationWithLogRecord(J.MethodInvocation original, J.MethodInvocation mi) {
+            List<Expression> args = mi.getArguments();
+            if (args.isEmpty()) {
+                return mi;
+            }
+
+            // Determine the starting index for parameter checking
+            // If first arg is exception, LogRecord should be second, params start at index 2
+            // Otherwise, LogRecord is first, params start at index 1
+            int logRecordIndex = 0;
+            int paramStartIndex = 1;
+
+            Expression firstArg = args.getFirst();
+            if (isExceptionType(firstArg)) {
+                logRecordIndex = 1;
+                paramStartIndex = 2;
+            }
+
+            // Verify we have a LogRecord at the expected index
+            if (logRecordIndex >= args.size()) {
+                return mi;
+            }
+
+            Expression logRecordArg = args.get(logRecordIndex);
+            if (!isLogRecordFormatExpression(logRecordArg)) {
+                return mi;
+            }
+
+            // Check remaining arguments for string concatenation
+            for (int i = paramStartIndex; i < args.size(); i++) {
+                Expression arg = args.get(i);
+                if (containsStringConcatenation(arg)) {
+                    String message = "TODO: String concatenation with LogRecord parameter is always wrong. " +
+                        "Use separate parameters instead" + SUPPRESSION_HINT;
+                    // Check if either the original or current method invocation already has this marker
+                    if (original.getMarkers().findFirst(SearchResult.class)
+                        .filter(sr -> message.equals(sr.getDescription()))
+                        .isPresent() ||
+                        mi.getMarkers().findFirst(SearchResult.class)
+                            .filter(sr -> message.equals(sr.getDescription()))
+                            .isPresent()) {
+                        return mi;
+                    }
+                    // Use the original method's ID for stable marker identification across cycles
+                    return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(original.getId(), message)));
+                }
+            }
+
+            return mi;
+        }
+
+        /**
+         * Checks if an expression contains string concatenation.
+         * This includes + operators on String types.
+         */
+        private boolean containsStringConcatenation(Expression expr) {
+            if (expr instanceof J.Binary binary) {
+                // Check if this is a + operator
+                if (binary.getOperator() == J.Binary.Type.Addition) {
+                    // Check if at least one operand is a String type
+                    JavaType leftType = binary.getLeft().getType();
+                    JavaType rightType = binary.getRight().getType();
+
+                    if (TypeUtils.isString(leftType) || TypeUtils.isString(rightType)) {
+                        return true;
+                    }
+                }
+
+                // Recursively check operands
+                return containsStringConcatenation(binary.getLeft()) ||
+                    containsStringConcatenation(binary.getRight());
+            }
+
+            return false;
+        }
+
+        enum LogLevel {
             TRACE, DEBUG, INFO, WARN, ERROR, FATAL;
 
             static Optional<LogLevel> fromMethodName(String methodName) {
