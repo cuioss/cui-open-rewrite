@@ -15,7 +15,8 @@
  */
 package de.cuioss.rewrite.util;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.InMemoryExecutionContext;
 import org.openrewrite.SourceFile;
@@ -39,101 +40,30 @@ class PathExclusionVisitorTest {
     private final ExecutionContext ctx = new InMemoryExecutionContext();
     private final PathExclusionVisitor visitor = new PathExclusionVisitor();
 
-    @Test
-    void shouldExcludeTargetDirectory() {
-        String source = "class GeneratedCode {}";
-        Path sourcePath = Path.of("target/generated-sources/annotations/GeneratedCode.java");
+    @ParameterizedTest(name = "[{index}] {2}")
+    @CsvSource(delimiterString = "|", textBlock = """
+        target/generated-sources/annotations/GeneratedCode.java                                                   | false | Target directory exclusion
+        target/generated-test-sources/test-annotations/TestBenchmark_jmhTest.java                                | false | Maven target test sources exclusion
+        build/generated/sources/annotationProcessor/java/main/BuildGenerated.java                                | false | Gradle build directory exclusion
+        src/main/java/SourceCode.java                                                                            | true  | Regular source files inclusion
+        src/test/java/SourceTest.java                                                                            | true  | Test source files inclusion
+        module-a/target/classes/ModuleGenerated.java                                                             | false | Nested target directories exclusion
+        target/generated-sources/annotations/WindowsGenerated.java                                               | false | Windows-style paths exclusion
+        benchmarking/cui-benchmarking-common/target/generated-test-sources/test-annotations/BenchmarkGenerated.java | false | Deep nested target paths exclusion
+        """)
+    void shouldHandlePathExclusions(String pathString, boolean shouldBeMarked, String description) {
+        String source = "class TestClass {}";
+        Path sourcePath = Path.of(pathString);
         SourceFile sourceFile = parseWithPath(source, sourcePath);
 
         SourceFile result = (SourceFile) visitor.visit(sourceFile, ctx);
+        boolean isMarked = result.getMarkers().findFirst(SearchResult.class).isPresent();
 
-        assertFalse(result.getMarkers().findFirst(SearchResult.class).isPresent(),
-            "Files in target directory should NOT be marked (excluded)");
-    }
-
-    @Test
-    void shouldExcludeMavenTargetTestSources() {
-        String source = "class TestBenchmark_jmhTest {}";
-        Path sourcePath = Path.of("target/generated-test-sources/test-annotations/TestBenchmark_jmhTest.java");
-        SourceFile sourceFile = parseWithPath(source, sourcePath);
-
-        SourceFile result = (SourceFile) visitor.visit(sourceFile, ctx);
-
-        assertFalse(result.getMarkers().findFirst(SearchResult.class).isPresent(),
-            "JMH generated test sources should NOT be marked (excluded)");
-    }
-
-    @Test
-    void shouldExcludeGradleBuildDirectory() {
-        String source = "class BuildGenerated {}";
-        Path sourcePath = Path.of("build/generated/sources/annotationProcessor/java/main/BuildGenerated.java");
-        SourceFile sourceFile = parseWithPath(source, sourcePath);
-
-        SourceFile result = (SourceFile) visitor.visit(sourceFile, ctx);
-
-        assertFalse(result.getMarkers().findFirst(SearchResult.class).isPresent(),
-            "Files in build directory should NOT be marked (excluded)");
-    }
-
-    @Test
-    void shouldProcessRegularSourceFiles() {
-        String source = "class SourceCode {}";
-        Path sourcePath = Path.of("src/main/java/SourceCode.java");
-        SourceFile sourceFile = parseWithPath(source, sourcePath);
-
-        SourceFile result = (SourceFile) visitor.visit(sourceFile, ctx);
-
-        assertTrue(result.getMarkers().findFirst(SearchResult.class).isPresent(),
-            "Regular source files should be marked for processing");
-    }
-
-    @Test
-    void shouldProcessTestSourceFiles() {
-        String source = "class SourceTest {}";
-        Path sourcePath = Path.of("src/test/java/SourceTest.java");
-        SourceFile sourceFile = parseWithPath(source, sourcePath);
-
-        SourceFile result = (SourceFile) visitor.visit(sourceFile, ctx);
-
-        assertTrue(result.getMarkers().findFirst(SearchResult.class).isPresent(),
-            "Test source files should be marked for processing");
-    }
-
-    @Test
-    void shouldExcludeNestedTargetDirectories() {
-        String source = "class ModuleGenerated {}";
-        Path sourcePath = Path.of("module-a/target/classes/ModuleGenerated.java");
-        SourceFile sourceFile = parseWithPath(source, sourcePath);
-
-        SourceFile result = (SourceFile) visitor.visit(sourceFile, ctx);
-
-        assertFalse(result.getMarkers().findFirst(SearchResult.class).isPresent(),
-            "Nested target directories should NOT be marked (excluded)");
-    }
-
-    @Test
-    void shouldHandleWindowsStylePaths() {
-        String source = "class WindowsGenerated {}";
-        // Windows-style path
-        Path sourcePath = Path.of("target", "generated-sources", "annotations", "WindowsGenerated.java");
-        SourceFile sourceFile = parseWithPath(source, sourcePath);
-
-        SourceFile result = (SourceFile) visitor.visit(sourceFile, ctx);
-
-        assertFalse(result.getMarkers().findFirst(SearchResult.class).isPresent(),
-            "Windows-style paths in target should NOT be marked (excluded)");
-    }
-
-    @Test
-    void shouldExcludeTargetInAnyPosition() {
-        String source = "class BenchmarkGenerated {}";
-        Path sourcePath = Path.of("benchmarking/cui-benchmarking-common/target/generated-test-sources/test-annotations/BenchmarkGenerated.java");
-        SourceFile sourceFile = parseWithPath(source, sourcePath);
-
-        SourceFile result = (SourceFile) visitor.visit(sourceFile, ctx);
-
-        assertFalse(result.getMarkers().findFirst(SearchResult.class).isPresent(),
-            "Deep nested target paths should NOT be marked (excluded)");
+        if (shouldBeMarked) {
+            assertTrue(isMarked, description + ": should be marked for processing");
+        } else {
+            assertFalse(isMarked, description + ": should NOT be marked (excluded)");
+        }
     }
 
     private SourceFile parseWithPath(String source, Path sourcePath) {
