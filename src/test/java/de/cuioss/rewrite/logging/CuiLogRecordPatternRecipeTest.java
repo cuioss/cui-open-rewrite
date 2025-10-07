@@ -744,4 +744,146 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
             )
         );
     }
+
+    /**
+     * Issue #1: Method reference ::format should be transformed to direct LogRecord usage
+     * LOGGER.info(INFO.GENERATING_REPORTS::format) -> LOGGER.info(INFO.GENERATING_REPORTS)
+     */
+    @Test
+    void shouldTransformMethodReferenceFormatToDirectLogRecord() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+
+                class ReportGenerator {
+                    private static final CuiLogger LOGGER = new CuiLogger(ReportGenerator.class);
+
+                    static class INFO {
+                        static final LogRecord GENERATING_REPORTS = null;
+                    }
+
+                    void generateDetailedPage() {
+                        LOGGER.info(INFO.GENERATING_REPORTS::format);
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+
+                class ReportGenerator {
+                    private static final CuiLogger LOGGER = new CuiLogger(ReportGenerator.class);
+
+                    static class INFO {
+                        static final LogRecord GENERATING_REPORTS = null;
+                    }
+
+                    void generateDetailedPage() {
+                        LOGGER.info(INFO.GENERATING_REPORTS);
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    /**
+     * Issue #2: Method reference ::format with exception should be transformed
+     * LOGGER.error(e, ERROR.WRK_PROCESSOR_FAILED::format) -> LOGGER.error(e, ERROR.WRK_PROCESSOR_FAILED)
+     */
+    @Test
+    void shouldTransformMethodReferenceFormatWithExceptionToDirectLogRecord() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+                import java.io.IOException;
+
+                class WrkResultPostProcessor {
+                    private static final CuiLogger LOGGER = new CuiLogger(WrkResultPostProcessor.class);
+
+                    static class ERROR {
+                        static final LogRecord WRK_PROCESSOR_FAILED = null;
+                    }
+
+                    void process() {
+                        try {
+                            // some code
+                        } catch (IOException e) {
+                            LOGGER.error(e, ERROR.WRK_PROCESSOR_FAILED::format);
+                        }
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+                import java.io.IOException;
+
+                class WrkResultPostProcessor {
+                    private static final CuiLogger LOGGER = new CuiLogger(WrkResultPostProcessor.class);
+
+                    static class ERROR {
+                        static final LogRecord WRK_PROCESSOR_FAILED = null;
+                    }
+
+                    void process() {
+                        try {
+                            // some code
+                        } catch (IOException e) {
+                            LOGGER.error(e, ERROR.WRK_PROCESSOR_FAILED);
+                        }
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    /**
+     * Issue #3: String concatenation with LogRecord should be flagged as a bug
+     * LOGGER.info(INFO.GENERATING_REPORTS, "text" + variable) is ALWAYS wrong
+     */
+    @Test
+    void shouldFlagStringConcatenationWithLogRecordAsBug() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+
+                class BadgeGenerator {
+                    private static final CuiLogger LOGGER = new CuiLogger(BadgeGenerator.class);
+
+                    static class INFO {
+                        static final LogRecord GENERATING_REPORTS = null;
+                    }
+
+                    void generateBadges(String perfBadgePath) {
+                        LOGGER.info(INFO.GENERATING_REPORTS, "Performance badge written to " + perfBadgePath);
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+
+                class BadgeGenerator {
+                    private static final CuiLogger LOGGER = new CuiLogger(BadgeGenerator.class);
+
+                    static class INFO {
+                        static final LogRecord GENERATING_REPORTS = null;
+                    }
+
+                    void generateBadges(String perfBadgePath) {
+                        /*~~(TODO: String concatenation with LogRecord parameter is always wrong. Use separate parameters instead. Suppress: // cui-rewrite:disable CuiLogRecordPatternRecipe)~~>*/LOGGER.info(INFO.GENERATING_REPORTS, "Performance badge written to " + perfBadgePath);
+                    }
+                }
+                """
+            )
+        );
+    }
 }

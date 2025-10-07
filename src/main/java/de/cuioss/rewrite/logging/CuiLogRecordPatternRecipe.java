@@ -123,6 +123,14 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
             boolean usesLogRecord = checkUsesLogRecord(mi);
 
+            // Check for string concatenation with LogRecord (always wrong)
+            if (usesLogRecord) {
+                J.MethodInvocation flagged = flagStringConcatenationWithLogRecord(mi);
+                if (flagged != mi) {
+                    return flagged;
+                }
+            }
+
             // Validate based on level
             switch (level) {
                 case INFO, WARN, ERROR, FATAL:
@@ -208,14 +216,22 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
             Expression firstArg = args.getFirst();
 
+            // Check if first argument is a method reference ::format
+            if (firstArg instanceof J.MemberReference memberRef && isFormatMethodReference(memberRef)) {
+                return transformMethodReference(mi, memberRef, 0);
+            }
+
             // Check if first argument is a .format() call
             if (firstArg instanceof J.MethodInvocation formatCall && isFormatCall(formatCall)) {
                 return transformFormatCall(mi, formatCall, 0);
             }
 
-            // Check for exception followed by .format() call
+            // Check for exception followed by method reference ::format
             if (isExceptionType(firstArg) && args.size() > 1) {
                 Expression secondArg = args.get(1);
+                if (secondArg instanceof J.MemberReference memberRef && isFormatMethodReference(memberRef)) {
+                    return transformMethodReference(mi, memberRef, 1);
+                }
                 if (secondArg instanceof J.MethodInvocation formatCall && isFormatCall(formatCall)) {
                     return transformFormatCall(mi, formatCall, 1);
                 }
@@ -229,6 +245,30 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             return FORMAT_METHOD_NAME.equals(methodInvocation.getSimpleName()) &&
                 select != null &&
                 isLogRecordExpression(select);
+        }
+
+        private boolean isFormatMethodReference(J.MemberReference memberRef) {
+            return FORMAT_METHOD_NAME.equals(memberRef.getReference().getSimpleName()) &&
+                isLogRecordExpression(memberRef.getContaining());
+        }
+
+        private J.MethodInvocation transformMethodReference(J.MethodInvocation loggerCall,
+            J.MemberReference memberRef,
+            int memberRefIndex) {
+            // Extract the LogRecord from method reference's containing expression
+            Expression logRecord = memberRef.getContaining();
+            if (logRecord == null) {
+                return loggerCall;
+            }
+
+            // Preserve the prefix from the member reference on the LogRecord
+            logRecord = logRecord.withPrefix(memberRef.getPrefix());
+
+            // Build new argument list for logger call
+            List<Expression> newLoggerArgs = new ArrayList<>(loggerCall.getArguments());
+            newLoggerArgs.set(memberRefIndex, logRecord);
+
+            return loggerCall.withArguments(newLoggerArgs);
         }
 
         private J.MethodInvocation transformFormatCall(J.MethodInvocation loggerCall,
@@ -354,6 +394,88 @@ public class CuiLogRecordPatternRecipe extends Recipe {
         private boolean isExceptionType(Expression expr) {
             JavaType type = expr.getType();
             return type != null && TypeUtils.isAssignableTo("java.lang.Throwable", type);
+        }
+
+        /**
+         * Flags string concatenation when used with LogRecord parameters.
+         * String concatenation with LogRecord is ALWAYS wrong because:
+         * - LogRecord parameters should be passed separately for proper formatting
+         * - Concatenation defeats the purpose of parameterized logging
+         *
+         * Example of WRONG usage:
+         * LOGGER.info(INFO.MESSAGE, "text" + variable)
+         *
+         * Should be:
+         * LOGGER.info(INFO.MESSAGE, "text", variable)
+         */
+        private J.MethodInvocation flagStringConcatenationWithLogRecord(J.MethodInvocation mi) {
+            List<Expression> args = mi.getArguments();
+            if (args.isEmpty()) {
+                return mi;
+            }
+
+            // Determine the starting index for parameter checking
+            // If first arg is exception, LogRecord should be second, params start at index 2
+            // Otherwise, LogRecord is first, params start at index 1
+            int logRecordIndex = 0;
+            int paramStartIndex = 1;
+
+            Expression firstArg = args.getFirst();
+            if (isExceptionType(firstArg)) {
+                logRecordIndex = 1;
+                paramStartIndex = 2;
+            }
+
+            // Verify we have a LogRecord at the expected index
+            if (logRecordIndex >= args.size()) {
+                return mi;
+            }
+
+            Expression logRecordArg = args.get(logRecordIndex);
+            if (!isLogRecordFormatExpression(logRecordArg)) {
+                return mi;
+            }
+
+            // Check remaining arguments for string concatenation
+            for (int i = paramStartIndex; i < args.size(); i++) {
+                Expression arg = args.get(i);
+                if (containsStringConcatenation(arg)) {
+                    String message = "TODO: String concatenation with LogRecord parameter is always wrong. " +
+                        "Use separate parameters instead" + SUPPRESSION_HINT;
+                    return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), message)));
+                }
+            }
+
+            return mi;
+        }
+
+        /**
+         * Checks if an expression contains string concatenation.
+         * This includes + operators on String types.
+         */
+        private boolean containsStringConcatenation(Expression expr) {
+            if (expr instanceof J.Binary binary) {
+                // Check if this is a + operator
+                if (binary.getOperator() == J.Binary.Type.Addition) {
+                    // Check if at least one operand is a String type
+                    JavaType leftType = binary.getLeft().getType();
+                    JavaType rightType = binary.getRight().getType();
+
+                    if (isStringType(leftType) || isStringType(rightType)) {
+                        return true;
+                    }
+                }
+
+                // Recursively check operands
+                return containsStringConcatenation(binary.getLeft()) ||
+                       containsStringConcatenation(binary.getRight());
+            }
+
+            return false;
+        }
+
+        private boolean isStringType(JavaType type) {
+            return type != null && TypeUtils.isString(type);
         }
 
         private enum LogLevel {
