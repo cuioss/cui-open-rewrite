@@ -16,6 +16,7 @@
 package de.cuioss.rewrite.logging;
 
 import de.cuioss.rewrite.util.BaseSuppressionVisitor;
+import de.cuioss.rewrite.util.PathExclusionVisitor;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Preconditions;
 import org.openrewrite.Recipe;
@@ -69,7 +70,10 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
     @Override
     public TreeVisitor<?, ExecutionContext> getVisitor() {
-        return Preconditions.check(new IsLikelyNotTest(), new CuiLogRecordPatternVisitor());
+        return Preconditions.check(
+            new PathExclusionVisitor(),
+            Preconditions.check(new IsLikelyNotTest(), new CuiLogRecordPatternVisitor())
+        );
     }
 
     @Override

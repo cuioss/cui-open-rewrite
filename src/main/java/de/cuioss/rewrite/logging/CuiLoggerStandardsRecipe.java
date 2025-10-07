@@ -16,9 +16,11 @@
 package de.cuioss.rewrite.logging;
 
 import de.cuioss.rewrite.util.BaseSuppressionVisitor;
+import de.cuioss.rewrite.util.PathExclusionVisitor;
 import de.cuioss.rewrite.util.RecipeMarkerUtil;
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.ExecutionContext;
+import org.openrewrite.Preconditions;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.tree.Expression;
@@ -68,7 +70,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
     @Override
     public TreeVisitor<?, ExecutionContext> getVisitor() {
-        return new CuiLoggerStandardsVisitor();
+        return Preconditions.check(new PathExclusionVisitor(), new CuiLoggerStandardsVisitor());
     }
 
     @Override
