@@ -15,10 +15,12 @@
  */
 package de.cuioss.rewrite.logging;
 
+import de.cuioss.rewrite.util.PathExclusionVisitor;
 import de.cuioss.rewrite.util.RecipeMarkerUtil;
 import de.cuioss.rewrite.util.RecipeSuppressionUtil;
 import org.openrewrite.Cursor;
 import org.openrewrite.ExecutionContext;
+import org.openrewrite.Preconditions;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.JavaIsoVisitor;
@@ -81,7 +83,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
     @Override
     public TreeVisitor<?, ExecutionContext> getVisitor() {
-        return new InvalidExceptionUsageVisitor();
+        return Preconditions.check(new PathExclusionVisitor(), new InvalidExceptionUsageVisitor());
     }
 
     @Override
