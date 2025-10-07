@@ -34,7 +34,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 public class CuiLogRecordPatternRecipe extends Recipe {
 
@@ -125,7 +124,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
             // Check for string concatenation with LogRecord (always wrong)
             if (usesLogRecord) {
-                J.MethodInvocation flagged = flagStringConcatenationWithLogRecord(mi);
+                J.MethodInvocation flagged = flagStringConcatenationWithLogRecord(method, mi);
                 if (flagged != mi) {
                     return flagged;
                 }
@@ -136,14 +135,14 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                 case INFO, WARN, ERROR, FATAL:
                     if (!usesLogRecord) {
                         String message = "TODO: " + level + " needs LogRecord" + SUPPRESSION_HINT;
-                        return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), message)));
+                        return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(mi.getId(), message)));
                     }
                     break;
 
                 case DEBUG, TRACE:
                     if (usesLogRecord) {
                         String message = "TODO: " + level + " no LogRecord" + SUPPRESSION_HINT;
-                        return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), message)));
+                        return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(mi.getId(), message)));
                     }
                     break;
             }
@@ -398,8 +397,11 @@ public class CuiLogRecordPatternRecipe extends Recipe {
          *
          * Should be:
          * LOGGER.info(INFO.MESSAGE, "text", variable)
+         *
+         * @param original The original method invocation (to check for existing markers)
+         * @param mi The potentially modified method invocation (to analyze and flag)
          */
-        private J.MethodInvocation flagStringConcatenationWithLogRecord(J.MethodInvocation mi) {
+        private J.MethodInvocation flagStringConcatenationWithLogRecord(J.MethodInvocation original, J.MethodInvocation mi) {
             List<Expression> args = mi.getArguments();
             if (args.isEmpty()) {
                 return mi;
@@ -433,7 +435,17 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                 if (containsStringConcatenation(arg)) {
                     String message = "TODO: String concatenation with LogRecord parameter is always wrong. " +
                         "Use separate parameters instead" + SUPPRESSION_HINT;
-                    return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), message)));
+                    // Check if either the original or current method invocation already has this marker
+                    if (original.getMarkers().findFirst(SearchResult.class)
+                        .filter(sr -> message.equals(sr.getDescription()))
+                        .isPresent() ||
+                        mi.getMarkers().findFirst(SearchResult.class)
+                            .filter(sr -> message.equals(sr.getDescription()))
+                            .isPresent()) {
+                        return mi;
+                    }
+                    // Use the original method's ID for stable marker identification across cycles
+                    return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(original.getId(), message)));
                 }
             }
 

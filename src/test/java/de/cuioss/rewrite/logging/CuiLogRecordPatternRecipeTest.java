@@ -887,10 +887,50 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         );
     }
 
-    // Note: Testing nested string concatenation (recursive path at lines 461-462) reveals a bug
-    // in the recipe where UUID.randomUUID() causes infinite cycles of marker additions.
-    // This should be fixed in the recipe by using consistent marker IDs.
-    // For now, accepting this uncovered recursive path as acceptable defensive programming.
+    @Test
+    void shouldFlagNestedStringConcatenationWithLogRecord() {
+        // Tests recursive checking in containsStringConcatenation()
+        // String concat is buried in a nested expression: count + ("text" + name)
+        // This exercises the recursive path at lines 461-462
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+
+                class Example {
+                    private static final CuiLogger LOGGER = new CuiLogger(Example.class);
+
+                    static class INFO {
+                        static final LogRecord MESSAGE = null;
+                    }
+
+                    void logWithNestedExpression(int count, String name) {
+                        // Nested expression: outer binary is int+obj, inner binary is string concat
+                        LOGGER.info(INFO.MESSAGE, count + ("prefix" + name));
+                    }
+                }
+                """,
+                """
+                      import de.cuioss.tools.logging.CuiLogger;
+                      import de.cuioss.tools.logging.LogRecord;
+
+                      class Example {
+                          private static final CuiLogger LOGGER = new CuiLogger(Example.class);
+
+                          static class INFO {
+                              static final LogRecord MESSAGE = null;
+                          }
+
+                          void logWithNestedExpression(int count, String name) {
+                              // Nested expression: outer binary is int+obj, inner binary is string concat
+                              /*~~(TODO: String concatenation with LogRecord parameter is always wrong. Use separate parameters instead. Suppress: // cui-rewrite:disable CuiLogRecordPatternRecipe)~~>*/LOGGER.info(INFO.MESSAGE, count + ("prefix" + name));
+                          }
+                      }
+                """
+            )
+        );
+    }
 
     @Test
     void shouldIgnoreTemplateCallOnNonLogRecordBuilder() {
