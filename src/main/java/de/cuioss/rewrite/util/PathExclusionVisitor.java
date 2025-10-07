@@ -17,11 +17,14 @@ package de.cuioss.rewrite.util;
 
 import de.cuioss.tools.logging.CuiLogger;
 import org.openrewrite.ExecutionContext;
+import org.openrewrite.PathUtils;
 import org.openrewrite.SourceFile;
 import org.openrewrite.Tree;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.marker.SearchResult;
+
+import java.nio.file.Path;
 
 /**
  * TreeVisitor that acts as a precondition to exclude source files matching specific path patterns.
@@ -59,26 +62,18 @@ public class PathExclusionVisitor extends TreeVisitor<Tree, ExecutionContext> {
      * @param exclusionPatterns glob patterns for paths to exclude
      */
     public PathExclusionVisitor(String... exclusionPatterns) {
-        this.exclusionPatterns = exclusionPatterns;
+        this.exclusionPatterns = exclusionPatterns.clone();
     }
 
     @Override
     public @Nullable Tree visit(@Nullable Tree tree, ExecutionContext ctx) {
         if (tree instanceof SourceFile sourceFile) {
-            String sourcePath = sourceFile.getSourcePath().toString();
-
-            // Normalize path separators to forward slashes for consistent pattern matching
-            sourcePath = sourcePath.replace('\\', '/');
-
-            LOGGER.trace("Checking path: %s", sourcePath);
+            Path sourcePath = sourceFile.getSourcePath();
 
             for (String pattern : exclusionPatterns) {
-                LOGGER.trace("Against pattern: %s", pattern);
-                boolean matches = matchesGlobPattern(sourcePath, pattern);
-                LOGGER.trace("Matches: %s", matches);
-                if (matches) {
+                if (matchesGlobPattern(sourcePath, pattern)) {
                     // File matches exclusion pattern - return it unmarked so precondition fails
-                    LOGGER.debug("Excluding file from processing: %s", sourcePath);
+                    LOGGER.debug("Excluding file from processing: %s (pattern: %s)", sourcePath, pattern);
                     return sourceFile;
                 }
             }
@@ -98,20 +93,7 @@ public class PathExclusionVisitor extends TreeVisitor<Tree, ExecutionContext> {
      * @param pattern the glob pattern
      * @return true if the path matches the pattern
      */
-    private boolean matchesGlobPattern(String path, String pattern) {
-        // Simple implementation: For patterns like "**/target/**" or "**/build/**"
-        // check if the directory name appears as a path component
-        if (pattern.startsWith("**/") && pattern.endsWith("/**")) {
-            String dirName = pattern.substring(3, pattern.length() - 3);
-
-            // Check if path starts with "dirName/" or contains "/dirName/"
-            boolean matches = path.startsWith(dirName + "/") || path.contains("/" + dirName + "/");
-
-            LOGGER.trace("Path '%s' %s pattern '%s'", path, matches ? "matches" : "does not match", pattern);
-            return matches;
-        }
-
-        LOGGER.trace("Pattern '%s' not in expected format, skipping path '%s'", pattern, path);
-        return false;
+    private boolean matchesGlobPattern(Path path, String pattern) {
+        return PathUtils.matchesGlob(path, pattern);
     }
 }
