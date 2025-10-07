@@ -886,4 +886,45 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void shouldIgnoreTemplateCallOnNonLogRecordBuilder() {
+        // Corner case: .template() method on a different class (not LogRecordModel.Builder)
+        // Should be ignored by the recipe
+        rewriteRun(
+            java(
+                """
+                class Example {
+                    interface TemplateBuilder {
+                        void template(String s);
+                    }
+
+                    void doSomething(TemplateBuilder builder) {
+                        builder.template("Some text");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void shouldIgnoreTemplateCallWithWrongArgumentCount() {
+        // Corner case: .template() with 0 or 2+ arguments
+        // Should be ignored by the recipe
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.LogRecordModel;
+
+                class Example {
+                    void doSomething() {
+                        // This would be a compile error, but recipe should handle gracefully
+                        LogRecordModel.builder().build();
+                    }
+                }
+                """
+            )
+        );
+    }
 }

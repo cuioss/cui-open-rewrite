@@ -275,10 +275,8 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             J.MethodInvocation formatCall,
             int formatCallIndex) {
             // Extract the LogRecord from format() call's select
+            // Note: select is guaranteed non-null by isFormatCall() check
             Expression logRecord = formatCall.getSelect();
-            if (logRecord == null) {
-                return loggerCall;
-            }
 
             // Preserve the prefix from the format call on the LogRecord
             logRecord = logRecord.withPrefix(formatCall.getPrefix());
