@@ -78,7 +78,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
         return List.of();
     }
 
-    private static class CuiLogRecordPatternVisitor extends BaseSuppressionVisitor {
+    static class CuiLogRecordPatternVisitor extends BaseSuppressionVisitor {
 
         private static final String SUPPRESSION_HINT = ". Suppress: // cui-rewrite:disable " + RECIPE_NAME;
 
@@ -465,7 +465,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             return false;
         }
 
-        private enum LogLevel {
+        enum LogLevel {
             TRACE, DEBUG, INFO, WARN, ERROR, FATAL;
 
             static Optional<LogLevel> fromMethodName(String methodName) {
