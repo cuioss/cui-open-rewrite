@@ -369,21 +369,15 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
             // This checks if the expression is accessing a LogRecord constant
             // It could be a field access like INFO.SOME_MESSAGE
-            if (expr instanceof J.FieldAccess) {
-                JavaType type = expr.getType();
-                if (type != null) {
-                    return TypeUtils.isAssignableTo(LOG_RECORD_TYPE, type);
-                }
+            if (expr instanceof J.FieldAccess fieldAccess) {
+                return TypeUtils.isAssignableTo(LOG_RECORD_TYPE, fieldAccess.getType());
             }
 
             // For identifier access (when imported statically or local variable)
-            if (expr instanceof J.Identifier) {
-                JavaType type = expr.getType();
-                if (type != null) {
-                    // Check both LogRecord interface and LogRecordModel implementation
-                    return TypeUtils.isAssignableTo(LOG_RECORD_TYPE, type) ||
-                        TypeUtils.isAssignableTo("de.cuioss.tools.logging.LogRecordModel", type);
-                }
+            if (expr instanceof J.Identifier identifier) {
+                // Check both LogRecord interface and LogRecordModel implementation
+                return TypeUtils.isAssignableTo(LOG_RECORD_TYPE, identifier.getType()) ||
+                    TypeUtils.isAssignableTo("de.cuioss.tools.logging.LogRecordModel", identifier.getType());
             }
 
             return false;
@@ -391,7 +385,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
 
         private boolean isExceptionType(Expression expr) {
             JavaType type = expr.getType();
-            return type != null && TypeUtils.isAssignableTo("java.lang.Throwable", type);
+            return TypeUtils.isAssignableTo("java.lang.Throwable", type);
         }
 
         /**
@@ -473,7 +467,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
         }
 
         private boolean isStringType(JavaType type) {
-            return type != null && TypeUtils.isString(type);
+            return TypeUtils.isString(type);
         }
 
         private enum LogLevel {
