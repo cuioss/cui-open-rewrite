@@ -196,7 +196,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             return TypeUtils.isOfClassType(type, "de.cuioss.tools.logging.LogRecordModel$Builder") ||
                 TypeUtils.isOfClassType(type, "de.cuioss.tools.logging.LogRecordModel.Builder");
         }
-
+        @SuppressWarnings("java:S3776") // Cognitive Complexity of 6 is ok here
         private J.MethodInvocation transformFormatCallToDirectLogRecord(J.MethodInvocation mi) {
             // Check if this is a CuiLogger method invocation
             if (isNotLoggerMethod(mi)) {
