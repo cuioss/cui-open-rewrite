@@ -16,12 +16,12 @@
 package de.cuioss.rewrite.util;
 
 import de.cuioss.tools.logging.CuiLogger;
+import org.jspecify.annotations.Nullable;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.PathUtils;
 import org.openrewrite.SourceFile;
 import org.openrewrite.Tree;
 import org.openrewrite.TreeVisitor;
-import org.openrewrite.internal.lang.Nullable;
 import org.openrewrite.marker.SearchResult;
 
 import java.nio.file.Path;
