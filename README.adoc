@@ -171,6 +171,7 @@ public class Person {
 **Known Limitations:**
 
 * Trailing comments (`public class Foo { // cui-rewrite:disable`) not fully supported due to OpenRewrite AST limitations
+* **Classes without modifiers**: Package-private classes with no modifiers (e.g., `class Foo`) cannot be formatted due to OpenRewrite AST structure
 * **Trailing comments on annotations are moved to the next line** - Comments like `@SuppressWarnings("all") // reason` will be preserved but repositioned
   - This is due to OpenRewrite's AST model where inline comments are stored in the prefix of the NEXT element
   - When reformatting adds a newline, the comment moves with it

@@ -15,7 +15,6 @@
  */
 package de.cuioss.rewrite.format;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
@@ -96,33 +95,6 @@ class AnnotationNewlineFormatNormalizeConflictTest implements RewriteTest {
         );
     }
 
-    /**
-     * Test with class-level annotations
-     * NOTE: Classes without modifiers are not currently supported due to OpenRewrite AST limitations.
-     * The "class" keyword is not a separate AST node, so we cannot add newline before it.
-     * In practice, classes almost always have modifiers (public, final, abstract, etc.)
-     */
-    @Disabled("Classes without modifiers not supported - see comment")
-    @Test
-    void shouldSplitClassAnnotationAndSurviveNormalization() {
-        rewriteRun(
-            java(
-                """
-                @Deprecated class TestClass {
-                    void method() {
-                    }
-                }
-                """,
-                """
-                @Deprecated
-                class TestClass {
-                    void method() {
-                    }
-                }
-                """
-            )
-        );
-    }
 
     /**
      * Test with field-level annotations
