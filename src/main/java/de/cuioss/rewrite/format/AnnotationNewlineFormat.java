@@ -167,6 +167,8 @@ public class AnnotationNewlineFormat extends Recipe {
                 return !cd.getModifiers().getFirst().getPrefix().getWhitespace().contains("\n");
             }
 
+            // NOTE: Classes without modifiers are not supported due to OpenRewrite AST limitations
+            // The "class" keyword is not a separate AST node we can manipulate
             return false;
         }
 
@@ -288,6 +290,7 @@ public class AnnotationNewlineFormat extends Recipe {
                     cd = cd.withModifiers(newModifiers);
                 }
             }
+            // NOTE: Classes without modifiers cannot be formatted due to OpenRewrite AST limitations
             return cd;
         }
 
