@@ -25,17 +25,14 @@ import static org.openrewrite.java.Assertions.java;
 /**
  * Tests the specific conflict between AnnotationNewlineFormat and NormalizeFormatVisitor.
  * <p>
- * NormalizeFormatVisitor moves all whitespace to the outermost AST element, which removes
+ * NormalizeFormatVisitor moves all whitespace to the outermost AST element, which can remove
  * the newlines that AnnotationNewlineFormat adds between annotations and declarations.
  * <p>
- * This test verifies that AnnotationNewlineFormat can handle NormalizeFormatVisitor
- * and maintain the split annotations.
- * <p>
- * <b>IMPORTANT: DO NOT MODIFY THIS TEST WITHOUT EXPLICIT USER PERMISSION!</b>
- * <p>
- * This test reproduces a critical bug where AnnotationNewlineFormat and NormalizeFormatVisitor
- * conflict with each other. The test MUST fail until the implementation is fixed properly.
- * Do not "fix" this test by changing the expected behavior - the implementation must be fixed instead.
+ * This test serves as a regression test to ensure that a previously identified conflict
+ * between AnnotationNewlineFormat and NormalizeFormatVisitor does not reoccur.
+ * It verifies that formatting applied by AnnotationNewlineFormat is preserved
+ * even when NormalizeFormatVisitor is run, which mimics the behavior of the
+ * pre-commit profile.
  * <p>
  * The test uses BOTH recipes (.recipe().recipe()) intentionally to reproduce the exact
  * scenario that occurs in the pre-commit profile where AutoFormat (which includes
