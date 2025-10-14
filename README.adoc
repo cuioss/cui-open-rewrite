@@ -34,7 +34,7 @@ Custom OpenRewrite recipes for CUI-OSS projects that enforce specific code forma
 
 **⚠️ CRITICAL: Recipe Execution Order**
 
-When combining with `AutoFormat`, run `AutoFormat` **FIRST**, then CUI recipes. `AutoFormat` includes `NormalizeFormat` which can undo annotation formatting if run after.
+When combining with `AutoFormat`, run `AutoFormat` **FIRST**, then CUI recipes. `AutoFormat` includes `NormalizeFormat` which can undo annotation formatting if the order is reversed.
 
 [source,xml]
 ----
