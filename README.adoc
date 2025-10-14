@@ -32,6 +32,10 @@ Custom OpenRewrite recipes for CUI-OSS projects that enforce specific code forma
 
 ==== With OpenRewrite Maven Plugin
 
+**⚠️ CRITICAL: Recipe Execution Order**
+
+When combining with `AutoFormat`, run `AutoFormat` **FIRST**, then CUI recipes. `AutoFormat` includes `NormalizeFormat` which can undo annotation formatting if the order is reversed.
+
 [source,xml]
 ----
 <plugin>
@@ -39,6 +43,9 @@ Custom OpenRewrite recipes for CUI-OSS projects that enforce specific code forma
     <artifactId>rewrite-maven-plugin</artifactId>
     <configuration>
         <activeRecipes>
+            <!-- Base formatting FIRST -->
+            <recipe>org.openrewrite.java.format.AutoFormat</recipe>
+            <!-- CUI recipes AFTER -->
             <recipe>de.cuioss.rewrite.format.AnnotationNewlineFormat</recipe>
             <recipe>de.cuioss.rewrite.logging.CuiLoggerStandardsRecipe</recipe>
             <recipe>de.cuioss.rewrite.logging.CuiLogRecordPatternRecipe</recipe>
