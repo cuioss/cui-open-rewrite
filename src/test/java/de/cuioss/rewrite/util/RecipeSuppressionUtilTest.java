@@ -31,7 +31,8 @@ import java.lang.reflect.InvocationTargetException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@EnableTestLogger(rootLevel = TestLogLevel.DEBUG) @SuppressWarnings({
+@EnableTestLogger(rootLevel = TestLogLevel.DEBUG)
+@SuppressWarnings({
     "java:S2699", // Tests use assertions via LogAsserts
     "java:S5976"  // Similar tests are intentionally kept separate for clarity
 })
