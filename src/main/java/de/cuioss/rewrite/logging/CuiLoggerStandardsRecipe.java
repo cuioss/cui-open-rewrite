@@ -452,7 +452,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             }
         }
 
-        private record ExceptionPosition(int index, @Nullable Expression exception) {
+        private record ExceptionPosition(int index, @Nullable
+            Expression exception) {
 
             static ExceptionPosition notFound() {
                 return new ExceptionPosition(-1, null);
