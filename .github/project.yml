@@ -1,6 +1,28 @@
 name: cui-open-rewrite
-pages-reference: cui-open-rewrite
-sonar-project-key: cuioss_cui-open-rewrite
+description: CUI OpenRewrite recipes for Java modernization
+
 release:
   current-version: 1.1.1
   next-version: 1.1-SNAPSHOT
+  create-github-release: true
+
+maven-build:
+  java-versions: '["21"]'
+  java-version: '21'
+  enable-snapshot-deploy: true
+  maven-profiles-snapshot: 'release-snapshot,javadoc'
+  maven-profiles-release: 'release,javadoc'
+  npm-cache: false
+
+sonar:
+  project-key: cuioss_cui-open-rewrite
+  enabled: true
+  skip-on-dependabot: true
+
+pages:
+  reference: cui-open-rewrite
+  deploy-at-release: true
+
+github-automation:
+  auto-merge-build-versions: true
+  auto-merge-build-timeout: 300
