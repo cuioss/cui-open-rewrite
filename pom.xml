@@ -9,7 +9,7 @@
     </parent>
     <groupId>de.cuioss.rewrite</groupId>
     <artifactId>cui-open-rewrite</artifactId>
-    <version>1.1.2</version>
+    <version>1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>cui open-rewrite</name>
     <description>OpenRewrite recipes for cuioss projects.
@@ -23,7 +23,7 @@
         <developerConnection>
             scm:git:https://github.com/cuioss/cui-open-rewrite/
         </developerConnection>
-        <tag>1.1.2</tag>
+        <tag>HEAD</tag>
     </scm>
     <issueManagement>
         <url>https://github.com/cuioss/cui-open-rewrite/issues</url>
