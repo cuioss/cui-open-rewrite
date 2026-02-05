@@ -462,7 +462,7 @@ class AnnotationNewlineFormatTest implements RewriteTest {
     void classAnnotationsShouldPersistThroughAutoFormat() {
         rewriteRun(
             spec -> spec.recipe(new AnnotationNewlineFormat())
-                .recipe(new AutoFormat())
+                .recipe(new AutoFormat(null))
                 .parser(JavaParser.fromJavaVersion()
                     .dependsOn(
                         """
