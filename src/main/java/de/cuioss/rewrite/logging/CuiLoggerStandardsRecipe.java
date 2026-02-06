@@ -210,6 +210,14 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                 newModifiers.addAll(otherModifiers);
 
                 vd = vd.withModifiers(newModifiers);
+
+                // Ensure a space between the last modifier and the type expression.
+                // When the original declaration had no modifiers, the type expression
+                // has no leading space, causing e.g. "finalCuiLogger" instead of "final CuiLogger".
+                if (vd.getTypeExpression() != null &&
+                    !vd.getTypeExpression().getPrefix().getWhitespace().startsWith(" ")) {
+                    vd = vd.withTypeExpression(vd.getTypeExpression().withPrefix(Space.SINGLE_SPACE));
+                }
                 // Auto-fixed, don't mark it
             }
 
