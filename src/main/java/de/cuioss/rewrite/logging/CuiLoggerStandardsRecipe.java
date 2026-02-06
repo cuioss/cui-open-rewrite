@@ -101,6 +101,12 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                 return vd;
             }
 
+            // Skip instance fields without initializer — these are constructor-injected
+            // loggers and must not be renamed or have their modifiers changed (issue #27).
+            if (isConstructorInjectedLogger(vd)) {
+                return vd;
+            }
+
             vd = checkLoggerNaming(vd);
             // Interface fields are implicitly public static final — adding
             // private would produce invalid Java (see issue #26).
@@ -122,6 +128,21 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             // Local variables are inside method declarations
             return getCursor().getParentTreeCursor().getValue() instanceof J.Block &&
                 getCursor().getParentTreeCursor().getParentTreeCursor().getValue() instanceof J.ClassDeclaration;
+        }
+
+        private boolean isConstructorInjectedLogger(J.VariableDeclarations vd) {
+            // A constructor-injected logger is a non-static instance field with no initializer.
+            // These fields receive their value via constructor parameters and must not be
+            // renamed to LOGGER or have static/final modifiers forced onto them.
+            if (vd.hasModifier(J.Modifier.Type.Static)) {
+                return false;
+            }
+            for (J.VariableDeclarations.NamedVariable variable : vd.getVariables()) {
+                if (variable.getInitializer() != null) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private boolean isInsideInterface() {
