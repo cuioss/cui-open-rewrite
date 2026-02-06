@@ -484,4 +484,26 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void shouldHandleLoggerWithNoModifiers() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                public class Example {
+                    CuiLogger LOGGER = new CuiLogger(Example.class);
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                public class Example {
+                    private static final CuiLogger LOGGER = new CuiLogger(Example.class);
+                }
+                """
+            )
+        );
+    }
 }
