@@ -570,4 +570,77 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void shouldNotRenameConstructorInjectedLoggerWhenStandardLoggerExists() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                public class CuiRestClientBuilder {
+
+                    private static final CuiLogger LOGGER = new CuiLogger(CuiRestClientBuilder.class);
+                    private final CuiLogger givenLogger;
+
+                    public CuiRestClientBuilder(final CuiLogger givenLogger) {
+                        this.givenLogger = givenLogger;
+                    }
+
+                    public void doSomething() {
+                        givenLogger.debug("using injected logger");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void shouldNotRenameConstructorInjectedLoggerWithoutStandardLogger() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                public class LogClientRequestFilter {
+
+                    private final CuiLogger logger;
+
+                    public LogClientRequestFilter(final CuiLogger logger) {
+                        this.logger = logger;
+                    }
+
+                    public void filter() {
+                        logger.debug("filtering request");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void shouldNotRenameInstanceLoggerFieldAssignedInConstructor() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                public class MyService {
+
+                    private final CuiLogger log;
+
+                    public MyService(final CuiLogger log) {
+                        this.log = log;
+                    }
+
+                    public void doWork() {
+                        log.info("working");
+                    }
+                }
+                """
+            )
+        );
+    }
 }
