@@ -486,6 +486,70 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
     }
 
     @Test
+    void shouldNotAddPrivateModifierToInterfaceField() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                public interface MyInterface {
+                    CuiLogger LOGGER = new CuiLogger(MyInterface.class);
+
+                    default void doSomething() {
+                        LOGGER.debug("hello");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void shouldRenameLoggerInInterfaceButNotAddPrivate() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                public interface MyInterface {
+                    CuiLogger log = new CuiLogger(MyInterface.class);
+
+                    default void doSomething() {
+                        log.debug("hello");
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                public interface MyInterface {
+                    CuiLogger LOGGER = new CuiLogger(MyInterface.class);
+
+                    default void doSomething() {
+                        LOGGER.debug("hello");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void shouldNotAddPrivateModifierToInterfaceFieldWithExplicitModifiers() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                public interface MyInterface {
+                    public static final CuiLogger LOGGER = new CuiLogger(MyInterface.class);
+                }
+                """
+            )
+        );
+    }
+
+    @Test
     void shouldHandleLoggerWithNoModifiers() {
         rewriteRun(
             java(

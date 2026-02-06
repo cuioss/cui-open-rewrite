@@ -102,7 +102,11 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             }
 
             vd = checkLoggerNaming(vd);
-            vd = checkLoggerModifiers(vd);
+            // Interface fields are implicitly public static final — adding
+            // private would produce invalid Java (see issue #26).
+            if (!isInsideInterface()) {
+                vd = checkLoggerModifiers(vd);
+            }
 
             return vd;
         }
@@ -118,6 +122,11 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             // Local variables are inside method declarations
             return getCursor().getParentTreeCursor().getValue() instanceof J.Block &&
                 getCursor().getParentTreeCursor().getParentTreeCursor().getValue() instanceof J.ClassDeclaration;
+        }
+
+        private boolean isInsideInterface() {
+            J.ClassDeclaration enclosingClass = getCursor().firstEnclosing(J.ClassDeclaration.class);
+            return enclosingClass != null && enclosingClass.getKind() == J.ClassDeclaration.Kind.Type.Interface;
         }
 
         private J.VariableDeclarations checkLoggerNaming(J.VariableDeclarations vd) {
