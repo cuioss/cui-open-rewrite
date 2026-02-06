@@ -125,9 +125,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         }
 
         private boolean isInsideInterface() {
-            Object enclosing = getCursor().getParentTreeCursor().getParentTreeCursor().getValue();
-            return enclosing instanceof J.ClassDeclaration classDecl
-                && classDecl.getKind() == J.ClassDeclaration.Kind.Type.Interface;
+            J.ClassDeclaration enclosingClass = getCursor().firstEnclosing(J.ClassDeclaration.class);
+            return enclosingClass != null && enclosingClass.getKind() == J.ClassDeclaration.Kind.Type.Interface;
         }
 
         private J.VariableDeclarations checkLoggerNaming(J.VariableDeclarations vd) {
