@@ -4,7 +4,7 @@
     <parent>
         <groupId>de.cuioss</groupId>
         <artifactId>cui-java-parent</artifactId>
-        <version>1.4.0</version>
+        <version>1.4.1</version>
         <relativePath />
     </parent>
     <groupId>de.cuioss.rewrite</groupId>
@@ -35,6 +35,21 @@
         <openrewrite.version>8.61.2</openrewrite.version>
         <openrewrite.maven.version>6.17.0</openrewrite.maven.version>
     </properties>
+    <dependencyManagement>
+        <dependencies>
+            <!-- Align JUnit Platform versions with JUnit Jupiter 6.x from parent -->
+            <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-launcher</artifactId>
+                <version>${version.junit.jupiter}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-engine</artifactId>
+                <version>${version.junit.jupiter}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
         <!-- OpenRewrite Core -->
         <dependency>
