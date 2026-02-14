@@ -753,21 +753,19 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
     // --- JUnit 5 test method skipping tests ---
 
     // Stubs for JUnit 5 annotations (needed for type resolution)
-    private static final String JUNIT5_TEST_STUB = """
-            package org.junit.jupiter.api;
-            import java.lang.annotation.*;
-            @Target(ElementType.METHOD)
-            @Retention(RetentionPolicy.RUNTIME)
-            public @interface Test {}
-            """;
+    private static String createAnnotationStub(String packageName, String annotationName) {
+        return """
+                package %s;
+                import java.lang.annotation.*;
+                @Target(ElementType.METHOD)
+                @Retention(RetentionPolicy.RUNTIME)
+                public @interface %s {}
+                """.formatted(packageName, annotationName);
+    }
 
-    private static final String JUNIT5_PARAMETERIZED_TEST_STUB = """
-            package org.junit.jupiter.params;
-            import java.lang.annotation.*;
-            @Target(ElementType.METHOD)
-            @Retention(RetentionPolicy.RUNTIME)
-            public @interface ParameterizedTest {}
-            """;
+    private static final String JUNIT5_TEST_STUB = createAnnotationStub("org.junit.jupiter.api", "Test");
+
+    private static final String JUNIT5_PARAMETERIZED_TEST_STUB = createAnnotationStub("org.junit.jupiter.params", "ParameterizedTest");
 
     private static final String JUNIT5_REPEATED_TEST_STUB = """
             package org.junit.jupiter.api;
@@ -779,21 +777,9 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
             }
             """;
 
-    private static final String JUNIT5_TEST_FACTORY_STUB = """
-            package org.junit.jupiter.api;
-            import java.lang.annotation.*;
-            @Target(ElementType.METHOD)
-            @Retention(RetentionPolicy.RUNTIME)
-            public @interface TestFactory {}
-            """;
+    private static final String JUNIT5_TEST_FACTORY_STUB = createAnnotationStub("org.junit.jupiter.api", "TestFactory");
 
-    private static final String JUNIT5_TEST_TEMPLATE_STUB = """
-            package org.junit.jupiter.api;
-            import java.lang.annotation.*;
-            @Target(ElementType.METHOD)
-            @Retention(RetentionPolicy.RUNTIME)
-            public @interface TestTemplate {}
-            """;
+    private static final String JUNIT5_TEST_TEMPLATE_STUB = createAnnotationStub("org.junit.jupiter.api", "TestTemplate");
 
     @Test
     void skipTestMethodWithGenericExceptions() {
