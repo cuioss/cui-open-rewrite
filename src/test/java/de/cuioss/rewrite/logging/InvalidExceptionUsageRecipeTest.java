@@ -750,6 +750,243 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
+    // --- JUnit 5 test method skipping tests ---
+
+    // Stubs for JUnit 5 annotations (needed for type resolution)
+    private static final String JUNIT5_TEST_STUB = """
+            package org.junit.jupiter.api;
+            import java.lang.annotation.*;
+            @Target(ElementType.METHOD)
+            @Retention(RetentionPolicy.RUNTIME)
+            public @interface Test {}
+            """;
+
+    private static final String JUNIT5_PARAMETERIZED_TEST_STUB = """
+            package org.junit.jupiter.params;
+            import java.lang.annotation.*;
+            @Target(ElementType.METHOD)
+            @Retention(RetentionPolicy.RUNTIME)
+            public @interface ParameterizedTest {}
+            """;
+
+    private static final String JUNIT5_REPEATED_TEST_STUB = """
+            package org.junit.jupiter.api;
+            import java.lang.annotation.*;
+            @Target(ElementType.METHOD)
+            @Retention(RetentionPolicy.RUNTIME)
+            public @interface RepeatedTest {
+                int value();
+            }
+            """;
+
+    private static final String JUNIT5_TEST_FACTORY_STUB = """
+            package org.junit.jupiter.api;
+            import java.lang.annotation.*;
+            @Target(ElementType.METHOD)
+            @Retention(RetentionPolicy.RUNTIME)
+            public @interface TestFactory {}
+            """;
+
+    private static final String JUNIT5_TEST_TEMPLATE_STUB = """
+            package org.junit.jupiter.api;
+            import java.lang.annotation.*;
+            @Target(ElementType.METHOD)
+            @Retention(RetentionPolicy.RUNTIME)
+            public @interface TestTemplate {}
+            """;
+
+    @Test
+    void skipTestMethodWithGenericExceptions() {
+        rewriteRun(
+            spec -> spec.parser(JavaParser.fromJavaVersion().dependsOn(JUNIT5_TEST_STUB)),
+            java(
+                """
+                import org.junit.jupiter.api.Test;
+
+                class MyTest {
+                    @Test
+                    void shouldHandleException() throws Exception {
+                        try {
+                            doSomething();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    void doSomething() throws Exception {
+                        throw new Exception("production code");
+                    }
+                }
+                """,
+                """
+                import org.junit.jupiter.api.Test;
+
+                class MyTest {
+                    @Test
+                    void shouldHandleException() throws Exception {
+                        try {
+                            doSomething();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    void doSomething() throws Exception {
+                        /*~~(TODO: Throw specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/throw new Exception("production code");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void skipParameterizedTestMethod() {
+        rewriteRun(
+            spec -> spec.parser(JavaParser.fromJavaVersion().dependsOn(JUNIT5_PARAMETERIZED_TEST_STUB)),
+            java(
+                """
+                import org.junit.jupiter.params.ParameterizedTest;
+
+                class MyTest {
+                    @ParameterizedTest
+                    void shouldHandleException() {
+                        try {
+                            doSomething();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    void doSomething() {
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void skipRepeatedTestMethod() {
+        rewriteRun(
+            spec -> spec.parser(JavaParser.fromJavaVersion().dependsOn(JUNIT5_REPEATED_TEST_STUB)),
+            java(
+                """
+                import org.junit.jupiter.api.RepeatedTest;
+
+                class MyTest {
+                    @RepeatedTest(3)
+                    void shouldHandleException() {
+                        try {
+                            doSomething();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    void doSomething() {
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void skipTestFactoryMethod() {
+        rewriteRun(
+            spec -> spec.parser(JavaParser.fromJavaVersion().dependsOn(JUNIT5_TEST_FACTORY_STUB)),
+            java(
+                """
+                import org.junit.jupiter.api.TestFactory;
+
+                class MyTest {
+                    @TestFactory
+                    void shouldHandleException() {
+                        throw new RuntimeException("test factory");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void skipTestTemplateMethod() {
+        rewriteRun(
+            spec -> spec.parser(JavaParser.fromJavaVersion().dependsOn(JUNIT5_TEST_TEMPLATE_STUB)),
+            java(
+                """
+                import org.junit.jupiter.api.TestTemplate;
+
+                class MyTest {
+                    @TestTemplate
+                    void shouldHandleException() {
+                        throw new RuntimeException("test template");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void stillFlagNonTestMethodsInTestClass() {
+        rewriteRun(
+            spec -> spec.parser(JavaParser.fromJavaVersion().dependsOn(JUNIT5_TEST_STUB)),
+            java(
+                """
+                import org.junit.jupiter.api.Test;
+
+                class MyTest {
+                    @Test
+                    void testMethod() {
+                        throw new RuntimeException("in test - should be skipped");
+                    }
+
+                    void helperMethod() {
+                        throw new RuntimeException("in helper - should be flagged");
+                    }
+                }
+                """,
+                """
+                import org.junit.jupiter.api.Test;
+
+                class MyTest {
+                    @Test
+                    void testMethod() {
+                        throw new RuntimeException("in test - should be skipped");
+                    }
+
+                    void helperMethod() {
+                        /*~~(TODO: Throw specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/throw new RuntimeException("in helper - should be flagged");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void skipTestMethodWithMultipleAnnotations() {
+        rewriteRun(
+            spec -> spec.parser(JavaParser.fromJavaVersion().dependsOn(JUNIT5_TEST_STUB)),
+            java(
+                """
+                import org.junit.jupiter.api.Test;
+
+                class MyTest {
+                    @Test
+                    @SuppressWarnings("unchecked")
+                    void shouldHandleException() {
+                        throw new RuntimeException("multiple annotations");
+                    }
+                }
+                """
+            )
+        );
+    }
+
     @Test
     void handleExceptionInTryWithResources() {
         rewriteRun(

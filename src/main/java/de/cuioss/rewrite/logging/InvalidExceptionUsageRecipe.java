@@ -59,6 +59,14 @@ public class InvalidExceptionUsageRecipe extends Recipe {
         "java.lang.Throwable"
     );
 
+    private static final Set<String> JUNIT5_TEST_ANNOTATIONS = Set.of(
+        "org.junit.jupiter.api.Test",
+        "org.junit.jupiter.params.ParameterizedTest",
+        "org.junit.jupiter.api.RepeatedTest",
+        "org.junit.jupiter.api.TestTemplate",
+        "org.junit.jupiter.api.TestFactory"
+    );
+
     @Override
     public String getDisplayName() {
         return "Invalid exception usage";
@@ -155,6 +163,22 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                 return classDecl;
             }
             return super.visitClassDeclaration(classDecl, ctx);
+        }
+
+        @Override
+        public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
+            if (isTestMethod(method)) {
+                return method; // Skip entire method body for JUnit 5 test methods
+            }
+            return super.visitMethodDeclaration(method, ctx);
+        }
+
+        private boolean isTestMethod(J.MethodDeclaration method) {
+            return method.getLeadingAnnotations().stream()
+                .anyMatch(annotation -> {
+                    JavaType.FullyQualified fqType = TypeUtils.asFullyQualified(annotation.getType());
+                    return fqType != null && JUNIT5_TEST_ANNOTATIONS.contains(fqType.getFullyQualifiedName());
+                });
         }
 
         @Override
