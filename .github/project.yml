@@ -30,6 +30,6 @@ consumers:
   - cuioss-parent-pom:cui-open-rewrite.version
 
 dependency-propagation:
-  group-id: de.cuioss
+  group-id: de.cuioss.rewrite
   artifact-id: cui-open-rewrite
   scope: dependency
