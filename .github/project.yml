@@ -25,3 +25,11 @@ pages:
 
 github-automation:
   auto-merge-build-versions: true
+
+consumers:
+  - cuioss-parent-pom:cui-open-rewrite.version
+
+dependency-propagation:
+  group-id: de.cuioss
+  artifact-id: cui-open-rewrite
+  scope: dependency
