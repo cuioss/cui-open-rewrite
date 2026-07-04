@@ -16,6 +16,7 @@
 package de.cuioss.rewrite.util;
 
 import de.cuioss.tools.logging.CuiLogger;
+import org.jspecify.annotations.Nullable;
 import org.openrewrite.Cursor;
 import org.openrewrite.java.tree.Comment;
 import org.openrewrite.java.tree.J;
@@ -59,7 +60,7 @@ public final class RecipeSuppressionUtil {
      * @param recipeName The simple or fully qualified name of the recipe to check (null for any recipe)
      * @return true if the element should be suppressed
      */
-    public static boolean isSuppressed(Cursor cursor, String recipeName) {
+    public static boolean isSuppressed(Cursor cursor, @Nullable String recipeName) {
         J element = cursor.getValue();
 
         // Check for direct suppression on the current element
@@ -75,7 +76,7 @@ public final class RecipeSuppressionUtil {
      * Checks for direct suppression on the current element.
      * This includes preceding comments, annotations, and element-specific locations.
      */
-    private static boolean hasDirectSuppression(J element, Cursor cursor, String recipeName) {
+    private static boolean hasDirectSuppression(J element, Cursor cursor, @Nullable String recipeName) {
         // Check for preceding comments (line before)
         if (hasSuppression(element.getPrefix().getComments(), cursor, recipeName)) {
             logSuppression(element, recipeName);
@@ -91,8 +92,14 @@ public final class RecipeSuppressionUtil {
      * This method automatically determines the appropriate parent types and boundaries
      * based on the current element context.
      */
-    private static boolean hasParentSuppression(Cursor cursor, String recipeName) {
+    private static boolean hasParentSuppression(Cursor cursor, @Nullable String recipeName) {
         J element = cursor.getValue();
+
+        // For catch blocks: honour a suppression comment placed at the end of the try body
+        // (before the closing brace) or on the try's last statement.
+        if (element instanceof J.Try.Catch && hasTryBlockEndSuppression(cursor, recipeName)) {
+            return true;
+        }
 
         // For catch blocks and throw statements: check try blocks and methods within method boundary
         if ((element instanceof J.Try.Catch || element instanceof J.Throw) && checkParentsWithinBoundary(cursor, recipeName, J.MethodDeclaration.class,
@@ -121,9 +128,28 @@ public final class RecipeSuppressionUtil {
     }
 
     /**
+     * Checks for a suppression comment at the end of the enclosing try block that applies to a
+     * catch block. This handles the common pattern where the comment is placed before the closing
+     * brace of the try, either in the block's end space or trailing its last statement.
+     */
+    private static boolean hasTryBlockEndSuppression(Cursor cursor, @Nullable String recipeName) {
+        Cursor parentCursor = cursor.getParentTreeCursor();
+        if (parentCursor.getValue() instanceof J.Try tryStatement) {
+            J.Block body = tryStatement.getBody();
+            if (hasSuppression(body.getEnd().getComments(), cursor, recipeName)) {
+                return true;
+            }
+            if (!body.getStatements().isEmpty()) {
+                return hasSuppression(body.getStatements().getLast().getPrefix().getComments(), cursor, recipeName);
+            }
+        }
+        return false;
+    }
+
+    /**
      * Checks element-specific suppression locations based on the element type.
      */
-    private static boolean checkElementSpecificSuppression(J element, Cursor cursor, String recipeName) {
+    private static boolean checkElementSpecificSuppression(J element, Cursor cursor, @Nullable String recipeName) {
         if (element instanceof J.ClassDeclaration cd) {
             return checkClassSuppression(cd, element, cursor, recipeName);
         } else if (element instanceof J.MethodDeclaration md) {
@@ -134,7 +160,7 @@ public final class RecipeSuppressionUtil {
         return false;
     }
 
-    private static boolean checkClassSuppression(J.ClassDeclaration cd, J element, Cursor cursor, String recipeName) {
+    private static boolean checkClassSuppression(J.ClassDeclaration cd, J element, Cursor cursor, @Nullable String recipeName) {
         // Check all annotations for comments (comments between annotations get attached to the next one)
         for (J.Annotation annotation : cd.getLeadingAnnotations()) {
             if (hasSuppression(annotation.getPrefix().getComments(), cursor, recipeName)) {
@@ -153,7 +179,7 @@ public final class RecipeSuppressionUtil {
         return false;
     }
 
-    private static boolean checkMethodSuppression(J.MethodDeclaration md, J element, Cursor cursor, String recipeName) {
+    private static boolean checkMethodSuppression(J.MethodDeclaration md, J element, Cursor cursor, @Nullable String recipeName) {
         if (!md.getLeadingAnnotations().isEmpty() &&
             hasSuppression(md.getLeadingAnnotations().getFirst().getPrefix().getComments(), cursor, recipeName)) {
             logSuppression(element, recipeName);
@@ -162,7 +188,7 @@ public final class RecipeSuppressionUtil {
         return false;
     }
 
-    private static boolean checkVariableSuppression(J.VariableDeclarations vd, J element, Cursor cursor, String recipeName) {
+    private static boolean checkVariableSuppression(J.VariableDeclarations vd, J element, Cursor cursor, @Nullable String recipeName) {
         if (!vd.getLeadingAnnotations().isEmpty() &&
             hasSuppression(vd.getLeadingAnnotations().getFirst().getPrefix().getComments(), cursor, recipeName)) {
             logSuppression(element, recipeName);
@@ -174,7 +200,7 @@ public final class RecipeSuppressionUtil {
     /**
      * Checks if the given list of comments contains a suppression directive.
      */
-    private static boolean hasSuppression(List<Comment> comments, Cursor cursor, String recipeName) {
+    private static boolean hasSuppression(List<Comment> comments, Cursor cursor, @Nullable String recipeName) {
         if (comments == null || comments.isEmpty()) {
             return false;
         }
@@ -191,7 +217,7 @@ public final class RecipeSuppressionUtil {
     /**
      * Checks a single comment for suppression directive.
      */
-    private static boolean checkCommentForSuppression(Comment comment, Cursor cursor, String recipeName) {
+    private static boolean checkCommentForSuppression(Comment comment, Cursor cursor, @Nullable String recipeName) {
         String text = comment.printComment(cursor);
         if (!text.contains(SUPPRESSION_MARKER)) {
             return false;
@@ -229,7 +255,7 @@ public final class RecipeSuppressionUtil {
     /**
      * Logs the suppression event.
      */
-    private static void logSuppression(J element, String recipeName) {
+    private static void logSuppression(J element, @Nullable String recipeName) {
         String elementType = getElementType(element);
         String elementName = getElementName(element);
 
@@ -274,7 +300,7 @@ public final class RecipeSuppressionUtil {
      * Helper method: checks parents within a boundary.
      */
     @SafeVarargs
-    private static boolean checkParentsWithinBoundary(Cursor cursor, String recipeName,
+    private static boolean checkParentsWithinBoundary(Cursor cursor, @Nullable String recipeName,
         Class<? extends J> stopAtType, Class<? extends J>... parentTypes) {
         Cursor parentCursor = cursor.getParentTreeCursor();
         while (true) {
@@ -304,7 +330,7 @@ public final class RecipeSuppressionUtil {
      * Helper method: finds first parent of any of the specified types and checks suppression.
      */
     @SafeVarargs
-    private static boolean checkFirstParentOfTypes(Cursor cursor, String recipeName, Class<? extends J>... parentTypes) {
+    private static boolean checkFirstParentOfTypes(Cursor cursor, @Nullable String recipeName, Class<? extends J>... parentTypes) {
         Cursor parentCursor = cursor.getParentTreeCursor();
         while (true) {
             Object value = parentCursor.getValue();
@@ -332,7 +358,7 @@ public final class RecipeSuppressionUtil {
      */
     // owolff: Refactoring would introduce complexity - hence suppressing
     @SuppressWarnings("java:S3776")
-    private static boolean isParentClassSuppressed(Cursor cursor, String recipeName) {
+    private static boolean isParentClassSuppressed(Cursor cursor, @Nullable String recipeName) {
         // Walk up the cursor tree looking for class declarations
         Cursor current = cursor;
         while (current != null) {
@@ -364,7 +390,7 @@ public final class RecipeSuppressionUtil {
             }
 
             // Check if we're at the root before trying to get parent
-            if (current.getParent() == null || "root".equals(current.toString())) {
+            if (current.getParent() == null) {
                 break;
             }
             current = current.getParentTreeCursor();

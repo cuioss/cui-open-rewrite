@@ -33,6 +33,22 @@ class AnnotationNewlineFormatTest implements RewriteTest {
     }
 
     @Test
+    void shouldNotProcessFilesUnderTarget() {
+        // The PathExclusionVisitor precondition must skip generated sources under target/.
+        // The source below would otherwise be reformatted; supplying only `before` asserts no change.
+        rewriteRun(
+            java(
+                """
+                @Deprecated public class Constants {
+                    public static final String VALUE = "test";
+                }
+                """,
+                spec -> spec.path("target/generated-sources/Constants.java")
+            )
+        );
+    }
+
+    @Test
     void formatSingleClassAnnotation() {
         rewriteRun(
             java(

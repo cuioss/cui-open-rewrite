@@ -15,14 +15,15 @@
  */
 package de.cuioss.rewrite.format;
 
-import de.cuioss.rewrite.util.RecipeSuppressionUtil;
+import de.cuioss.rewrite.util.BaseSuppressionVisitor;
+import de.cuioss.rewrite.util.PathExclusionVisitor;
 import de.cuioss.tools.logging.CuiLogger;
 import org.jspecify.annotations.Nullable;
 import org.openrewrite.Cursor;
 import org.openrewrite.ExecutionContext;
+import org.openrewrite.Preconditions;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
-import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.style.IntelliJ;
 import org.openrewrite.java.style.TabsAndIndentsStyle;
 import org.openrewrite.java.tree.J;
@@ -60,17 +61,21 @@ public class AnnotationNewlineFormat extends Recipe {
 
     @Override
     public TreeVisitor<?, ExecutionContext> getVisitor() {
-        return new AnnotationNewlineFormatVisitor();
+        return Preconditions.check(new PathExclusionVisitor(), new AnnotationNewlineFormatVisitor());
     }
 
-    private static class AnnotationNewlineFormatVisitor extends JavaIsoVisitor<ExecutionContext> {
+    private static class AnnotationNewlineFormatVisitor extends BaseSuppressionVisitor {
 
         private static final CuiLogger LOGGER = new CuiLogger(AnnotationNewlineFormatVisitor.class);
+
+        AnnotationNewlineFormatVisitor() {
+            super(RECIPE_NAME);
+        }
 
         @Override
         public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
             // Check for suppression comments
-            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
+            if (isSuppressed()) {
                 LOGGER.debug("Skipping class %s due to suppression", classDecl.getSimpleName());
                 return classDecl;
             }
@@ -95,7 +100,7 @@ public class AnnotationNewlineFormat extends Recipe {
         @Override
         public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
             // Check for suppression comments
-            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
+            if (isSuppressed()) {
                 LOGGER.debug("Skipping method %s due to suppression", method.getSimpleName());
                 return method;
             }
@@ -120,7 +125,7 @@ public class AnnotationNewlineFormat extends Recipe {
         @Override
         public J.VariableDeclarations visitVariableDeclarations(J.VariableDeclarations multiVariable, ExecutionContext ctx) {
             // Check for suppression only on fields
-            if (isFieldDeclaration() && RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
+            if (isFieldDeclaration() && isSuppressed()) {
                 return multiVariable;
             }
 

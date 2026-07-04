@@ -19,9 +19,11 @@ import de.cuioss.rewrite.util.BaseSuppressionVisitor;
 import de.cuioss.rewrite.util.PathExclusionVisitor;
 import de.cuioss.rewrite.util.RecipeMarkerUtil;
 import org.jspecify.annotations.Nullable;
+import org.openrewrite.Cursor;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Preconditions;
 import org.openrewrite.Recipe;
+import org.openrewrite.Tree;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.RenameVariable;
 import org.openrewrite.java.tree.Expression;
@@ -38,7 +40,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 public class CuiLoggerStandardsRecipe extends Recipe {
 
@@ -75,19 +76,10 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         return Preconditions.check(new PathExclusionVisitor(), new CuiLoggerStandardsVisitor());
     }
 
-    @Override
-    public List<Recipe> getRecipeList() {
-        return List.of();
-    }
-
     private static class CuiLoggerStandardsVisitor extends BaseSuppressionVisitor {
 
         public CuiLoggerStandardsVisitor() {
             super(RECIPE_NAME);
-        }
-
-        private UUID randomId() {
-            return UUID.randomUUID();
         }
 
         @Override
@@ -125,11 +117,13 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                 return false;
             }
 
-            // Check if this is a field declaration (not a local variable)
-            // Field declarations are direct children of class declarations or blocks at class level
-            // Local variables are inside method declarations
-            return getCursor().getParentTreeCursor().getValue() instanceof J.Block &&
-                getCursor().getParentTreeCursor().getParentTreeCursor().getValue() instanceof J.ClassDeclaration;
+            // A field declaration sits directly in a class body: its enclosing block's parent
+            // is the class declaration. This structural check deliberately excludes local
+            // variables (enclosed by a method) and variables inside initializer blocks
+            // (enclosed by a nested block), which firstEnclosing(ClassDeclaration) would not.
+            Cursor enclosingBlock = getCursor().getParentTreeCursor();
+            return enclosingBlock.getValue() instanceof J.Block
+                && enclosingBlock.getParentTreeCursor().getValue() instanceof J.ClassDeclaration;
         }
 
         private boolean isConstructorInjectedLogger(J.VariableDeclarations vd) {
@@ -162,7 +156,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                     // produce a duplicate field. Flag it instead of generating invalid code.
                     String message = RecipeMarkerUtil.createTaskMessage(
                         "Rename logger to LOGGER (name already in use)", RECIPE_NAME);
-                    return vd.withMarkers(vd.getMarkers().addIfAbsent(new SearchResult(randomId(), message)));
+                    return vd.withMarkers(vd.getMarkers().addIfAbsent(new SearchResult(Tree.randomId(), message)));
                 }
                 // Delegate the rename to RenameVariable so that every reference form
                 // (this.log, log passed as an argument, initializers, nested classes) is updated.
@@ -218,7 +212,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
                 // Always add private
                 J.Modifier privateMod = new J.Modifier(
-                    randomId(),
+                    Tree.randomId(),
                     firstSpace,
                     Markers.EMPTY,
                     null,
@@ -229,7 +223,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
                 // Always add static
                 J.Modifier staticMod = new J.Modifier(
-                    randomId(),
+                    Tree.randomId(),
                     Space.SINGLE_SPACE,
                     Markers.EMPTY,
                     null,
@@ -240,7 +234,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
                 // Always add final
                 J.Modifier finalMod = new J.Modifier(
-                    randomId(),
+                    Tree.randomId(),
                     Space.SINGLE_SPACE,
                     Markers.EMPTY,
                     null,
@@ -295,7 +289,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         private J.MethodInvocation checkSystemStreams(J.MethodInvocation mi) {
             if (isSystemOutOrErr(mi)) {
                 String message = RecipeMarkerUtil.createTaskMessage("Use CuiLogger", RECIPE_NAME);
-                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(randomId(), message)));
+                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(Tree.randomId(), message)));
             }
             return mi;
         }
@@ -327,31 +321,20 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             List<Expression> args = mi.getArguments();
             Expression messageArg = null;
             int messageArgIndex = 0;
-            boolean hasException = false;
 
-            // Check if first argument is an exception
+            // When the first argument is an exception, the message is the second argument.
             if (!args.isEmpty() && isExceptionType(args.getFirst())) {
-                hasException = true;
-                // If exception is first, message should be second argument
                 if (args.size() > 1) {
                     messageArg = args.get(1);
                     messageArgIndex = 1;
                 }
             } else {
-                // Standard pattern: message is first argument
+                // Standard pattern: message is the first argument.
                 messageArg = args.getFirst();
-                // messageArgIndex is already 0 from initialization
-                // Check if any of the remaining arguments is an exception
-                for (int i = 1; i < args.size(); i++) {
-                    if (isExceptionType(args.get(i))) {
-                        hasException = true;
-                        break;
-                    }
-                }
             }
 
             String message = extractMessageString(messageArg);
-            return new LoggerCallContext(messageArg, messageArgIndex, hasException, message);
+            return new LoggerCallContext(messageArg, messageArgIndex, message);
         }
 
         private @Nullable String extractMessageString(@Nullable Expression messageArg) {
@@ -366,17 +349,17 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
 
         private J.MethodInvocation checkPlaceholderPatterns(J.MethodInvocation mi, LoggerCallContext context) {
-            if (context.message == null) {
+            if (context.message() == null) {
                 return mi;
             }
 
-            if (PlaceholderValidationUtil.hasIncorrectPlaceholders(context.message)) {
-                String correctedMessage = PlaceholderValidationUtil.correctPlaceholders(context.message);
-                if (context.messageArg instanceof J.Literal literal) {
+            if (PlaceholderValidationUtil.hasIncorrectPlaceholders(context.message())) {
+                String correctedMessage = PlaceholderValidationUtil.correctPlaceholders(context.message());
+                if (context.messageArg() instanceof J.Literal literal) {
                     J.Literal newLiteral = literal.withValue(correctedMessage)
                         .withValueSource("\"" + correctedMessage + "\"");
                     List<Expression> newArgs = new ArrayList<>(mi.getArguments());
-                    newArgs.set(context.messageArgIndex, newLiteral);
+                    newArgs.set(context.messageArgIndex(), newLiteral);
                     mi = mi.withArguments(newArgs);
                     // Auto-fixed, don't mark it
                 }
@@ -387,7 +370,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
         private J.MethodInvocation validateParameterCount(J.MethodInvocation mi, LoggerCallContext context) {
             // Extract the current message (may have been fixed by checkPlaceholderPatterns)
-            String currentMessage = extractMessageString(mi.getArguments().get(context.messageArgIndex));
+            String currentMessage = extractMessageString(mi.getArguments().get(context.messageArgIndex()));
             if (currentMessage == null) {
                 return mi;
             }
@@ -399,7 +382,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             int paramCount = 0;
             for (int i = 0; i < args.size(); i++) {
                 // Skip the message argument and exception arguments (they don't count as substitution params)
-                if (i != context.messageArgIndex && !isExceptionType(args.get(i))) {
+                if (i != context.messageArgIndex() && !isExceptionType(args.get(i))) {
                     paramCount++;
                 }
             }
@@ -407,7 +390,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             if (placeholderCount != paramCount) {
                 String action = "%d placeholders, %d params".formatted(placeholderCount, paramCount);
                 String message = RecipeMarkerUtil.createTaskMessage(action, RECIPE_NAME);
-                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(randomId(), message)));
+                return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(Tree.randomId(), message)));
             }
 
             return mi;
@@ -482,20 +465,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         }
 
 
-        private static class LoggerCallContext {
-            @Nullable
-            Expression messageArg;
-            int messageArgIndex;
-            boolean hasException;
-            @Nullable
-            String message;
-
-            LoggerCallContext(@Nullable Expression messageArg, int messageArgIndex, boolean hasException, @Nullable String message) {
-                this.messageArg = messageArg;
-                this.messageArgIndex = messageArgIndex;
-                this.hasException = hasException;
-                this.message = message;
-            }
+        private record LoggerCallContext(@Nullable Expression messageArg, int messageArgIndex,
+                                         @Nullable String message) {
         }
 
         private record ExceptionPosition(int index, @Nullable
