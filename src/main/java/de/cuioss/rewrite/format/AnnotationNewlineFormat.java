@@ -35,6 +35,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Recipe that ensures type-, method- and field-level annotations are each placed on their own line.
+ *
+ * <p>Inline declarations such as {@code @Deprecated public class Foo} are reformatted so the
+ * annotation sits on a separate line from the declaration, improving readability and matching the
+ * CUI formatting standard. Classes without any modifier are left untouched due to OpenRewrite AST
+ * limitations.</p>
+ *
+ * <p>Suppression is supported via {@code // cui-rewrite:disable AnnotationNewlineFormat}.</p>
+ */
 public class AnnotationNewlineFormat extends Recipe {
 
     public static final String RECIPE_NAME = "AnnotationNewlineFormat";

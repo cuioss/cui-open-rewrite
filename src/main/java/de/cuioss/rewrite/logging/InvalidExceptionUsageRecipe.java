@@ -47,7 +47,7 @@ import java.util.Set;
  */
 public class InvalidExceptionUsageRecipe extends Recipe {
 
-    private static final String RECIPE_NAME = "InvalidExceptionUsageRecipe";
+    public static final String RECIPE_NAME = "InvalidExceptionUsageRecipe";
 
     private static final Set<String> GENERIC_EXCEPTION_TYPES = Set.of(
         "java.lang.Exception",

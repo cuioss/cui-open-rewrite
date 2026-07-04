@@ -41,6 +41,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Recipe that enforces the CUI logging standards on {@code CuiLogger} usage.
+ *
+ * <p>It auto-fixes logger field naming (to {@code LOGGER}) and modifiers (to
+ * {@code private static final}), rewrites {@code {}} / printf placeholders to {@code %s}, and moves
+ * an exception argument to the first position for {@code error}/{@code warn} calls. It flags — with
+ * {@code SearchResult} markers — {@code System.out}/{@code System.err} usage and placeholder/parameter
+ * count mismatches.</p>
+ *
+ * <p>Suppression is supported via {@code // cui-rewrite:disable CuiLoggerStandardsRecipe}.</p>
+ */
 public class CuiLoggerStandardsRecipe extends Recipe {
 
     private static final String CUI_LOGGER_TYPE = "de.cuioss.tools.logging.CuiLogger";
