@@ -1009,4 +1009,65 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
         );
     }
 
+    @Test
+    void detectGenericExceptionInMultiCatch() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        } catch (IllegalStateException | RuntimeException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    void doSomething() {
+                        // may throw
+                    }
+                }
+                """,
+                """
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        } /*~~(TODO: Catch specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (IllegalStateException | RuntimeException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    void doSomething() {
+                        // may throw
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void allowSpecificExceptionsInMultiCatch() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        } catch (IllegalStateException | IllegalArgumentException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    void doSomething() {
+                        // may throw
+                    }
+                }
+                """
+            )
+        );
+    }
+
 }

@@ -643,4 +643,88 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void shouldRenameQualifiedThisReference() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    private static final CuiLogger log = new CuiLogger(Test.class);
+
+                    void method() {
+                        this.log.info("hello");
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+
+                    void method() {
+                        this.LOGGER.info("hello");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void shouldRenameNonInvocationReference() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    private static final CuiLogger log = new CuiLogger(Test.class);
+
+                    CuiLogger expose() {
+                        return log;
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+
+                    CuiLogger expose() {
+                        return LOGGER;
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void shouldNotRenameWhenLoggerNameCollisionExists() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                    private static final CuiLogger log = new CuiLogger(Test.class);
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                    /*~~(TODO: Rename logger to LOGGER (name already in use). Suppress: // cui-rewrite:disable CuiLoggerStandardsRecipe)~~>*/private static final CuiLogger log = new CuiLogger(Test.class);
+                }
+                """
+            )
+        );
+    }
 }

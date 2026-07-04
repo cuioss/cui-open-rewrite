@@ -18,6 +18,7 @@ package de.cuioss.rewrite.logging;
 import de.cuioss.rewrite.util.PathExclusionVisitor;
 import de.cuioss.rewrite.util.RecipeMarkerUtil;
 import de.cuioss.rewrite.util.RecipeSuppressionUtil;
+import org.jspecify.annotations.Nullable;
 import org.openrewrite.Cursor;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Preconditions;
@@ -210,26 +211,47 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                 return c;
             }
 
-            // Check the caught exception type
+            // Check the caught exception type. A multi-catch (catch (A | B e)) has a
+            // JavaType.MultiCatch union type, so each alternative must be inspected individually.
             J.ControlParentheses<J.VariableDeclarations> parameterParens = c.getParameter();
             J.VariableDeclarations parameter = parameterParens.getTree();
-            if (parameter.getType() != null) {
-                JavaType type = parameter.getType();
-                JavaType.FullyQualified fqType = TypeUtils.asFullyQualified(type);
+            String simpleType = findGenericExceptionSimpleName(parameter.getType());
+            if (simpleType != null) {
+                String taskMessage = createTaskMessage("Catch", simpleType);
 
-                if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
-                    String simpleType = fqType.getClassName();
-                    String taskMessage = createTaskMessage("Catch", simpleType);
-
-                    // Check if this comment already exists (from a previous run)
-                    if (RecipeMarkerUtil.hasTaskComment(c, taskMessage, getCursor()) || RecipeMarkerUtil.hasSearchResultMarker(c)) {
-                        return c;
-                    }
-                    return SearchResult.found(c, taskMessage);
+                // Check if this comment already exists (from a previous run)
+                if (RecipeMarkerUtil.hasTaskComment(c, taskMessage, getCursor()) || RecipeMarkerUtil.hasSearchResultMarker(c)) {
+                    return c;
                 }
+                return SearchResult.found(c, taskMessage);
             }
 
             return c;
+        }
+
+        /**
+         * Returns the simple name of the first generic exception type in the given type, or
+         * {@code null} if none is generic. Handles both single catch types and multi-catch unions.
+         */
+        private @Nullable String findGenericExceptionSimpleName(@Nullable JavaType type) {
+            if (type instanceof JavaType.MultiCatch multiCatch) {
+                for (JavaType alternative : multiCatch.getThrowableTypes()) {
+                    String simpleName = genericSimpleNameOf(alternative);
+                    if (simpleName != null) {
+                        return simpleName;
+                    }
+                }
+                return null;
+            }
+            return genericSimpleNameOf(type);
+        }
+
+        private @Nullable String genericSimpleNameOf(@Nullable JavaType type) {
+            JavaType.FullyQualified fqType = TypeUtils.asFullyQualified(type);
+            if (fqType != null && GENERIC_EXCEPTION_TYPES.contains(fqType.getFullyQualifiedName())) {
+                return fqType.getClassName();
+            }
+            return null;
         }
 
         @Override
