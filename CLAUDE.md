@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 cui-open-rewrite is a Java library providing OpenRewrite recipes for cuioss projects. It helps automate Java modernization and code migration tasks.
 
-**Maven Coordinates**: `de.cuioss:cui-open-rewrite`
+**Maven Coordinates**: `de.cuioss.rewrite:cui-open-rewrite`
 
 ## Build Commands
 

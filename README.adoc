@@ -12,19 +12,26 @@ image:https://sonarcloud.io/api/project_badges/measure?project=cuioss_cui-open-r
 image:https://sonarcloud.io/api/project_badges/measure?project=cuioss_cui-open-rewrite&metric=coverage[Coverage,link=https://sonarcloud.io/summary/new_code?id=cuioss_cui-open-rewrite]
 
 
-https://cuioss.github.io/cui-java-module-template/about.html[Generated Documentation on github-pages]
+https://cuioss.github.io/cui-open-rewrite/about.html[Generated Documentation on github-pages]
 
 == What is it?
 
 Custom OpenRewrite recipes for CUI-OSS projects that enforce specific code formatting standards not available in existing OpenRewrite recipes.
 
+=== Requirements
+
+The recipes run on both JDK 21 and JDK 25. On JDK 21 the `rewrite-java-21` parser is used; on JDK 25 the `rewrite-java-25` parser is activated automatically via the `java25-parser` Maven profile.
+
 === Maven Coordinates
+
+Replace `${cui-open-rewrite.version}` below with the latest release (see the Maven Central badge above).
 
 [source,xml]
 ----
 <dependency>
     <groupId>de.cuioss.rewrite</groupId>
     <artifactId>cui-open-rewrite</artifactId>
+    <version>${cui-open-rewrite.version}</version>
 </dependency>
 ----
 

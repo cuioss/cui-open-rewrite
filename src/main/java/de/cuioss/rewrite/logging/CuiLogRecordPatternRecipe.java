@@ -37,6 +37,16 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Recipe that enforces the CUI {@code LogRecord} pattern per the CUI logging standards.
+ *
+ * <p>Use of a {@code LogRecord} template is mandatory for INFO/WARN/ERROR/FATAL logging and forbidden
+ * for DEBUG/TRACE (which must log directly). The recipe rewrites incorrect placeholders to {@code %s}
+ * in templates, converts zero-argument {@code LogRecord.format()} calls to the {@code LogRecord::format}
+ * method reference, and flags — with {@code SearchResult} markers — calls that violate the pattern.</p>
+ *
+ * <p>Suppression is supported via {@code // cui-rewrite:disable CuiLogRecordPatternRecipe}.</p>
+ */
 public class CuiLogRecordPatternRecipe extends Recipe {
 
     private static final String CUI_LOGGER_TYPE = "de.cuioss.tools.logging.CuiLogger";
