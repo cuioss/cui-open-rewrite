@@ -33,6 +33,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
@@ -485,8 +486,9 @@ public class CuiLogRecordPatternRecipe extends Recipe {
             TRACE, DEBUG, INFO, WARN, ERROR, FATAL;
 
             static Optional<LogLevel> fromMethodName(String methodName) {
-                // Convert method name to uppercase and try to match
-                String upperMethodName = methodName.toUpperCase();
+                // Convert method name to uppercase and try to match.
+                // Locale.ROOT avoids locale-sensitive casing (e.g. the Turkish dotted-I).
+                String upperMethodName = methodName.toUpperCase(Locale.ROOT);
                 try {
                     return Optional.of(LogLevel.valueOf(upperMethodName));
                 } catch (IllegalArgumentException e) {

@@ -23,10 +23,12 @@ import org.openrewrite.ExecutionContext;
 import org.openrewrite.Preconditions;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
+import org.openrewrite.java.RenameVariable;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 import org.openrewrite.java.tree.Space;
+import org.openrewrite.java.tree.Statement;
 import org.openrewrite.java.tree.TypeUtils;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.marker.SearchResult;
@@ -151,28 +153,39 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         }
 
         private J.VariableDeclarations checkLoggerNaming(J.VariableDeclarations vd) {
-            boolean needsRename = false;
-            String oldLoggerName = null;
-            List<J.VariableDeclarations.NamedVariable> updatedVariables = new ArrayList<>();
             for (J.VariableDeclarations.NamedVariable variable : vd.getVariables()) {
-                String name = variable.getSimpleName();
-                if (!LOGGER_NAME.equals(name)) {
-                    needsRename = true;
-                    oldLoggerName = name;
-                    // Rename the variable to LOGGER_NAME
-                    J.Identifier newName = variable.getName().withSimpleName(LOGGER_NAME);
-                    // Don't update type information - it causes LST errors
-                    variable = variable.withName(newName);
+                if (LOGGER_NAME.equals(variable.getSimpleName())) {
+                    continue;
                 }
-                updatedVariables.add(variable);
-            }
-            if (needsRename) {
-                vd = vd.withVariables(updatedVariables);
-                // Store the old name so we can update references
-                getCursor().putMessageOnFirstEnclosing(J.ClassDeclaration.class, "RENAMED_LOGGER", oldLoggerName);
-                // Auto-fixed, don't mark it
+                if (loggerNameCollision()) {
+                    // Another field named LOGGER already exists in this class; renaming would
+                    // produce a duplicate field. Flag it instead of generating invalid code.
+                    String message = RecipeMarkerUtil.createTaskMessage(
+                        "Rename logger to LOGGER (name already in use)", RECIPE_NAME);
+                    return vd.withMarkers(vd.getMarkers().addIfAbsent(new SearchResult(randomId(), message)));
+                }
+                // Delegate the rename to RenameVariable so that every reference form
+                // (this.log, log passed as an argument, initializers, nested classes) is updated.
+                doAfterVisit(new RenameVariable<>(variable, LOGGER_NAME));
             }
             return vd;
+        }
+
+        private boolean loggerNameCollision() {
+            J.ClassDeclaration enclosingClass = getCursor().firstEnclosing(J.ClassDeclaration.class);
+            if (enclosingClass == null) {
+                return false;
+            }
+            for (Statement statement : enclosingClass.getBody().getStatements()) {
+                if (statement instanceof J.VariableDeclarations other) {
+                    for (J.VariableDeclarations.NamedVariable variable : other.getVariables()) {
+                        if (LOGGER_NAME.equals(variable.getSimpleName())) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
         }
 
         private J.VariableDeclarations checkLoggerModifiers(J.VariableDeclarations vd) {
@@ -236,7 +249,9 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                 );
                 newModifiers.add(finalMod);
 
-                // Add back other modifiers (annotations, etc.)
+                // Only visibility, static and final are normalized. Any additional modifiers
+                // (e.g. transient, volatile) are appended after final in their original relative
+                // order, which is consistent with the JLS ordering where they follow final.
                 newModifiers.addAll(otherModifiers);
 
                 vd = vd.withModifiers(newModifiers);
@@ -267,13 +282,6 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             mi = checkSystemStreams(mi);
             if (RecipeMarkerUtil.hasSearchResultMarker(mi)) {
                 return mi;
-            }
-
-            // Check if we need to rename logger references
-            String renamedLogger = getCursor().getNearestMessage("RENAMED_LOGGER");
-            if (renamedLogger != null && mi.getSelect() instanceof J.Identifier select
-                && renamedLogger.equals(select.getSimpleName())) {
-                mi = mi.withSelect(select.withSimpleName(LOGGER_NAME));
             }
 
             // Check logger method invocations
