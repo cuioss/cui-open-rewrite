@@ -33,31 +33,9 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
             .typeValidationOptions(TypeValidation.none())
             .parser(JavaParser.fromJavaVersion()
                 .dependsOn(
-                    """
-                    package de.cuioss.tools.logging;
-                    public class CuiLogger {
-                        public CuiLogger(Class<?> clazz) {}
-                        public CuiLogger(String className) {}
-                        public void trace(String message, Object... args) {}
-                        public void debug(String message, Object... args) {}
-                        public void info(String message, Object... args) {}
-                        public void warn(String message, Object... args) {}
-                        public void error(String message, Object... args) {}
-                        public void trace(Throwable t, String message, Object... args) {}
-                        public void debug(Throwable t, String message, Object... args) {}
-                        public void info(Throwable t, String message, Object... args) {}
-                        public void warn(Throwable t, String message, Object... args) {}
-                        public void error(Throwable t, String message, Object... args) {}
-                    }
-                    """,
-                    """
-                    package de.cuioss.tools.logging;
-                    public class CuiLoggerFactory {
-                        public static CuiLogger getLogger() { return null; }
-                        public static CuiLogger getLogger(Class<?> clazz) { return null; }
-                        public static CuiLogger getLogger(String className) { return null; }
-                    }
-                    """
+                    CuiLoggerTestFixtures.CUI_LOGGER_STUB,
+                    CuiLoggerTestFixtures.CUI_LOGGER_FACTORY_STUB,
+                    CuiLoggerTestFixtures.LOG_RECORD_STUB
                 ));
     }
 
@@ -722,6 +700,66 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                 class Test {
                     private static final CuiLogger LOGGER = new CuiLogger(Test.class);
                     /*~~(TODO: Rename logger to LOGGER (name already in use). Suppress: // cui-rewrite:disable CuiLoggerStandardsRecipe)~~>*/private static final CuiLogger log = new CuiLogger(Test.class);
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void shouldRenameFieldAndUnqualifiedReferenceInMethodBody() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    private static final CuiLogger log = new CuiLogger(Test.class);
+
+                    void method() {
+                        log.info("test");
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+
+                    void method() {
+                        LOGGER.info("test");
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void combinedFixes() {
+        rewriteRun(
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    public CuiLogger log = new CuiLogger(Test.class);
+
+                    void method(Exception e) {
+                        log.error("Error {} with number %d", "message", 42, e);
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+
+                    void method(Exception e) {
+                        LOGGER.error(e, "Error %s with number %s", "message", 42);
+                    }
                 }
                 """
             )

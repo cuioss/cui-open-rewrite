@@ -16,10 +16,14 @@
 package de.cuioss.rewrite.format;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.format.AutoFormat;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
+
+import java.util.stream.Stream;
 
 import static org.openrewrite.java.Assertions.java;
 
@@ -333,86 +337,64 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void preserveTrailingCommentOnSingleAnnotation() {
-        rewriteRun(
-            java(
-                """
-                public class TestClass {
-                    @SuppressWarnings("squid:S00107") // This comment explains why
-                    public void methodWithManyParams(int a, int b, int c, int d, int e, int f, int g, int h) {
-                        // method body
-                    }
+    static Stream<String> preserveTrailingCommentSources() {
+        return Stream.of(
+            // trailing comment on a single annotation (public method)
+            """
+            public class TestClass {
+                @SuppressWarnings("squid:S00107") // This comment explains why
+                public void methodWithManyParams(int a, int b, int c, int d, int e, int f, int g, int h) {
+                    // method body
                 }
-                """
-            )
+            }
+            """,
+            // trailing comment on a single annotation (package-private method)
+            """
+            public class TestClass {
+                @SuppressWarnings("java:S1612") // Cannot use method reference due to ambiguous get() methods
+                void concurrentAccess() {
+                    // method body
+                }
+            }
+            """,
+            // trailing comment on the second of multiple annotations
+            """
+            public class TestClass {
+                @Deprecated
+                @SuppressWarnings("java:S1612") // Cannot use method reference due to ambiguous get() methods
+                void concurrentAccess() {
+                    // method body
+                }
+            }
+            """,
+            // trailing comment together with an @Override annotation
+            """
+            public class HttpJwksLoader {
+                @Override
+                @SuppressWarnings("java:S3776") // Cognitive complexity - initialization logic requires these checks
+                public void initJWKSLoader() {
+                    // method body
+                }
+            }
+            """,
+            // trailing comment on field annotations
+            """
+            import java.util.List;
+
+            public class ClaimValue {
+                @SuppressWarnings("unused")
+                @Deprecated // Must not be null, but may be empty
+                private final List<String> asList = null;
+            }
+            """
         );
     }
 
-    @Test
-    void preserveTrailingCommentOnPackagePrivateMethod() {
+    @ParameterizedTest
+    @MethodSource("preserveTrailingCommentSources")
+    void shouldPreserveTrailingCommentsOnAnnotations(String source) {
         rewriteRun(
-            java(
-                """
-                public class TestClass {
-                    @SuppressWarnings("java:S1612") // Cannot use method reference due to ambiguous get() methods
-                    void concurrentAccess() {
-                        // method body
-                    }
-                }
-                """
-            )
-        );
-    }
-
-    @Test
-    void preserveTrailingCommentOnMultipleAnnotations() {
-        rewriteRun(
-            java(
-                """
-                public class TestClass {
-                    @Deprecated
-                    @SuppressWarnings("java:S1612") // Cannot use method reference due to ambiguous get() methods
-                    void concurrentAccess() {
-                        // method body
-                    }
-                }
-                """
-            )
-        );
-    }
-
-    @Test
-    void preserveTrailingCommentWithOverrideAnnotation() {
-        rewriteRun(
-            java(
-                """
-                public class HttpJwksLoader {
-                    @Override
-                    @SuppressWarnings("java:S3776") // Cognitive complexity - initialization logic requires these checks
-                    public void initJWKSLoader() {
-                        // method body
-                    }
-                }
-                """
-            )
-        );
-    }
-
-    @Test
-    void preserveTrailingCommentOnFieldAnnotations() {
-        rewriteRun(
-            java(
-                """
-                import java.util.List;
-
-                public class ClaimValue {
-                    @SuppressWarnings("unused")
-                    @Deprecated // Must not be null, but may be empty
-                    private final List<String> asList = null;
-                }
-                """
-            )
+            java(source)
         );
     }
 

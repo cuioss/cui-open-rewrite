@@ -24,7 +24,7 @@ import org.openrewrite.java.format.NormalizeFormatVisitor;
  * Test recipe wrapper for NormalizeFormatVisitor.
  * Required because anonymous Recipe classes cannot be serialized for testing.
  */
-public class NormalizeFormatRecipe extends Recipe {
+public class TestNormalizeFormatRecipe extends Recipe {
 
     @Override
     public String getDisplayName() {

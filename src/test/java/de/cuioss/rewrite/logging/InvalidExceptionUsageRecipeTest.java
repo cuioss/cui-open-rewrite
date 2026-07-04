@@ -147,28 +147,6 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
     }
 
     @Test
-    void detectThrowingException() {
-        rewriteRun(
-            java(
-                """
-                class Test {
-                    void test() throws Exception {
-                        throw new Exception("Bad practice");
-                    }
-                }
-                """,
-                """
-                class Test {
-                    void test() throws Exception {
-                        /*~~(TODO: Throw specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/throw new Exception("Bad practice");
-                    }
-                }
-                """
-            )
-        );
-    }
-
-    @Test
     void detectThrowingRuntimeException() {
         rewriteRun(
             java(
@@ -1063,6 +1041,62 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
 
                     void doSomething() {
                         // may throw
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    /**
+     * GitHub issue #5: markers must not be re-added on repeated runs.
+     * Code that already carries the TODO marker comment must be recognized so no
+     * duplicate marker is added.
+     */
+    @Test
+    void shouldNotAddDuplicateWhenCommentAlreadyExists() {
+        rewriteRun(
+            spec -> spec.expectedCyclesThatMakeChanges(0).cycles(1),
+            java(
+                """
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        } /*~~(TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    void doSomething() throws Exception {
+                        // Something
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    /**
+     * GitHub issue #5: markers must not be re-added on repeated runs.
+     * Running the recipe across multiple cycles must only make changes in the first cycle.
+     */
+    @Test
+    void shouldBeIdempotentAcrossMultipleCycles() {
+        rewriteRun(
+            spec -> spec.expectedCyclesThatMakeChanges(1).cycles(3),
+            java(
+                """
+                class Test {
+                    void test() throws Exception {
+                        throw new Exception("test");
+                    }
+                }
+                """,
+                """
+                class Test {
+                    void test() throws Exception {
+                        /*~~(TODO: Throw specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/throw new Exception("test");
                     }
                 }
                 """

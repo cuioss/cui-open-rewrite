@@ -29,7 +29,6 @@ import static org.openrewrite.java.Assertions.java;
 /**
  * Tests that verify logging behavior of the AnnotationNewlineFormat recipe
  * according to the CUI logging standards.
- * llm-rules: /Users/oliver/git/cui-llm-rules/standards/logging/testing-guide.adoc
  */
 @EnableTestLogger(rootLevel = TestLogLevel.DEBUG)
 class AnnotationSuppressionLoggingTest implements RewriteTest {
@@ -54,7 +53,7 @@ class AnnotationSuppressionLoggingTest implements RewriteTest {
             )
         );
 
-        // then - verify info level log message is present
+        // then - verify debug level log message is present
         LogAsserts.assertLogMessagePresentContaining(
             TestLogLevel.DEBUG,
             "Skipping class 'TestClass' for recipe 'AnnotationNewlineFormat' due to cui-rewrite:disable comment"
@@ -77,7 +76,7 @@ class AnnotationSuppressionLoggingTest implements RewriteTest {
             )
         );
 
-        // then - verify info level log message is present
+        // then - verify debug level log message is present
         LogAsserts.assertLogMessagePresentContaining(
             TestLogLevel.DEBUG,
             "Skipping method 'toString' for recipe 'AnnotationNewlineFormat' due to cui-rewrite:disable comment"
@@ -98,7 +97,7 @@ class AnnotationSuppressionLoggingTest implements RewriteTest {
             )
         );
 
-        // then - verify info level log message is present
+        // then - verify debug level log message is present
         LogAsserts.assertLogMessagePresentContaining(
             TestLogLevel.DEBUG,
             "Skipping field"
@@ -125,10 +124,10 @@ class AnnotationSuppressionLoggingTest implements RewriteTest {
             )
         );
 
-        // then - verify no info message about suppression
+        // then - verify no debug message about suppression
         // The suppression message should not be present when no suppression comment exists
         LogAsserts.assertNoLogMessagePresent(
-            TestLogLevel.INFO,
+            TestLogLevel.DEBUG,
             "Skipping class 'TestClass' for recipe 'AnnotationNewlineFormat' due to cui-rewrite:disable comment"
         );
     }

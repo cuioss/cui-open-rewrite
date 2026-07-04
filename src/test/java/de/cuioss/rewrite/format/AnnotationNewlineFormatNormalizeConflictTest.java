@@ -45,7 +45,7 @@ class AnnotationNewlineFormatNormalizeConflictTest implements RewriteTest {
     public void defaults(RecipeSpec spec) {
         // CRITICAL: Order matters! NormalizeFormat must run FIRST, then AnnotationNewlineFormat
         // This mimics the real pre-commit profile where AutoFormat (includes Normalize) runs before AnnotationNewlineFormat
-        spec.recipe(new NormalizeFormatRecipe())
+        spec.recipe(new TestNormalizeFormatRecipe())
             .recipe(new AnnotationNewlineFormat())
             .parser(JavaParser.fromJavaVersion()
                 .dependsOn(

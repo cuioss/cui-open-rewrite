@@ -16,11 +16,16 @@
 package de.cuioss.rewrite.format;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openrewrite.DocumentExample;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 import org.openrewrite.test.TypeValidation;
+
+import java.util.stream.Stream;
 
 import static org.openrewrite.java.Assertions.java;
 
@@ -59,13 +64,12 @@ class LombokAnnotationFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void formatDataAnnotation() {
-        rewriteRun(
-            java(
+    static Stream<Arguments> lombokAnnotationCases() {
+        return Stream.of(
+            Arguments.of(
                 """
                 import lombok.Data;
-                
+
                 @Data public class Person {
                     private String name;
                     private int age;
@@ -73,27 +77,21 @@ class LombokAnnotationFormatTest implements RewriteTest {
                 """,
                 """
                 import lombok.Data;
-                
+
                 @Data
                 public class Person {
                     private String name;
                     private int age;
                 }
                 """
-            )
-        );
-    }
-
-    @Test
-    void formatMultipleLombokAnnotations() {
-        rewriteRun(
-            java(
+            ),
+            Arguments.of(
                 """
                 import lombok.Data;
                 import lombok.Builder;
                 import lombok.NoArgsConstructor;
                 import lombok.AllArgsConstructor;
-                
+
                 @Data @Builder @NoArgsConstructor @AllArgsConstructor public class Person {
                     private String name;
                     private int age;
@@ -104,7 +102,7 @@ class LombokAnnotationFormatTest implements RewriteTest {
                 import lombok.Builder;
                 import lombok.NoArgsConstructor;
                 import lombok.AllArgsConstructor;
-                
+
                 @Data
                 @Builder
                 @NoArgsConstructor
@@ -114,17 +112,11 @@ class LombokAnnotationFormatTest implements RewriteTest {
                     private int age;
                 }
                 """
-            )
-        );
-    }
-
-    @Test
-    void formatSlf4jAnnotation() {
-        rewriteRun(
-            java(
+            ),
+            Arguments.of(
                 """
                 import lombok.extern.slf4j.Slf4j;
-                
+
                 @Slf4j public class LoggingService {
                     public void doSomething() {
                         log.info("Doing something");
@@ -133,7 +125,7 @@ class LombokAnnotationFormatTest implements RewriteTest {
                 """,
                 """
                 import lombok.extern.slf4j.Slf4j;
-                
+
                 @Slf4j
                 public class LoggingService {
                     public void doSomething() {
@@ -141,7 +133,33 @@ class LombokAnnotationFormatTest implements RewriteTest {
                     }
                 }
                 """
+            ),
+            Arguments.of(
+                """
+                import lombok.Data;
+
+                @Data @Deprecated public class OldPerson {
+                    private String name;
+                }
+                """,
+                """
+                import lombok.Data;
+
+                @Data
+                @Deprecated
+                public class OldPerson {
+                    private String name;
+                }
+                """
             )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("lombokAnnotationCases")
+    void shouldSplitLombokAnnotationsOntoOwnLines(String before, String after) {
+        rewriteRun(
+            java(before, after)
         );
     }
 
@@ -164,27 +182,4 @@ class LombokAnnotationFormatTest implements RewriteTest {
         );
     }
 
-    @Test
-    void formatMixedLombokAndJavaAnnotations() {
-        rewriteRun(
-            java(
-                """
-                import lombok.Data;
-                
-                @Data @Deprecated public class OldPerson {
-                    private String name;
-                }
-                """,
-                """
-                import lombok.Data;
-                
-                @Data
-                @Deprecated
-                public class OldPerson {
-                    private String name;
-                }
-                """
-            )
-        );
-    }
 }
