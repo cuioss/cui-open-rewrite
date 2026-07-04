@@ -12,17 +12,12 @@
     <version>1.3-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>cui open-rewrite</name>
-    <description>OpenRewrite recipes for cuioss projects.
-    </description>
+    <description>OpenRewrite recipes for cuioss projects.</description>
     <url>https://github.com/cuioss/cui-open-rewrite/</url>
     <scm>
         <url>https://github.com/cuioss/cui-open-rewrite/</url>
-        <connection>
-            scm:git:https://github.com/cuioss/cui-open-rewrite/.git
-        </connection>
-        <developerConnection>
-            scm:git:https://github.com/cuioss/cui-open-rewrite/
-        </developerConnection>
+        <connection>scm:git:https://github.com/cuioss/cui-open-rewrite.git</connection>
+        <developerConnection>scm:git:https://github.com/cuioss/cui-open-rewrite.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
     <issueManagement>
@@ -33,7 +28,6 @@
         <maven.compiler.release>21</maven.compiler.release>
         <maven.jar.plugin.automatic.module.name>de.cuioss.rewrite</maven.jar.plugin.automatic.module.name>
         <openrewrite.version>8.85.7</openrewrite.version>
-        <openrewrite.maven.version>6.17.0</openrewrite.maven.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -58,10 +52,18 @@
             <version>${openrewrite.version}</version>
         </dependency>
 
-        <!-- Runtime dependency for Java 11+ support -->
+        <!-- Runtime parsers: JDK 21 picks rewrite-java-21, JDK 25 picks rewrite-java-25.
+             Parser selection in JavaParser.fromJavaVersion() is gated by the running JVM
+             version before any class loading, so both can coexist safely. -->
         <dependency>
             <groupId>org.openrewrite</groupId>
-            <artifactId>rewrite-java-11</artifactId>
+            <artifactId>rewrite-java-21</artifactId>
+            <version>${openrewrite.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openrewrite</groupId>
+            <artifactId>rewrite-java-25</artifactId>
             <version>${openrewrite.version}</version>
             <scope>runtime</scope>
         </dependency>
