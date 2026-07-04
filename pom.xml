@@ -52,18 +52,12 @@
             <version>${openrewrite.version}</version>
         </dependency>
 
-        <!-- Runtime parsers: JDK 21 picks rewrite-java-21, JDK 25 picks rewrite-java-25.
-             Parser selection in JavaParser.fromJavaVersion() is gated by the running JVM
-             version before any class loading, so both can coexist safely. -->
+        <!-- Runtime parser for JDK 21. The Java 25 parser is added on JDK 25+ via the
+             java25-parser profile so that its Java-25 class files never reach the classpath
+             on JDK 21-24 (would trigger UnsupportedClassVersionError in classpath scanners). -->
         <dependency>
             <groupId>org.openrewrite</groupId>
             <artifactId>rewrite-java-21</artifactId>
-            <version>${openrewrite.version}</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.openrewrite</groupId>
-            <artifactId>rewrite-java-25</artifactId>
             <version>${openrewrite.version}</version>
             <scope>runtime</scope>
         </dependency>
@@ -108,4 +102,24 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <profiles>
+        <!-- The Java 25 parser ships class files compiled for Java 25 (class-file version 69).
+             Activate it only on JDK 25+ so those class files are never present on the classpath
+             of a JDK 21-24 build, where a classpath scanner could hit UnsupportedClassVersionError.
+             On JDK 21 the rewrite-java-21 parser is used; on JDK 25 this parser takes over. -->
+        <profile>
+            <id>java25-parser</id>
+            <activation>
+                <jdk>[25,)</jdk>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.openrewrite</groupId>
+                    <artifactId>rewrite-java-25</artifactId>
+                    <version>${openrewrite.version}</version>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>
