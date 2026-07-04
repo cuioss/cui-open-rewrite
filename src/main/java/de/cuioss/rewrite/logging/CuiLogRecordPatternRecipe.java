@@ -77,11 +77,6 @@ public class CuiLogRecordPatternRecipe extends Recipe {
         );
     }
 
-    @Override
-    public List<Recipe> getRecipeList() {
-        return List.of();
-    }
-
     static class CuiLogRecordPatternVisitor extends BaseSuppressionVisitor {
 
         private static final String SUPPRESSION_HINT = ". Suppress: // cui-rewrite:disable " + RECIPE_NAME;

@@ -15,24 +15,20 @@
  */
 package de.cuioss.rewrite.logging;
 
+import de.cuioss.rewrite.util.BaseSuppressionVisitor;
 import de.cuioss.rewrite.util.PathExclusionVisitor;
 import de.cuioss.rewrite.util.RecipeMarkerUtil;
-import de.cuioss.rewrite.util.RecipeSuppressionUtil;
 import org.jspecify.annotations.Nullable;
-import org.openrewrite.Cursor;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Preconditions;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
-import org.openrewrite.java.JavaIsoVisitor;
-import org.openrewrite.java.tree.Comment;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 import org.openrewrite.java.tree.TypeUtils;
 import org.openrewrite.marker.SearchResult;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -52,7 +48,6 @@ import java.util.Set;
 public class InvalidExceptionUsageRecipe extends Recipe {
 
     private static final String RECIPE_NAME = "InvalidExceptionUsageRecipe";
-    private static final String SUPPRESSION_COMMENT = "cui-rewrite:disable";
 
     private static final Set<String> GENERIC_EXCEPTION_TYPES = Set.of(
         "java.lang.Exception",
@@ -95,12 +90,11 @@ public class InvalidExceptionUsageRecipe extends Recipe {
         return Preconditions.check(new PathExclusionVisitor(), new InvalidExceptionUsageVisitor());
     }
 
-    @Override
-    public List<Recipe> getRecipeList() {
-        return List.of();
-    }
+    private static class InvalidExceptionUsageVisitor extends BaseSuppressionVisitor {
 
-    private static class InvalidExceptionUsageVisitor extends JavaIsoVisitor<ExecutionContext> {
+        InvalidExceptionUsageVisitor() {
+            super(RECIPE_NAME);
+        }
 
         /**
          * Creates a task message with suppression hint for the given action and exception type.
@@ -114,63 +108,12 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             return RecipeMarkerUtil.createTaskMessage(actionMessage, RECIPE_NAME);
         }
 
-
-        /**
-         * Checks if there's a suppression comment at the end of the try block that applies to this catch block.
-         * This handles the common pattern where suppression is placed before the closing brace of try.
-         */
-        private boolean checkTryBlockEndSuppression() {
-            // Navigate to the parent Try statement
-            var cursor = getCursor().getParentTreeCursor();
-            if (cursor.getValue() instanceof J.Try tryStatement) {
-                return checkSuppressionInTryBody(tryStatement.getBody(), cursor);
-            }
-            return false;
-        }
-
-        private boolean checkSuppressionInTryBody(J.Block tryBody, Cursor cursor) {
-            // First check comments in the try body's end space (before the closing brace)
-            var endComments = tryBody.getEnd().getComments();
-            for (Comment comment : endComments) {
-                if (hasSuppressionComment(comment.printComment(cursor))) {
-                    return true;
-                }
-            }
-
-            // Also check if the last statement in the try block has trailing comments
-            // This handles cases where the comment is attached to the last statement
-            if (!tryBody.getStatements().isEmpty()) {
-                var afterComments = tryBody.getStatements().getLast().getPrefix().getComments();
-                for (Comment comment : afterComments) {
-                    if (hasSuppressionComment(comment.printComment(cursor))) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        private boolean hasSuppressionComment(String text) {
-            return text.contains(SUPPRESSION_COMMENT) &&
-                (text.contains(RECIPE_NAME) || text.trim().endsWith(SUPPRESSION_COMMENT));
-        }
-
-
-        @Override
-        public J.ClassDeclaration visitClassDeclaration(J.ClassDeclaration classDecl, ExecutionContext ctx) {
-            // Check for class-level suppression
-            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
-                // Skip the entire class
-                return classDecl;
-            }
-            return super.visitClassDeclaration(classDecl, ctx);
-        }
-
         @Override
         public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration method, ExecutionContext ctx) {
             if (isTestMethod(method)) {
                 return method; // Skip entire method body for JUnit 5 test methods
             }
+            // BaseSuppressionVisitor handles method- and class-level suppression.
             return super.visitMethodDeclaration(method, ctx);
         }
 
@@ -188,26 +131,9 @@ public class InvalidExceptionUsageRecipe extends Recipe {
         public J.Try.Catch visitCatch(J.Try.Catch catchBlock, ExecutionContext ctx) {
             J.Try.Catch c = super.visitCatch(catchBlock, ctx);
 
-            // Check for suppression (handles all scenarios automatically)
-            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
-                return c;
-            }
-
-            // Additional check: the comment before the catch might be in the catch's own prefix
-            // This is because comments before "} catch" often attach to the catch block itself
-            var catchComments = c.getPrefix().getComments();
-            for (Comment comment : catchComments) {
-                String text = comment.printComment(getCursor());
-                if (text.contains(SUPPRESSION_COMMENT) &&
-                    (text.contains(RECIPE_NAME) ||
-                        text.trim().endsWith(SUPPRESSION_COMMENT))) {
-                    return c;
-                }
-            }
-
-            // Special case: Check if suppression comment is at the end of the try block body
-            // This handles the case where the suppression is placed before the closing brace of try
-            if (checkTryBlockEndSuppression()) {
+            // Suppression (catch prefix, class/method scope and the try-block-end pattern)
+            // is handled centrally by RecipeSuppressionUtil.
+            if (isSuppressed()) {
                 return c;
             }
 
@@ -261,7 +187,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             J.Throw t = super.visitThrow(thrown, ctx);
 
             // Check if suppressed
-            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
+            if (isSuppressed()) {
                 return t;
             }
 
@@ -298,7 +224,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
             }
 
             // Check if suppressed - either directly or via parent element
-            if (RecipeSuppressionUtil.isSuppressed(getCursor(), RECIPE_NAME)) {
+            if (isSuppressed()) {
                 return nc;
             }
 
