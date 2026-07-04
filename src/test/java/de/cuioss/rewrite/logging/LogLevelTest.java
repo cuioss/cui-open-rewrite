@@ -17,6 +17,8 @@ package de.cuioss.rewrite.logging;
 
 import de.cuioss.rewrite.logging.CuiLogRecordPatternRecipe.CuiLogRecordPatternVisitor.LogLevel;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.Optional;
 
@@ -27,26 +29,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class LogLevelTest {
 
-    @Test
-    void shouldParseValidLogLevels() {
-        assertEquals(Optional.of(LogLevel.TRACE), LogLevel.fromMethodName("trace"));
-        assertEquals(Optional.of(LogLevel.DEBUG), LogLevel.fromMethodName("debug"));
-        assertEquals(Optional.of(LogLevel.INFO), LogLevel.fromMethodName("info"));
-        assertEquals(Optional.of(LogLevel.WARN), LogLevel.fromMethodName("warn"));
-        assertEquals(Optional.of(LogLevel.ERROR), LogLevel.fromMethodName("error"));
-        assertEquals(Optional.of(LogLevel.FATAL), LogLevel.fromMethodName("fatal"));
-    }
-
-    @Test
-    void shouldParseUpperCaseLogLevels() {
-        assertEquals(Optional.of(LogLevel.INFO), LogLevel.fromMethodName("INFO"));
-        assertEquals(Optional.of(LogLevel.ERROR), LogLevel.fromMethodName("ERROR"));
-    }
-
-    @Test
-    void shouldParseMixedCaseLogLevels() {
-        assertEquals(Optional.of(LogLevel.INFO), LogLevel.fromMethodName("InFo"));
-        assertEquals(Optional.of(LogLevel.WARN), LogLevel.fromMethodName("WaRn"));
+    @ParameterizedTest(name = "[{index}] \"{0}\" -> {1}")
+    @CsvSource({
+        // lower-case method names
+        "trace, TRACE",
+        "debug, DEBUG",
+        "info,  INFO",
+        "warn,  WARN",
+        "error, ERROR",
+        "fatal, FATAL",
+        // upper-case method names
+        "INFO,  INFO",
+        "ERROR, ERROR",
+        // mixed-case method names
+        "InFo,  INFO",
+        "WaRn,  WARN"
+    })
+    void shouldParseLogLevelsCaseInsensitively(String methodName, LogLevel expected) {
+        assertEquals(Optional.of(expected), LogLevel.fromMethodName(methodName));
     }
 
     @Test

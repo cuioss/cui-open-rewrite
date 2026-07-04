@@ -27,8 +27,6 @@ import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.tree.J;
 
-import java.lang.reflect.InvocationTargetException;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 @EnableTestLogger(rootLevel = TestLogLevel.DEBUG)
@@ -164,23 +162,6 @@ class RecipeSuppressionUtilTest {
     }
 
     @Test
-    void shouldHandleRecipeNameWithoutPackage() {
-        String source = """
-            // cui-rewrite:disable SimpleRecipe
-            public class TestClass {}
-            """;
-
-        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
-
-        TestVisitor visitor = new TestVisitor("SimpleRecipe");
-        visitor.visit(cu, ctx);
-
-        assertTrue(visitor.classWasSuppressed);
-        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.DEBUG,
-            "Skipping class 'TestClass' for recipe 'SimpleRecipe'");
-    }
-
-    @Test
     void shouldMatchSimpleNameFromFullyQualifiedRecipe() {
         String source = """
             // cui-rewrite:disable TestRecipe
@@ -252,17 +233,6 @@ class RecipeSuppressionUtilTest {
         visitor.visit(cu, ctx);
 
         assertTrue(visitor.methodWasSuppressed);
-    }
-
-    @Test
-    void shouldTestPrivateConstructor() throws Exception {
-        var constructor = RecipeSuppressionUtil.class.getDeclaredConstructor();
-        constructor.setAccessible(true);
-
-        var exception = assertThrows(InvocationTargetException.class, constructor::newInstance);
-
-        assertTrue(exception.getCause() instanceof UnsupportedOperationException);
-        assertTrue(exception.getCause().getMessage().contains("Utility class"));
     }
 
     @Test

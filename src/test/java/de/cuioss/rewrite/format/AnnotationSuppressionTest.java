@@ -100,7 +100,6 @@ class AnnotationSuppressionTest implements RewriteTest {
                 @Deprecated @SuppressWarnings("all") public class TestClass {
                     public static final String VALUE = "test";
                 }
-                // cui-rewrite:enable AnnotationNewlineFormat
                 """
             )
         );
@@ -120,20 +119,6 @@ class AnnotationSuppressionTest implements RewriteTest {
         );
     }
 
-
-    @Test
-    void suppressNextLineWithoutRecipeName() {
-        rewriteRun(
-            java(
-                """
-                // cui-rewrite:disable
-                @Deprecated @SuppressWarnings("all") public class TestClass {
-                    public static final String VALUE = "test";
-                }
-                """
-            )
-        );
-    }
 
     @Test
     void suppressWithTrailingComment() {

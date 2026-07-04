@@ -34,70 +34,10 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
         spec.recipe(new CuiLogRecordPatternRecipe())
             .parser(JavaParser.fromJavaVersion()
                 .dependsOn(
-                    """
-                    package de.cuioss.tools.logging;
-                    import java.util.function.Supplier;
-                    public class CuiLogger {
-                        public CuiLogger(Class<?> clazz) {}
-                        // String-based logging
-                        public void trace(String message, Object... args) {}
-                        public void debug(String message, Object... args) {}
-                        public void info(String message, Object... args) {}
-                        public void warn(String message, Object... args) {}
-                        public void error(String message, Object... args) {}
-                        public void fatal(String message, Object... args) {}
-                        // String-based logging with exception
-                        public void trace(Throwable t, String message, Object... args) {}
-                        public void debug(Throwable t, String message, Object... args) {}
-                        public void info(Throwable t, String message, Object... args) {}
-                        public void warn(Throwable t, String message, Object... args) {}
-                        public void error(Throwable t, String message, Object... args) {}
-                        public void fatal(Throwable t, String message, Object... args) {}
-                        // Supplier-based logging
-                        public void trace(Supplier<String> message) {}
-                        public void debug(Supplier<String> message) {}
-                        public void info(Supplier<String> message) {}
-                        public void warn(Supplier<String> message) {}
-                        public void error(Supplier<String> message) {}
-                        public void fatal(Supplier<String> message) {}
-                        // Supplier-based logging with exception
-                        public void trace(Throwable t, Supplier<String> message) {}
-                        public void debug(Throwable t, Supplier<String> message) {}
-                        public void info(Throwable t, Supplier<String> message) {}
-                        public void warn(Throwable t, Supplier<String> message) {}
-                        public void error(Throwable t, Supplier<String> message) {}
-                        public void fatal(Throwable t, Supplier<String> message) {}
-                        // LogRecord-based logging (new direct pattern)
-                        public void info(LogRecord logRecord, Object... args) {}
-                        public void warn(LogRecord logRecord, Object... args) {}
-                        public void error(LogRecord logRecord, Object... args) {}
-                        public void fatal(LogRecord logRecord, Object... args) {}
-                        // LogRecord-based logging with exception (new direct pattern)
-                        public void info(Throwable t, LogRecord logRecord, Object... args) {}
-                        public void warn(Throwable t, LogRecord logRecord, Object... args) {}
-                        public void error(Throwable t, LogRecord logRecord, Object... args) {}
-                        public void fatal(Throwable t, LogRecord logRecord, Object... args) {}
-                    }
-                    """,
-                    """
-                    package de.cuioss.tools.logging;
-                    public interface LogRecord {
-                        String format(Object... args);
-                    }
-                    """,
-                    """
-                    package de.cuioss.tools.logging;
-                    public class LogRecordModel implements LogRecord {
-                        public String format(Object... args) { return ""; }
-                        public static Builder builder() { return new Builder(); }
-                        public static class Builder {
-                            public Builder template(String template) { return this; }
-                            public Builder prefix(String prefix) { return this; }
-                            public Builder identifier(int id) { return this; }
-                            public LogRecord build() { return new LogRecordModel(); }
-                        }
-                    }
-                    """
+                    CuiLoggerTestFixtures.CUI_LOGGER_STUB,
+                    CuiLoggerTestFixtures.CUI_LOGGER_FACTORY_STUB,
+                    CuiLoggerTestFixtures.LOG_RECORD_STUB,
+                    CuiLoggerTestFixtures.LOG_RECORD_MODEL_STUB
                 ));
     }
 
@@ -966,6 +906,87 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                     void doSomething() {
                         // This would be a compile error, but recipe should handle gracefully
                         LogRecordModel.builder().build();
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    /**
+     * Regression scenario: the recipe must not crash when encountering a {@code getName()}
+     * method invocation that is unrelated to logging.
+     */
+    @Test
+    void shouldNotFailOnGetNameMethod() {
+        rewriteRun(
+            java(
+                """
+                package de.cuioss.tools.logging;
+
+                public class CuiLoggerFactoryTest {
+
+                    public void testMethod() {
+                        TestObject obj = new TestObject();
+                        String name = obj.getName(); // This should not crash the recipe
+                    }
+
+                    static class TestObject {
+                        public String getName() {
+                            return "test";
+                        }
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    /**
+     * Regression scenario: a local {@code getName()} call must not be treated as a log level,
+     * while a genuine {@code LOG.info(...)} call is still flagged.
+     */
+    @Test
+    void shouldNotFailOnNonLoggerMethods() {
+        rewriteRun(
+            java(
+                """
+                package de.cuioss.tools.logging;
+
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.CuiLoggerFactory;
+
+                public class CuiLoggerFactoryTest {
+
+                    private static final CuiLogger LOG = CuiLoggerFactory.getLogger(CuiLoggerFactoryTest.class);
+
+                    public void testMethod() {
+                        String name = getName(); // This should not be processed as a log level
+                        LOG.info("Test message"); // This should be processed but shouldn't fail
+                    }
+
+                    private String getName() {
+                        return "test";
+                    }
+                }
+                """,
+                """
+                package de.cuioss.tools.logging;
+
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.CuiLoggerFactory;
+
+                public class CuiLoggerFactoryTest {
+
+                    private static final CuiLogger LOG = CuiLoggerFactory.getLogger(CuiLoggerFactoryTest.class);
+
+                    public void testMethod() {
+                        String name = getName(); // This should not be processed as a log level
+                        /*~~(TODO: INFO needs LogRecord. Suppress: // cui-rewrite:disable CuiLogRecordPatternRecipe)~~>*/LOG.info("Test message"); // This should be processed but shouldn't fail
+                    }
+
+                    private String getName() {
+                        return "test";
                     }
                 }
                 """

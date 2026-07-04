@@ -25,7 +25,7 @@ import org.openrewrite.marker.SearchResult;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -37,7 +37,7 @@ class RecipeMarkerUtilTest {
     void shouldCreateTaskMessage() {
         String result = RecipeMarkerUtil.createTaskMessage("Use specific exception", "TestRecipe");
 
-        assertThat(result).isEqualTo("TODO: Use specific exception. Suppress: // cui-rewrite:disable TestRecipe");
+        assertEquals("TODO: Use specific exception. Suppress: // cui-rewrite:disable TestRecipe", result);
     }
 
     @Test

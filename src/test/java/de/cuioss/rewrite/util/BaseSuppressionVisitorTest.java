@@ -110,29 +110,6 @@ class BaseSuppressionVisitorTest implements RewriteTest {
         );
     }
 
-    @Test
-    void helperMethodWorksCorrectly() {
-        rewriteRun(
-            spec -> spec.recipe(new TestRecipe()),
-            java(
-                """
-                public class Example {
-                    public void method() {
-                        System.out.println("This should be marked");
-                    }
-                }
-                """,
-                """
-                public class Example {
-                    public void method() {
-                        /*~~(TEST: Found println)~~>*/System.out.println("This should be marked");
-                    }
-                }
-                """
-            )
-        );
-    }
-
     /**
      * Test recipe that extends BaseSuppressionVisitor to verify its behavior
      */

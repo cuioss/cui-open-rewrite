@@ -15,11 +15,13 @@
  */
 package de.cuioss.rewrite.util;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.InMemoryExecutionContext;
 import org.openrewrite.SourceFile;
+import org.openrewrite.Tree;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.marker.SearchResult;
@@ -28,6 +30,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -64,6 +67,37 @@ class PathExclusionVisitorTest {
         } else {
             assertFalse(isMarked, description + ": should NOT be marked (excluded)");
         }
+    }
+
+    @Test
+    void shouldHonourCustomExclusionPattern() {
+        PathExclusionVisitor customVisitor = new PathExclusionVisitor("**/custom/**");
+
+        // Distinct class names so the shared parser does not see duplicate fully qualified names.
+        SourceFile matching = parseWithPath("class MatchingClass {}", Path.of("module/custom/Generated.java"));
+        SourceFile matchingResult = (SourceFile) customVisitor.visit(matching, ctx);
+        assertFalse(matchingResult.getMarkers().findFirst(SearchResult.class).isPresent(),
+            "path matching the custom pattern should be excluded (unmarked)");
+
+        SourceFile nonMatching = parseWithPath("class NonMatchingClass {}", Path.of("src/main/java/SourceCode.java"));
+        SourceFile nonMatchingResult = (SourceFile) customVisitor.visit(nonMatching, ctx);
+        assertTrue(nonMatchingResult.getMarkers().findFirst(SearchResult.class).isPresent(),
+            "path not matching the custom pattern should be included (marked)");
+    }
+
+    @Test
+    void shouldDelegateForNonSourceFileTree() {
+        List<SourceFile> sources = parser.parse("class TestClass {}").toList();
+        J.CompilationUnit cu = (J.CompilationUnit) sources.getFirst();
+        J.ClassDeclaration classDecl = cu.getClasses().getFirst();
+
+        // The class declaration is a Tree but not a SourceFile, so the visitor must fall
+        // through to super.visit() and must not mark it with a SearchResult.
+        Tree result = visitor.visit(classDecl, ctx);
+
+        assertNotNull(result);
+        assertFalse(result.getMarkers().findFirst(SearchResult.class).isPresent(),
+            "non-SourceFile trees must not be marked for processing");
     }
 
     private SourceFile parseWithPath(String source, Path sourcePath) {
