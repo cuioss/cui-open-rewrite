@@ -27,7 +27,7 @@
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
         <maven.jar.plugin.automatic.module.name>de.cuioss.rewrite</maven.jar.plugin.automatic.module.name>
-        <openrewrite.version>8.86.1</openrewrite.version>
+        <openrewrite.version>8.87.0</openrewrite.version>
     </properties>
     <dependencyManagement>
         <dependencies>
