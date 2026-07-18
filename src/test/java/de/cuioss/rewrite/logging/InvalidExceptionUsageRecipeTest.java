@@ -56,7 +56,9 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~(TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (Exception e) {
+                        }
+                        /*TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                        catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
@@ -94,7 +96,49 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~(TODO: Catch specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (RuntimeException e) {
+                        }
+                        /*TODO: Catch specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                        catch (RuntimeException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    void doSomething() {
+                        // Something that might throw RuntimeException
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void preservesExistingCatchPrefixComment() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        } /* keep me */ catch (RuntimeException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    void doSomething() {
+                        // Something that might throw RuntimeException
+                    }
+                }
+                """,
+                """
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        }
+                        /* keep me */ /*TODO: Catch specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                        catch (RuntimeException e) {
                             e.printStackTrace();
                         }
                     }
@@ -132,7 +176,9 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~(TODO: Catch specific not Throwable. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (Throwable t) {
+                        }
+                        /*TODO: Catch specific not Throwable. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                        catch (Throwable t) {
                             t.printStackTrace();
                         }
                     }
@@ -249,7 +295,9 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                             doSomething();
                         } catch (IOException e) {
                             // Handle specific exception
-                        } /*~~(TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (Exception e) {
+                        }
+                        /*TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                        catch (Exception e) {
                             // Generic catch as fallback
                         }
                     }
@@ -344,10 +392,14 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                         try {
                             try {
                                 doSomething();
-                            } /*~~(TODO: Catch specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (RuntimeException re) {
+                            }
+                            /*TODO: Catch specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                            catch (RuntimeException re) {
                                 /*~~(TODO: Throw specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/throw new Exception("Wrapping", re);
                             }
-                        } /*~~(TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (Exception e) {
+                        }
+                        /*TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                        catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
@@ -392,7 +444,9 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                         Supplier<String> supplier = () -> {
                             try {
                                 return doSomething();
-                            } /*~~(TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (Exception e) {
+                            }
+                            /*TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                            catch (Exception e) {
                                 /*~~(TODO: Throw specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/throw new RuntimeException(e);
                             }
                         };
@@ -514,7 +568,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         handleException(new Exception("Parameter case"));
                     }
-                    
+
                     void handleException(Exception e) {
                         // Handle exception
                     }
@@ -525,7 +579,7 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         handleException(/*~~(TODO: Use specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/new Exception("Parameter case"));
                     }
-                    
+
                     void handleException(Exception e) {
                         // Handle exception
                     }
@@ -591,7 +645,9 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~(TODO: Catch specific not Throwable. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (Throwable t) {
+                        }
+                        /*TODO: Catch specific not Throwable. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                        catch (Throwable t) {
                             /*~~(TODO: Throw specific not Throwable. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/throw new Throwable("Wrapping", t);
                         }
                     }
@@ -629,7 +685,9 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     static {
                         try {
                             initialize();
-                        } /*~~(TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (Exception e) {
+                        }
+                        /*TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                        catch (Exception e) {
                             /*~~(TODO: Throw specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/throw new RuntimeException("Static init failed", e);
                         }
                     }
@@ -668,7 +726,9 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~(TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (Exception e) {
+                        }
+                        /*TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                        catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
@@ -977,7 +1037,9 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try (FileInputStream fis = new FileInputStream("test.txt")) {
                             // Use resource
-                        } /*~~(TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (Exception e) {
+                        }
+                        /*TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                        catch (Exception e) {
                             /*~~(TODO: Throw specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/throw new RuntimeException(e);
                         }
                     }
@@ -1011,7 +1073,9 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~(TODO: Catch specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (IllegalStateException | RuntimeException e) {
+                        }
+                        /*TODO: Catch specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                        catch (IllegalStateException | RuntimeException e) {
                             e.printStackTrace();
                         }
                     }
@@ -1063,7 +1127,9 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                     void test() {
                         try {
                             doSomething();
-                        } /*~~(TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/catch (Exception e) {
+                        }
+                        /*TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                        catch (Exception e) {
                             e.printStackTrace();
                         }
                     }

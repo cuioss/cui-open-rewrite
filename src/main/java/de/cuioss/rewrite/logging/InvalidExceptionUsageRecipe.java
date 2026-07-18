@@ -126,8 +126,6 @@ public class InvalidExceptionUsageRecipe extends Recipe {
         }
 
         @Override
-        @SuppressWarnings("java:S2637")
-        // SearchResult.found() never returns null for non-null input
         public J.Try.Catch visitCatch(J.Try.Catch catchBlock, ExecutionContext ctx) {
             J.Try.Catch c = super.visitCatch(catchBlock, ctx);
 
@@ -149,10 +147,26 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                 if (RecipeMarkerUtil.hasTaskComment(c, taskMessage, getCursor()) || RecipeMarkerUtil.hasSearchResultMarker(c)) {
                     return c;
                 }
-                return SearchResult.found(c, taskMessage);
+                // Place the advisory marker on its own line above the catch (rather than inline
+                // before the catch keyword) so the catch line itself is left untouched, avoiding
+                // the coverage/blame churn an inline marker causes.
+                return RecipeMarkerUtil.withOwnLineCatchMarker(c, taskMessage, catchIndent());
             }
 
             return c;
+        }
+
+        /**
+         * Returns the indentation (leading whitespace) of the enclosing try/catch construct, used
+         * to align the own-line catch marker with the closing brace of the try block. A catch is
+         * always nested inside a try, so the enclosing {@link J.Try} is always present.
+         *
+         * @return the indentation string (the trailing segment of the try's leading whitespace
+         *         after the last newline; the full whitespace when it carries no newline)
+         */
+        private String catchIndent() {
+            String whitespace = getCursor().firstEnclosingOrThrow(J.Try.class).getPrefix().getWhitespace();
+            return whitespace.substring(whitespace.lastIndexOf('\n') + 1);
         }
 
         /**

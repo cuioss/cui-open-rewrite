@@ -19,7 +19,12 @@ import org.openrewrite.Cursor;
 import org.openrewrite.java.tree.Comment;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Space;
+import org.openrewrite.java.tree.TextComment;
+import org.openrewrite.marker.Markers;
 import org.openrewrite.marker.SearchResult;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Utility class for managing OpenRewrite recipe markers and task comments.
@@ -40,6 +45,36 @@ public final class RecipeMarkerUtil {
      */
     public static String createTaskMessage(String action, String recipeName) {
         return "TODO: %s. Suppress: // cui-rewrite:disable %s".formatted(action, recipeName);
+    }
+
+    /**
+     * Builds a copy of the given catch with the advisory task marker placed on its own line
+     * above the {@code catch} keyword.
+     *
+     * <p>The catch element's leading {@link Space} — the prefix between the try-block's closing
+     * {@code }} and the {@code catch} keyword — is reshaped to {@code newline + indent}, followed
+     * by the marker as a multiline block comment, followed by {@code newline + indent} before the
+     * {@code catch} keyword. This keeps the {@code catch} line itself untouched (apart from
+     * indentation), avoiding the coverage/blame churn an inline marker would cause. Because the
+     * marker is a multiline comment carried in the catch prefix, the existing duplicate-detection
+     * path ({@link #hasTaskComment}) recognizes it on subsequent runs and the idempotence guard
+     * still fires.</p>
+     *
+     * <p>Any comments already present in the catch prefix (developer notes, unrelated suppression
+     * comments) are preserved — the new marker is appended after them rather than replacing them,
+     * keeping the recipe non-destructive to unrelated AST content.</p>
+     *
+     * @param catchBlock  the catch to mark
+     * @param taskMessage the advisory task message to embed as a multiline comment
+     * @param indent      the indentation (leading whitespace) of the enclosing try/catch construct
+     * @return a copy of {@code catchBlock} whose prefix carries the own-line marker comment
+     */
+    public static J.Try.Catch withOwnLineCatchMarker(J.Try.Catch catchBlock, String taskMessage, String indent) {
+        String newlineIndent = "\n" + indent;
+        Comment marker = new TextComment(true, taskMessage, newlineIndent, Markers.EMPTY);
+        List<Comment> comments = new ArrayList<>(catchBlock.getPrefix().getComments());
+        comments.add(marker);
+        return catchBlock.withPrefix(Space.build(newlineIndent, comments));
     }
 
     /**
