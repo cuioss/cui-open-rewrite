@@ -113,6 +113,46 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
     }
 
     @Test
+    void preservesExistingCatchPrefixComment() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        } /* keep me */ catch (RuntimeException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    void doSomething() {
+                        // Something that might throw RuntimeException
+                    }
+                }
+                """,
+                """
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        }
+                        /* keep me */ /*TODO: Catch specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                        catch (RuntimeException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    void doSomething() {
+                        // Something that might throw RuntimeException
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
     void detectCatchingThrowable() {
         rewriteRun(
             java(

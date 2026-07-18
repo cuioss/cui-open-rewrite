@@ -23,6 +23,7 @@ import org.openrewrite.java.tree.TextComment;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.marker.SearchResult;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -59,6 +60,10 @@ public final class RecipeMarkerUtil {
      * path ({@link #hasTaskComment}) recognizes it on subsequent runs and the idempotence guard
      * still fires.</p>
      *
+     * <p>Any comments already present in the catch prefix (developer notes, unrelated suppression
+     * comments) are preserved — the new marker is appended after them rather than replacing them,
+     * keeping the recipe non-destructive to unrelated AST content.</p>
+     *
      * @param catchBlock  the catch to mark
      * @param taskMessage the advisory task message to embed as a multiline comment
      * @param indent      the indentation (leading whitespace) of the enclosing try/catch construct
@@ -67,7 +72,9 @@ public final class RecipeMarkerUtil {
     public static J.Try.Catch withOwnLineCatchMarker(J.Try.Catch catchBlock, String taskMessage, String indent) {
         String newlineIndent = "\n" + indent;
         Comment marker = new TextComment(true, taskMessage, newlineIndent, Markers.EMPTY);
-        return catchBlock.withPrefix(Space.build(newlineIndent, List.of(marker)));
+        List<Comment> comments = new ArrayList<>(catchBlock.getPrefix().getComments());
+        comments.add(marker);
+        return catchBlock.withPrefix(Space.build(newlineIndent, comments));
     }
 
     /**

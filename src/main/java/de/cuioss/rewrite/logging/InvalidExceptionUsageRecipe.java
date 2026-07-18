@@ -158,18 +158,15 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
         /**
          * Returns the indentation (leading whitespace) of the enclosing try/catch construct, used
-         * to align the own-line catch marker with the closing brace of the try block.
+         * to align the own-line catch marker with the closing brace of the try block. A catch is
+         * always nested inside a try, so the enclosing {@link J.Try} is always present.
          *
-         * @return the indentation string, or an empty string when it cannot be resolved
+         * @return the indentation string (the trailing segment of the try's leading whitespace
+         *         after the last newline; the full whitespace when it carries no newline)
          */
         private String catchIndent() {
-            J.Try tryStatement = getCursor().firstEnclosing(J.Try.class);
-            if (tryStatement == null) {
-                return "";
-            }
-            String whitespace = tryStatement.getPrefix().getWhitespace();
-            int lastNewline = whitespace.lastIndexOf('\n');
-            return lastNewline >= 0 ? whitespace.substring(lastNewline + 1) : "";
+            String whitespace = getCursor().firstEnclosingOrThrow(J.Try.class).getPrefix().getWhitespace();
+            return whitespace.substring(whitespace.lastIndexOf('\n') + 1);
         }
 
         /**
