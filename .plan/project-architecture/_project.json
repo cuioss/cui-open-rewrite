@@ -1,0 +1,13 @@
+{
+  "description": "",
+  "description_reasoning": "",
+  "extensions_used": [
+    "plan-marshall",
+    "pm-documents"
+  ],
+  "modules": {
+    "cui-open-rewrite": {},
+    "documentation": {}
+  },
+  "name": "cui-open-rewrite"
+}
