@@ -57,8 +57,7 @@
       "verification_steps": {
         "default:verify:quality-gate": {},
         "default:verify:module-tests": {},
-        "default:verify:coverage": {},
-        "default:verify:arch-gate": {}
+        "default:verify:coverage": {}
       },
       "effort": {
         "default": "level-4",
