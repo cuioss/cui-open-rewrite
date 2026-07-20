@@ -88,6 +88,15 @@ When recipes detect issues that cannot be auto-fixed, they add **SearchResult ma
 * This is standard OpenRewrite behavior for marking code that needs attention
 * To remove markers, either fix the underlying issue or suppress the recipe
 
+In addition to the in-source markers, every marker-producing recipe emits one
+`WARN`-level build-log line per finding on each run. This makes findings visible in the
+build log even when the marker was **already present** in the source (a committed marker
+produces no diff, so the in-source marker alone would go unnoticed on a re-run):
+
+* Each WARN line carries the source file path, the line and column of the flagged element, the recipe name, and the marker/task message
+* Newly-detected findings and pre-existing findings use distinguishable wording (`Finding detected` vs `Finding pre-existing`) so the two cases are independently greppable
+* The WARN lines are emitted through `CuiLogger` and appear on the build console regardless of whether the run changed the source
+
 ==== AnnotationNewlineFormat Recipe
 
 Ensures that Java annotations are formatted on separate lines for better readability.
