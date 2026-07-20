@@ -83,7 +83,7 @@ public final class RecipeMarkerUtil {
      * length immediately after the element's leading {@link Space} (its prefix) has been printed.
      *
      * @param compilationUnit the enclosing compilation unit whose printed source is measured
-     * @param element         the element to locate (matched by identity within the unit)
+     * @param element         the element to locate (matched by node id within the unit)
      * @return a two-element array {@code [line, column]}, both 1-based; {@code [1, 1]} when the
      *         element cannot be located within the printed source
      */
@@ -96,7 +96,11 @@ public final class RecipeMarkerUtil {
 
             @Override
             public @Nullable J visit(@Nullable Tree tree, PrintOutputCapture<Integer> p) {
-                if (tree == element) {
+                // Match by node id rather than object identity: withMarkers/withPrefix produce a
+                // copy that preserves getId(), so a rewritten or copied element passed to
+                // logFinding still locates its original source position instead of falling back
+                // to [1,1].
+                if (tree != null && tree.getId().equals(element.getId())) {
                     armed = true;
                 }
                 return super.visit(tree, p);
