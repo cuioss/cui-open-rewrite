@@ -15,6 +15,9 @@
  */
 package de.cuioss.rewrite.logging;
 
+import de.cuioss.test.juli.LogAsserts;
+import de.cuioss.test.juli.TestLogLevel;
+import de.cuioss.test.juli.junit5.EnableTestLogger;
 import org.junit.jupiter.api.Test;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
@@ -24,6 +27,7 @@ import org.openrewrite.test.TypeValidation;
 import static org.openrewrite.java.Assertions.java;
 
 // cui-rewrite:disable CuiLoggerStandardsRecipe
+@EnableTestLogger
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class CuiLoggerStandardsRecipeTest implements RewriteTest {
 
@@ -764,5 +768,105 @@ class CuiLoggerStandardsRecipeTest implements RewriteTest {
                 """
             )
         );
+    }
+
+    // --- WARN build-log visibility (issue #116) ---
+
+    @Test
+    void shouldLogWarnForSystemStreamUsageNewAndPreExisting() {
+        rewriteRun(
+            spec -> spec.cycles(2).expectedCyclesThatMakeChanges(1),
+            java(
+                """
+                class Test {
+                    void method() {
+                        System.out.println("Should not use System.out");
+                        System.err.println("Should not use System.err");
+                    }
+                }
+                """,
+                """
+                class Test {
+                    void method() {
+                        /*~~(TODO: Use CuiLogger. Suppress: // cui-rewrite:disable CuiLoggerStandardsRecipe)~~>*/System.out.println("Should not use System.out");
+                        /*~~(TODO: Use CuiLogger. Suppress: // cui-rewrite:disable CuiLoggerStandardsRecipe)~~>*/System.err.println("Should not use System.err");
+                    }
+                }
+                """
+            )
+        );
+
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Finding detected at");
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Finding pre-existing at");
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN,
+            "by CuiLoggerStandardsRecipe: TODO: Use CuiLogger");
+    }
+
+    @Test
+    void shouldLogWarnForLoggerNameCollisionNewAndPreExisting() {
+        rewriteRun(
+            spec -> spec.cycles(2).expectedCyclesThatMakeChanges(1),
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                    private static final CuiLogger log = new CuiLogger(Test.class);
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                    /*~~(TODO: Rename logger to LOGGER (name already in use). Suppress: // cui-rewrite:disable CuiLoggerStandardsRecipe)~~>*/private static final CuiLogger log = new CuiLogger(Test.class);
+                }
+                """
+            )
+        );
+
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Finding detected at");
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Finding pre-existing at");
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN,
+            "by CuiLoggerStandardsRecipe: TODO: Rename logger to LOGGER (name already in use)");
+    }
+
+    @Test
+    void shouldLogWarnForParameterCountMismatchNewAndPreExisting() {
+        rewriteRun(
+            spec -> spec.cycles(2).expectedCyclesThatMakeChanges(1),
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+
+                    void method() {
+                        String value1 = "test";
+                        LOGGER.info("Message with %s and %s", value1);
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+
+                    void method() {
+                        String value1 = "test";
+                        /*~~(TODO: 2 placeholders, 1 params. Suppress: // cui-rewrite:disable CuiLoggerStandardsRecipe)~~>*/LOGGER.info("Message with %s and %s", value1);
+                    }
+                }
+                """
+            )
+        );
+
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Finding detected at");
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Finding pre-existing at");
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN,
+            "by CuiLoggerStandardsRecipe: TODO: 2 placeholders, 1 params");
     }
 }

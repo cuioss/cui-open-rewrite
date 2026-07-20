@@ -167,6 +167,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                     // produce a duplicate field. Flag it instead of generating invalid code.
                     String message = RecipeMarkerUtil.createTaskMessage(
                         "Rename logger to LOGGER (name already in use)", RECIPE_NAME);
+                    RecipeMarkerUtil.logFinding(vd, message, RECIPE_NAME, getCursor(),
+                        RecipeMarkerUtil.hasSearchResultMarker(vd));
                     return vd.withMarkers(vd.getMarkers().addIfAbsent(new SearchResult(Tree.randomId(), message)));
                 }
                 // Delegate the rename to RenameVariable so that every reference form
@@ -286,6 +288,17 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             // Check for System.out/err usage
             mi = checkSystemStreams(mi);
             if (RecipeMarkerUtil.hasSearchResultMarker(mi)) {
+                // A logger-method finding flagged on a previous run carries its marker into this
+                // one; the logger validation below is short-circuited for already-marked calls, so
+                // report the pre-existing finding here. System.out/err findings were already
+                // reported inside checkSystemStreams, so they are excluded to avoid a double line.
+                if (!isSystemOutOrErr(mi)) {
+                    J.MethodInvocation marked = mi;
+                    marked.getMarkers().findFirst(SearchResult.class)
+                        .map(SearchResult::getDescription)
+                        .ifPresent(description -> RecipeMarkerUtil.logFinding(
+                            marked, description, RECIPE_NAME, getCursor(), true));
+                }
                 return mi;
             }
 
@@ -300,6 +313,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         private J.MethodInvocation checkSystemStreams(J.MethodInvocation mi) {
             if (isSystemOutOrErr(mi)) {
                 String message = RecipeMarkerUtil.createTaskMessage("Use CuiLogger", RECIPE_NAME);
+                RecipeMarkerUtil.logFinding(mi, message, RECIPE_NAME, getCursor(),
+                    RecipeMarkerUtil.hasSearchResultMarker(mi));
                 return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(Tree.randomId(), message)));
             }
             return mi;
@@ -401,6 +416,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             if (placeholderCount != paramCount) {
                 String action = "%d placeholders, %d params".formatted(placeholderCount, paramCount);
                 String message = RecipeMarkerUtil.createTaskMessage(action, RECIPE_NAME);
+                RecipeMarkerUtil.logFinding(mi, message, RECIPE_NAME, getCursor(),
+                    RecipeMarkerUtil.hasSearchResultMarker(mi));
                 return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(Tree.randomId(), message)));
             }
 
