@@ -145,8 +145,10 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
                 // Check if this comment already exists (from a previous run)
                 if (RecipeMarkerUtil.hasTaskComment(c, taskMessage, getCursor()) || RecipeMarkerUtil.hasSearchResultMarker(c)) {
+                    RecipeMarkerUtil.logFinding(c, taskMessage, RECIPE_NAME, getCursor(), true);
                     return c;
                 }
+                RecipeMarkerUtil.logFinding(c, taskMessage, RECIPE_NAME, getCursor(), false);
                 // Place the advisory marker on its own line above the catch (rather than inline
                 // before the catch keyword) so the catch line itself is left untouched, avoiding
                 // the coverage/blame churn an inline marker causes.
@@ -216,8 +218,10 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
                     // Check if this comment already exists (from a previous run)
                     if (RecipeMarkerUtil.hasTaskComment(t, taskMessage, getCursor()) || RecipeMarkerUtil.hasSearchResultMarker(t)) {
+                        RecipeMarkerUtil.logFinding(t, taskMessage, RECIPE_NAME, getCursor(), true);
                         return t;
                     }
+                    RecipeMarkerUtil.logFinding(t, taskMessage, RECIPE_NAME, getCursor(), false);
                     return SearchResult.found(t, taskMessage);
                 }
             }
@@ -251,8 +255,10 @@ public class InvalidExceptionUsageRecipe extends Recipe {
 
                 // Check if this comment already exists (from a previous run)
                 if (RecipeMarkerUtil.hasTaskComment(nc, taskMessage, getCursor()) || RecipeMarkerUtil.hasSearchResultMarker(nc)) {
+                    RecipeMarkerUtil.logFinding(nc, taskMessage, RECIPE_NAME, getCursor(), true);
                     return nc;
                 }
+                RecipeMarkerUtil.logFinding(nc, taskMessage, RECIPE_NAME, getCursor(), false);
                 return SearchResult.found(nc, taskMessage);
             }
 

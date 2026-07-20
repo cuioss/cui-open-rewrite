@@ -15,6 +15,9 @@
  */
 package de.cuioss.rewrite.logging;
 
+import de.cuioss.test.juli.LogAsserts;
+import de.cuioss.test.juli.TestLogLevel;
+import de.cuioss.test.juli.junit5.EnableTestLogger;
 import org.junit.jupiter.api.Test;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.test.RecipeSpec;
@@ -23,6 +26,7 @@ import org.openrewrite.test.RewriteTest;
 import static org.openrewrite.java.Assertions.java;
 
 // cui-rewrite:disable InvalidExceptionUsageRecipe
+@EnableTestLogger
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class InvalidExceptionUsageRecipeTest implements RewriteTest {
 
@@ -1168,6 +1172,134 @@ class InvalidExceptionUsageRecipeTest implements RewriteTest {
                 """
             )
         );
+    }
+
+    // --- WARN build-log visibility (issue #116) ---
+
+    @Test
+    void shouldLogWarnWhenNewlyDetectingCatchAndThrow() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        } catch (Throwable t) {
+                            throw new Throwable("Wrapping", t);
+                        }
+                    }
+
+                    void doSomething() {
+                        // Something
+                    }
+                }
+                """,
+                """
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        }
+                        /*TODO: Catch specific not Throwable. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                        catch (Throwable t) {
+                            /*~~(TODO: Throw specific not Throwable. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/throw new Throwable("Wrapping", t);
+                        }
+                    }
+
+                    void doSomething() {
+                        // Something
+                    }
+                }
+                """
+            )
+        );
+
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Finding detected at");
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN,
+            "by InvalidExceptionUsageRecipe: TODO: Catch specific not Throwable");
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN,
+            "by InvalidExceptionUsageRecipe: TODO: Throw specific not Throwable");
+    }
+
+    @Test
+    void shouldLogWarnWhenNewlyDetectingNewClass() {
+        rewriteRun(
+            java(
+                """
+                class Test {
+                    Exception createException() {
+                        return new RuntimeException("Assignment case");
+                    }
+                }
+                """,
+                """
+                class Test {
+                    Exception createException() {
+                        return /*~~(TODO: Use specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/new RuntimeException("Assignment case");
+                    }
+                }
+                """
+            )
+        );
+
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Finding detected at");
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN,
+            "by InvalidExceptionUsageRecipe: TODO: Use specific not RuntimeException");
+    }
+
+    @Test
+    void shouldLogWarnForPreExistingCatchMarkerWithoutDiff() {
+        rewriteRun(
+            spec -> spec.expectedCyclesThatMakeChanges(0).cycles(1),
+            java(
+                """
+                class Test {
+                    void test() {
+                        try {
+                            doSomething();
+                        }
+                        /*TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                        catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    void doSomething() throws Exception {
+                        // Something
+                    }
+                }
+                """
+            )
+        );
+
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN,
+            "Finding pre-existing at");
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN,
+            "by InvalidExceptionUsageRecipe: TODO: Catch specific not Exception");
+        LogAsserts.assertNoLogMessagePresent(TestLogLevel.WARN, "Finding detected");
+    }
+
+    @Test
+    void shouldLogWarnForPreExistingThrowMarkerWithoutDiff() {
+        rewriteRun(
+            spec -> spec.expectedCyclesThatMakeChanges(0).cycles(1),
+            java(
+                """
+                class Test {
+                    void test() throws Exception {
+                        /*~~(TODO: Throw specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe)~~>*/throw new Exception("test");
+                    }
+                }
+                """
+            )
+        );
+
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN,
+            "Finding pre-existing at");
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN,
+            "by InvalidExceptionUsageRecipe: TODO: Throw specific not Exception");
+        LogAsserts.assertNoLogMessagePresent(TestLogLevel.WARN, "Finding detected");
     }
 
 }
