@@ -147,7 +147,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                     if (!usesLogRecord) {
                         String message = "TODO: " + level + " needs LogRecord" + SUPPRESSION_HINT;
                         RecipeMarkerUtil.logFinding(mi, message, RECIPE_NAME, getCursor(),
-                            RecipeMarkerUtil.hasSearchResultMarker(mi));
+                            RecipeMarkerUtil.hasSearchResultMarker(mi, message));
                         return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(mi.getId(), message)));
                     }
                     break;
@@ -156,7 +156,7 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                     if (usesLogRecord) {
                         String message = "TODO: " + level + " no LogRecord" + SUPPRESSION_HINT;
                         RecipeMarkerUtil.logFinding(mi, message, RECIPE_NAME, getCursor(),
-                            RecipeMarkerUtil.hasSearchResultMarker(mi));
+                            RecipeMarkerUtil.hasSearchResultMarker(mi, message));
                         return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(mi.getId(), message)));
                     }
                     break;

@@ -87,6 +87,82 @@ class RecipeMarkerUtilTest {
     }
 
     @Test
+    void shouldScopeSearchResultMarkerToOwningRecipe() {
+        // Arrange: an element carrying a marker whose description belongs to recipe A only.
+        String source = """
+            public class Test {
+                void method() {
+                    System.out.println("test");
+                }
+            }
+            """;
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+        String recipeAMessage = "TODO: RecipeA finding. Suppress: // cui-rewrite:disable RecipeA";
+        String recipeBMessage = "TODO: RecipeB finding. Suppress: // cui-rewrite:disable RecipeB";
+
+        AtomicBoolean matchesRecipeA = new AtomicBoolean(false);
+        AtomicBoolean matchesRecipeB = new AtomicBoolean(true);
+
+        // Act: scope the check to each recipe's own message.
+        new JavaIsoVisitor<ExecutionContext>() {
+            @Override
+            public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
+                if ("println".equals(method.getSimpleName())) {
+                    J.MethodInvocation withMarker = method.withMarkers(
+                        method.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), recipeAMessage))
+                    );
+                    matchesRecipeA.set(RecipeMarkerUtil.hasSearchResultMarker(withMarker, recipeAMessage));
+                    matchesRecipeB.set(RecipeMarkerUtil.hasSearchResultMarker(withMarker, recipeBMessage));
+                }
+                return super.visitMethodInvocation(method, ctx);
+            }
+        }.visit(cu, null);
+
+        // Assert: recipe A's marker is its own pre-existing finding; recipe B must not see it.
+        assertTrue(matchesRecipeA.get());
+        assertFalse(matchesRecipeB.get());
+    }
+
+    @Test
+    void shouldMatchSearchResultMarkerBySubstring() {
+        // Arrange: a full task message embedding the recipe name; a scoped check by recipe name
+        // (a substring of the description) must still match its own marker.
+        String source = """
+            public class Test {
+                void method() {
+                    System.out.println("test");
+                }
+            }
+            """;
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+        String recipeName = "CuiLoggerStandardsRecipe";
+        String fullMessage = "TODO: Use CuiLogger. Suppress: // cui-rewrite:disable " + recipeName;
+
+        AtomicBoolean matchesByRecipeName = new AtomicBoolean(false);
+        AtomicBoolean matchesForeignRecipeName = new AtomicBoolean(true);
+
+        // Act
+        new JavaIsoVisitor<ExecutionContext>() {
+            @Override
+            public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
+                if ("println".equals(method.getSimpleName())) {
+                    J.MethodInvocation withMarker = method.withMarkers(
+                        method.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), fullMessage))
+                    );
+                    matchesByRecipeName.set(RecipeMarkerUtil.hasSearchResultMarker(withMarker, recipeName));
+                    matchesForeignRecipeName.set(
+                        RecipeMarkerUtil.hasSearchResultMarker(withMarker, "InvalidExceptionUsageRecipe"));
+                }
+                return super.visitMethodInvocation(method, ctx);
+            }
+        }.visit(cu, null);
+
+        // Assert
+        assertTrue(matchesByRecipeName.get());
+        assertFalse(matchesForeignRecipeName.get());
+    }
+
+    @Test
     void shouldDetectTaskCommentInMethodInvocation() {
         String source = """
             public class Test {

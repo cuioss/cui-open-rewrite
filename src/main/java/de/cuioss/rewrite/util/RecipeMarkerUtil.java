@@ -180,6 +180,25 @@ public final class RecipeMarkerUtil {
     }
 
     /**
+     * Checks if a J element has a SearchResult marker whose description matches the given
+     * message or recipe name. Scoping the check to a specific message/recipe name prevents
+     * cross-recipe interference: a marker added by a different recipe no longer counts as this
+     * recipe's own pre-existing finding.
+     *
+     * @param element the Java element to check
+     * @param messageOrRecipeName the marker message or recipe name to match against the
+     *                            SearchResult description (exact match or substring)
+     * @return true if a SearchResult marker with a matching description is present
+     */
+    public static boolean hasSearchResultMarker(J element, String messageOrRecipeName) {
+        return element.getMarkers().findFirst(SearchResult.class)
+            .map(SearchResult::getDescription)
+            .filter(desc -> desc != null
+                && (desc.equals(messageOrRecipeName) || desc.contains(messageOrRecipeName)))
+            .isPresent();
+    }
+
+    /**
      * Checks if a Space contains a multiline comment with the given message.
      * This prevents duplicate markers when recipes run multiple times.
      *

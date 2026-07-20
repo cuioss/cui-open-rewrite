@@ -144,7 +144,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                 String taskMessage = createTaskMessage("Catch", simpleType);
 
                 // Check if this comment already exists (from a previous run)
-                if (RecipeMarkerUtil.hasTaskComment(c, taskMessage, getCursor()) || RecipeMarkerUtil.hasSearchResultMarker(c)) {
+                if (RecipeMarkerUtil.hasTaskComment(c, taskMessage, getCursor()) || RecipeMarkerUtil.hasSearchResultMarker(c, taskMessage)) {
                     RecipeMarkerUtil.logFinding(c, taskMessage, RECIPE_NAME, getCursor(), true);
                     return c;
                 }
@@ -217,7 +217,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                     String taskMessage = createTaskMessage("Throw", simpleType);
 
                     // Check if this comment already exists (from a previous run)
-                    if (RecipeMarkerUtil.hasTaskComment(t, taskMessage, getCursor()) || RecipeMarkerUtil.hasSearchResultMarker(t)) {
+                    if (RecipeMarkerUtil.hasTaskComment(t, taskMessage, getCursor()) || RecipeMarkerUtil.hasSearchResultMarker(t, taskMessage)) {
                         RecipeMarkerUtil.logFinding(t, taskMessage, RECIPE_NAME, getCursor(), true);
                         return t;
                     }
@@ -254,7 +254,7 @@ public class InvalidExceptionUsageRecipe extends Recipe {
                 String taskMessage = createTaskMessage("Use", simpleType);
 
                 // Check if this comment already exists (from a previous run)
-                if (RecipeMarkerUtil.hasTaskComment(nc, taskMessage, getCursor()) || RecipeMarkerUtil.hasSearchResultMarker(nc)) {
+                if (RecipeMarkerUtil.hasTaskComment(nc, taskMessage, getCursor()) || RecipeMarkerUtil.hasSearchResultMarker(nc, taskMessage)) {
                     RecipeMarkerUtil.logFinding(nc, taskMessage, RECIPE_NAME, getCursor(), true);
                     return nc;
                 }
