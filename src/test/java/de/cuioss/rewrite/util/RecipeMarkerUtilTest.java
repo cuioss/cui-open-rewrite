@@ -15,6 +15,9 @@
  */
 package de.cuioss.rewrite.util;
 
+import de.cuioss.test.juli.LogAsserts;
+import de.cuioss.test.juli.TestLogLevel;
+import de.cuioss.test.juli.junit5.EnableTestLogger;
 import org.junit.jupiter.api.Test;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.java.JavaIsoVisitor;
@@ -29,7 +32,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@EnableTestLogger
 class RecipeMarkerUtilTest {
+
+    /**
+     * Source whose {@code throw} statement starts at line 3, column 9 (8 spaces of indentation
+     * precede the {@code throw} keyword). Explicit {@code \n} and spaces are used instead of a text
+     * block so the derived line/column is unambiguous.
+     */
+    private static final String THROW_SOURCE =
+        "class A {\n    void m() {\n        throw new RuntimeException();\n    }\n}\n";
 
     private final JavaParser parser = JavaParser.fromJavaVersion().build();
 
@@ -324,5 +336,41 @@ class RecipeMarkerUtilTest {
         }.visit(cu, null);
 
         assertTrue(found.get());
+    }
+
+    @Test
+    void shouldLogNewlyDetectedFindingWithPositionAndContent() {
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(THROW_SOURCE).findFirst().orElseThrow();
+        String taskMessage = "TODO: Throw specific not RuntimeException";
+
+        new JavaIsoVisitor<ExecutionContext>() {
+            @Override
+            public J.Throw visitThrow(J.Throw thrown, ExecutionContext ctx) {
+                RecipeMarkerUtil.logFinding(thrown, taskMessage, "TestRecipe", getCursor(), false);
+                return super.visitThrow(thrown, ctx);
+            }
+        }.visit(cu, null);
+
+        String expected = "Finding detected at " + cu.getSourcePath() + ":3:9 by TestRecipe: " + taskMessage;
+        LogAsserts.assertSingleLogMessagePresentContaining(TestLogLevel.WARN, expected);
+        LogAsserts.assertNoLogMessagePresent(TestLogLevel.WARN, "Finding pre-existing");
+    }
+
+    @Test
+    void shouldLogPreExistingFindingWithDistinguishableWording() {
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(THROW_SOURCE).findFirst().orElseThrow();
+        String taskMessage = "TODO: Throw specific not RuntimeException";
+
+        new JavaIsoVisitor<ExecutionContext>() {
+            @Override
+            public J.Throw visitThrow(J.Throw thrown, ExecutionContext ctx) {
+                RecipeMarkerUtil.logFinding(thrown, taskMessage, "TestRecipe", getCursor(), true);
+                return super.visitThrow(thrown, ctx);
+            }
+        }.visit(cu, null);
+
+        String expected = "Finding pre-existing at " + cu.getSourcePath() + ":3:9 by TestRecipe: " + taskMessage;
+        LogAsserts.assertSingleLogMessagePresentContaining(TestLogLevel.WARN, expected);
+        LogAsserts.assertNoLogMessagePresent(TestLogLevel.WARN, "Finding detected");
     }
 }

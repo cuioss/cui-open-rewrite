@@ -1,0 +1,24 @@
+= Log Messages for cui-open-rewrite
+:toc: left
+:toclevels: 2
+
+== Overview
+
+All messages follow the format: [Module-Prefix]-[identifier]: [message]
+
+This document catalogs all production log messages for the cui-open-rewrite module.
+Each message includes an identifier, component, message template, and description.
+
+The WARN-level records below are emitted by `de.cuioss.rewrite.util.RecipeMarkerUtil.logFinding`
+so every marker-producing recipe reports each finding in the build log — including findings whose
+marker was already present in the source and therefore produce no diff. Newly-detected and
+pre-existing findings use distinguishable wording so they stay independently greppable.
+
+== WARN Level (100-199)
+
+[cols="1,1,2,2", options="header"]
+|===
+|ID |Component |Message |Description
+|CUI_REWRITE-100 |CUI_REWRITE |Finding detected at %s:%s:%s by %s: %s |Logged when a recipe newly detects a finding on the current run. Parameters: source file path, line, column, recipe name, task/marker message
+|CUI_REWRITE-101 |CUI_REWRITE |Finding pre-existing at %s:%s:%s by %s: %s |Logged when a recipe re-encounters a finding whose marker was already present in the source (no diff produced). Parameters: source file path, line, column, recipe name, task/marker message
+|===

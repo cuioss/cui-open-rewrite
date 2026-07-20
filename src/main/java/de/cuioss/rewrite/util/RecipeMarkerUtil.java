@@ -15,7 +15,13 @@
  */
 package de.cuioss.rewrite.util;
 
+import de.cuioss.rewrite.util.RecipeLogMessages.WARN;
+import de.cuioss.tools.logging.CuiLogger;
+import org.jspecify.annotations.Nullable;
 import org.openrewrite.Cursor;
+import org.openrewrite.PrintOutputCapture;
+import org.openrewrite.Tree;
+import org.openrewrite.java.JavaPrinter;
 import org.openrewrite.java.tree.Comment;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Space;
@@ -23,6 +29,7 @@ import org.openrewrite.java.tree.TextComment;
 import org.openrewrite.marker.Markers;
 import org.openrewrite.marker.SearchResult;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,8 +39,93 @@ import java.util.List;
  */
 public final class RecipeMarkerUtil {
 
+    private static final CuiLogger LOGGER = new CuiLogger(RecipeMarkerUtil.class);
+
     private RecipeMarkerUtil() {
         // Utility class
+    }
+
+    /**
+     * Emits a single WARN-level build-log line for a recipe finding, making the finding visible
+     * even when its marker was already present in the source (and therefore produces no diff).
+     *
+     * <p>The source file path is resolved from the enclosing
+     * {@link org.openrewrite.java.tree.J.CompilationUnit} and the marked element's (line, column)
+     * is derived from its start offset within the printed compilation-unit source (offset counted
+     * up to the first non-prefix character of the element, converted to line/column by counting
+     * newlines). The {@code preExisting} flag selects wording that distinguishes a newly-detected
+     * finding from an already-present one so the two remain independently greppable.</p>
+     *
+     * @param element     the marked Java element (its position drives the reported line/column)
+     * @param taskMessage the advisory task/marker message describing the finding
+     * @param recipeName  the name of the recipe that produced the finding
+     * @param cursor      the current cursor, used to resolve the enclosing compilation unit
+     * @param preExisting {@code true} when the marker was already present (no diff),
+     *                    {@code false} when the finding is newly detected on this run
+     */
+    public static void logFinding(J element, String taskMessage, String recipeName, Cursor cursor, boolean preExisting) {
+        J.CompilationUnit compilationUnit = cursor.firstEnclosingOrThrow(J.CompilationUnit.class);
+        Path sourcePath = compilationUnit.getSourcePath();
+        int[] lineColumn = lineAndColumn(compilationUnit, element);
+        int line = lineColumn[0];
+        int column = lineColumn[1];
+        if (preExisting) {
+            LOGGER.warn(WARN.FINDING_PRE_EXISTING, sourcePath, line, column, recipeName, taskMessage);
+        } else {
+            LOGGER.warn(WARN.FINDING_DETECTED, sourcePath, line, column, recipeName, taskMessage);
+        }
+    }
+
+    /**
+     * Derives the 1-based {@code (line, column)} of the given element within the printed source of
+     * the compilation unit. The element's start offset is the position of its first non-prefix
+     * character: the compilation unit is printed with a {@link JavaPrinter} that records the output
+     * length immediately after the element's leading {@link Space} (its prefix) has been printed.
+     *
+     * @param compilationUnit the enclosing compilation unit whose printed source is measured
+     * @param element         the element to locate (matched by identity within the unit)
+     * @return a two-element array {@code [line, column]}, both 1-based; {@code [1, 1]} when the
+     *         element cannot be located within the printed source
+     */
+    private static int[] lineAndColumn(J.CompilationUnit compilationUnit, J element) {
+        int[] capturedOffset = {-1};
+        PrintOutputCapture<Integer> capture = new PrintOutputCapture<>(0);
+        JavaPrinter<Integer> printer = new JavaPrinter<>() {
+
+            private boolean armed;
+
+            @Override
+            public @Nullable J visit(@Nullable Tree tree, PrintOutputCapture<Integer> p) {
+                if (tree == element) {
+                    armed = true;
+                }
+                return super.visit(tree, p);
+            }
+
+            @Override
+            public Space visitSpace(Space space, Space.Location loc, PrintOutputCapture<Integer> p) {
+                Space result = super.visitSpace(space, loc, p);
+                if (armed && capturedOffset[0] < 0) {
+                    capturedOffset[0] = p.out.length();
+                    armed = false;
+                }
+                return result;
+            }
+        };
+        printer.visit(compilationUnit, capture);
+        String source = capture.getOut();
+        int offset = capturedOffset[0] < 0 ? 0 : capturedOffset[0];
+        int line = 1;
+        int column = 1;
+        for (int i = 0; i < offset && i < source.length(); i++) {
+            if (source.charAt(i) == '\n') {
+                line++;
+                column = 1;
+            } else {
+                column++;
+            }
+        }
+        return new int[]{line, column};
     }
 
     /**
