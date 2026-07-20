@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 CUI-OpenSource-Software (info@cuioss.de)
+ * Copyright © 2022 CUI-OpenSource-Software (info@cuioss.de)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,13 +50,13 @@ class AnnotationNewlineFormatNormalizeConflictTest implements RewriteTest {
             .parser(JavaParser.fromJavaVersion()
                 .dependsOn(
                     """
-                    package org.junit.jupiter.api;
-                    public @interface Test {}
-                    """,
+                        package org.junit.jupiter.api;
+                        public @interface Test {}
+                        """,
                     """
-                    package org.junit.jupiter.api;
-                    public @interface BeforeEach {}
-                    """
+                        package org.junit.jupiter.api;
+                        public @interface BeforeEach {}
+                        """
                 ));
     }
 
@@ -70,24 +70,24 @@ class AnnotationNewlineFormatNormalizeConflictTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                import org.junit.jupiter.api.Test;
-
-                class TestClass {
-                    @Test void method() {
-                        // test
+                    import org.junit.jupiter.api.Test;
+                    
+                    class TestClass {
+                        @Test void method() {
+                            // test
+                        }
                     }
-                }
-                """,
+                    """,
                 """
-                import org.junit.jupiter.api.Test;
-
-                class TestClass {
-                    @Test
-                    void method() {
-                        // test
+                    import org.junit.jupiter.api.Test;
+                    
+                    class TestClass {
+                        @Test
+                        void method() {
+                            // test
+                        }
                     }
-                }
-                """
+                    """
             )
         );
     }
@@ -101,16 +101,16 @@ class AnnotationNewlineFormatNormalizeConflictTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                class TestClass {
-                    @Deprecated String field;
-                }
-                """,
+                    class TestClass {
+                        @Deprecated String field;
+                    }
+                    """,
                 """
-                class TestClass {
-                    @Deprecated
-                    String field;
-                }
-                """
+                    class TestClass {
+                        @Deprecated
+                        String field;
+                    }
+                    """
             )
         );
     }
@@ -123,38 +123,38 @@ class AnnotationNewlineFormatNormalizeConflictTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                import org.junit.jupiter.api.Test;
-                import org.junit.jupiter.api.BeforeEach;
-
-                class TestClass {
-                    @BeforeEach void setUp() {
+                    import org.junit.jupiter.api.Test;
+                    import org.junit.jupiter.api.BeforeEach;
+                    
+                    class TestClass {
+                        @BeforeEach void setUp() {
+                        }
+                    
+                        @Test void testOne() {
+                        }
+                    
+                        @Test void testTwo() {
+                        }
                     }
-
-                    @Test void testOne() {
-                    }
-
-                    @Test void testTwo() {
-                    }
-                }
-                """,
+                    """,
                 """
-                import org.junit.jupiter.api.Test;
-                import org.junit.jupiter.api.BeforeEach;
-
-                class TestClass {
-                    @BeforeEach
-                    void setUp() {
+                    import org.junit.jupiter.api.Test;
+                    import org.junit.jupiter.api.BeforeEach;
+                    
+                    class TestClass {
+                        @BeforeEach
+                        void setUp() {
+                        }
+                    
+                        @Test
+                        void testOne() {
+                        }
+                    
+                        @Test
+                        void testTwo() {
+                        }
                     }
-
-                    @Test
-                    void testOne() {
-                    }
-
-                    @Test
-                    void testTwo() {
-                    }
-                }
-                """
+                    """
             )
         );
     }
@@ -167,20 +167,20 @@ class AnnotationNewlineFormatNormalizeConflictTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                class TestClass {
-                    @Override String toString() {
-                        return "test";
+                    class TestClass {
+                        @Override String toString() {
+                            return "test";
+                        }
                     }
-                }
-                """,
+                    """,
                 """
-                class TestClass {
-                    @Override
-                    String toString() {
-                        return "test";
+                    class TestClass {
+                        @Override
+                        String toString() {
+                            return "test";
+                        }
                     }
-                }
-                """
+                    """
             )
         );
     }

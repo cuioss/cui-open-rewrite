@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 CUI-OpenSource-Software (info@cuioss.de)
+ * Copyright © 2022 CUI-OpenSource-Software (info@cuioss.de)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,13 +39,13 @@ class BaseSuppressionVisitorTest implements RewriteTest {
             spec -> spec.recipe(new TestRecipe()),
             java(
                 """
-                // cui-rewrite:disable TestRecipe
-                public class Example {
-                    public void method() {
-                        System.out.println("This should not be marked");
+                    // cui-rewrite:disable TestRecipe
+                    public class Example {
+                        public void method() {
+                            System.out.println("This should not be marked");
+                        }
                     }
-                }
-                """
+                    """
             )
         );
     }
@@ -56,29 +56,29 @@ class BaseSuppressionVisitorTest implements RewriteTest {
             spec -> spec.recipe(new TestRecipe()),
             java(
                 """
-                public class Example {
-                    // cui-rewrite:disable TestRecipe
-                    public void suppressedMethod() {
-                        System.out.println("This should not be marked");
+                    public class Example {
+                        // cui-rewrite:disable TestRecipe
+                        public void suppressedMethod() {
+                            System.out.println("This should not be marked");
+                        }
+                    
+                        public void normalMethod() {
+                            System.out.println("This should be marked");
+                        }
                     }
-
-                    public void normalMethod() {
-                        System.out.println("This should be marked");
-                    }
-                }
-                """,
+                    """,
                 """
-                public class Example {
-                    // cui-rewrite:disable TestRecipe
-                    public void suppressedMethod() {
-                        System.out.println("This should not be marked");
+                    public class Example {
+                        // cui-rewrite:disable TestRecipe
+                        public void suppressedMethod() {
+                            System.out.println("This should not be marked");
+                        }
+                    
+                        public void normalMethod() {
+                            /*~~(TEST: Found println)~~>*/System.out.println("This should be marked");
+                        }
                     }
-
-                    public void normalMethod() {
-                        /*~~(TEST: Found println)~~>*/System.out.println("This should be marked");
-                    }
-                }
-                """
+                    """
             )
         );
     }
@@ -89,23 +89,23 @@ class BaseSuppressionVisitorTest implements RewriteTest {
             spec -> spec.recipe(new TestRecipe()),
             java(
                 """
-                public class Example {
-                    public void method() {
-                        // cui-rewrite:disable TestRecipe
-                        System.out.println("This should not be marked");
-                        System.out.println("This should be marked");
+                    public class Example {
+                        public void method() {
+                            // cui-rewrite:disable TestRecipe
+                            System.out.println("This should not be marked");
+                            System.out.println("This should be marked");
+                        }
                     }
-                }
-                """,
+                    """,
                 """
-                public class Example {
-                    public void method() {
-                        // cui-rewrite:disable TestRecipe
-                        System.out.println("This should not be marked");
-                        /*~~(TEST: Found println)~~>*/System.out.println("This should be marked");
+                    public class Example {
+                        public void method() {
+                            // cui-rewrite:disable TestRecipe
+                            System.out.println("This should not be marked");
+                            /*~~(TEST: Found println)~~>*/System.out.println("This should be marked");
+                        }
                     }
-                }
-                """
+                    """
             )
         );
     }

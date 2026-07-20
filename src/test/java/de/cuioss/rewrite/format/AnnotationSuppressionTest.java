@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 CUI-OpenSource-Software (info@cuioss.de)
+ * Copyright © 2022 CUI-OpenSource-Software (info@cuioss.de)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,11 +36,11 @@ class AnnotationSuppressionTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                // cui-rewrite:disable
-                @Deprecated @SuppressWarnings("all") public class TestClass {
-                    public static final String VALUE = "test";
-                }
-                """
+                    // cui-rewrite:disable
+                    @Deprecated @SuppressWarnings("all") public class TestClass {
+                        public static final String VALUE = "test";
+                    }
+                    """
             )
         );
     }
@@ -50,13 +50,13 @@ class AnnotationSuppressionTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                public class TestClass {
-                    // cui-rewrite:disable
-                    @Override @Deprecated public String toString() {
-                        return "test";
+                    public class TestClass {
+                        // cui-rewrite:disable
+                        @Override @Deprecated public String toString() {
+                            return "test";
+                        }
                     }
-                }
-                """
+                    """
             )
         );
     }
@@ -66,11 +66,11 @@ class AnnotationSuppressionTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                public class TestClass {
-                    // cui-rewrite:disable
-                    @Deprecated @SuppressWarnings("unused") private String field;
-                }
-                """
+                    public class TestClass {
+                        // cui-rewrite:disable
+                        @Deprecated @SuppressWarnings("unused") private String field;
+                    }
+                    """
             )
         );
     }
@@ -80,13 +80,13 @@ class AnnotationSuppressionTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                // cui-rewrite:disable
-                @Deprecated @SuppressWarnings("all") public class TestClass {
-                    @Override @Deprecated public String toString() {
-                        return "test";
+                    // cui-rewrite:disable
+                    @Deprecated @SuppressWarnings("all") public class TestClass {
+                        @Override @Deprecated public String toString() {
+                            return "test";
+                        }
                     }
-                }
-                """
+                    """
             )
         );
     }
@@ -96,11 +96,11 @@ class AnnotationSuppressionTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                // cui-rewrite:disable AnnotationNewlineFormat
-                @Deprecated @SuppressWarnings("all") public class TestClass {
-                    public static final String VALUE = "test";
-                }
-                """
+                    // cui-rewrite:disable AnnotationNewlineFormat
+                    @Deprecated @SuppressWarnings("all") public class TestClass {
+                        public static final String VALUE = "test";
+                    }
+                    """
             )
         );
     }
@@ -110,11 +110,11 @@ class AnnotationSuppressionTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                // cui-rewrite:disable de.cuioss.rewrite.format.AnnotationNewlineFormat
-                @Deprecated @SuppressWarnings("all") public class TestClass {
-                    public static final String VALUE = "test";
-                }
-                """
+                    // cui-rewrite:disable de.cuioss.rewrite.format.AnnotationNewlineFormat
+                    @Deprecated @SuppressWarnings("all") public class TestClass {
+                        public static final String VALUE = "test";
+                    }
+                    """
             )
         );
     }
@@ -129,17 +129,17 @@ class AnnotationSuppressionTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                @Deprecated @SuppressWarnings("all") public class TestClass { // cui-rewrite:disable
-                    public static final String VALUE = "test";
-                }
-                """,
+                    @Deprecated @SuppressWarnings("all") public class TestClass { // cui-rewrite:disable
+                        public static final String VALUE = "test";
+                    }
+                    """,
                 """
-                @Deprecated
-                @SuppressWarnings("all")
-                public class TestClass { // cui-rewrite:disable
-                    public static final String VALUE = "test";
-                }
-                """
+                    @Deprecated
+                    @SuppressWarnings("all")
+                    public class TestClass { // cui-rewrite:disable
+                        public static final String VALUE = "test";
+                    }
+                    """
             )
         );
     }
@@ -149,19 +149,19 @@ class AnnotationSuppressionTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                // cui-rewrite:disable SomeOtherRecipe
-                @Deprecated @SuppressWarnings("all") public class TestClass {
-                    public static final String VALUE = "test";
-                }
-                """,
+                    // cui-rewrite:disable SomeOtherRecipe
+                    @Deprecated @SuppressWarnings("all") public class TestClass {
+                        public static final String VALUE = "test";
+                    }
+                    """,
                 """
-                // cui-rewrite:disable SomeOtherRecipe
-                @Deprecated
-                @SuppressWarnings("all")
-                public class TestClass {
-                    public static final String VALUE = "test";
-                }
-                """
+                    // cui-rewrite:disable SomeOtherRecipe
+                    @Deprecated
+                    @SuppressWarnings("all")
+                    public class TestClass {
+                        public static final String VALUE = "test";
+                    }
+                    """
             )
         );
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 CUI-OpenSource-Software (info@cuioss.de)
+ * Copyright © 2022 CUI-OpenSource-Software (info@cuioss.de)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,20 +36,20 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
             spec -> spec.expectedCyclesThatMakeChanges(0),
             java(
                 """
-                class Test {
-                    void method() {
-                        try {
-                            doSomething();
-                        // cui-rewrite:disable InvalidExceptionUsageRecipe
-                        } catch (RuntimeException e) {
-                            handleException(e);
+                    class Test {
+                        void method() {
+                            try {
+                                doSomething();
+                            // cui-rewrite:disable InvalidExceptionUsageRecipe
+                            } catch (RuntimeException e) {
+                                handleException(e);
+                            }
                         }
+                    
+                        void doSomething() {}
+                        void handleException(Exception e) {}
                     }
-
-                    void doSomething() {}
-                    void handleException(Exception e) {}
-                }
-                """
+                    """
             )
         );
     }
@@ -59,20 +59,20 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                class Test {
-                    void method() {
-                        try {
-                            doSomething();
-                            // cui-rewrite:disable InvalidExceptionUsageRecipe
-                        } catch (RuntimeException e) {
-                            handleException(e);
+                    class Test {
+                        void method() {
+                            try {
+                                doSomething();
+                                // cui-rewrite:disable InvalidExceptionUsageRecipe
+                            } catch (RuntimeException e) {
+                                handleException(e);
+                            }
                         }
+                    
+                        void doSomething() {}
+                        void handleException(Exception e) {}
                     }
-
-                    void doSomething() {}
-                    void handleException(Exception e) {}
-                }
-                """
+                    """
             )
         );
     }
@@ -82,35 +82,35 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                class Test {
-                    void method() {
-                        try {
-                            doSomething();
-                        } catch (RuntimeException e) {
-                            handleException(e);
+                    class Test {
+                        void method() {
+                            try {
+                                doSomething();
+                            } catch (RuntimeException e) {
+                                handleException(e);
+                            }
                         }
+                    
+                        void doSomething() {}
+                        void handleException(Exception e) {}
                     }
-
-                    void doSomething() {}
-                    void handleException(Exception e) {}
-                }
-                """,
+                    """,
                 """
-                class Test {
-                    void method() {
-                        try {
-                            doSomething();
+                    class Test {
+                        void method() {
+                            try {
+                                doSomething();
+                            }
+                            /*TODO: Catch specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                            catch (RuntimeException e) {
+                                handleException(e);
+                            }
                         }
-                        /*TODO: Catch specific not RuntimeException. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
-                        catch (RuntimeException e) {
-                            handleException(e);
-                        }
+                    
+                        void doSomething() {}
+                        void handleException(Exception e) {}
                     }
-
-                    void doSomething() {}
-                    void handleException(Exception e) {}
-                }
-                """
+                    """
             )
         );
     }
@@ -120,24 +120,24 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                import java.util.logging.Level;
-
-                class MoreStrings {
-                    private static final java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger("Test");
-
-                    static String lenientToString(Object o) {
-                        try {
-                            return String.valueOf(o);
-                            // cui-rewrite:disable InvalidExceptionUsageRecipe
-                        } catch (RuntimeException e) {
-                            final var objectToString = o == null ? "null" :
-                                    o.getClass().getName() + '@' + Integer.toHexString(System.identityHashCode(o));
-                            LOGGER.log(Level.WARNING, e, () -> "Exception during lenientFormat for " + objectToString);
-                            return "<" + objectToString + " threw " + e.getClass().getName() + ">";
+                    import java.util.logging.Level;
+                    
+                    class MoreStrings {
+                        private static final java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger("Test");
+                    
+                        static String lenientToString(Object o) {
+                            try {
+                                return String.valueOf(o);
+                                // cui-rewrite:disable InvalidExceptionUsageRecipe
+                            } catch (RuntimeException e) {
+                                final var objectToString = o == null ? "null" :
+                                        o.getClass().getName() + '@' + Integer.toHexString(System.identityHashCode(o));
+                                LOGGER.log(Level.WARNING, e, () -> "Exception during lenientFormat for " + objectToString);
+                                return "<" + objectToString + " threw " + e.getClass().getName() + ">";
+                            }
                         }
                     }
-                }
-                """
+                    """
             )
         );
     }
@@ -147,20 +147,20 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                class Test {
-                    void method() {
-                        try {
-                            doSomething();
-                            // cui-rewrite:disable
-                        } catch (Exception e) {
-                            handleException(e);
+                    class Test {
+                        void method() {
+                            try {
+                                doSomething();
+                                // cui-rewrite:disable
+                            } catch (Exception e) {
+                                handleException(e);
+                            }
                         }
+                    
+                        void doSomething() {}
+                        void handleException(Exception e) {}
                     }
-
-                    void doSomething() {}
-                    void handleException(Exception e) {}
-                }
-                """
+                    """
             )
         );
     }
@@ -170,19 +170,19 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                class Test {
-                    void method() {
-                        try {
-                            // Empty try block
-                            // cui-rewrite:disable InvalidExceptionUsageRecipe
-                        } catch (Exception e) {
-                            handleException(e);
+                    class Test {
+                        void method() {
+                            try {
+                                // Empty try block
+                                // cui-rewrite:disable InvalidExceptionUsageRecipe
+                            } catch (Exception e) {
+                                handleException(e);
+                            }
                         }
+                    
+                        void handleException(Exception e) {}
                     }
-
-                    void handleException(Exception e) {}
-                }
-                """
+                    """
             )
         );
     }
@@ -192,19 +192,19 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                class Test {
-                    void method() {
-                        try {
-                            // Just comments
-                            // cui-rewrite:disable
-                        } catch (RuntimeException e) {
-                            handleException(e);
+                    class Test {
+                        void method() {
+                            try {
+                                // Just comments
+                                // cui-rewrite:disable
+                            } catch (RuntimeException e) {
+                                handleException(e);
+                            }
                         }
+                    
+                        void handleException(Exception e) {}
                     }
-
-                    void handleException(Exception e) {}
-                }
-                """
+                    """
             )
         );
     }
@@ -214,37 +214,37 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                class Test {
-                    void method() {
-                        try {
-                            doSomething();
-                            // cui-rewrite:disable SomeOtherRecipe
-                        } catch (Exception e) {
-                            handleException(e);
+                    class Test {
+                        void method() {
+                            try {
+                                doSomething();
+                                // cui-rewrite:disable SomeOtherRecipe
+                            } catch (Exception e) {
+                                handleException(e);
+                            }
                         }
+                    
+                        void doSomething() {}
+                        void handleException(Exception e) {}
                     }
-
-                    void doSomething() {}
-                    void handleException(Exception e) {}
-                }
-                """,
+                    """,
                 """
-                class Test {
-                    void method() {
-                        try {
-                            doSomething();
-                            // cui-rewrite:disable SomeOtherRecipe
+                    class Test {
+                        void method() {
+                            try {
+                                doSomething();
+                                // cui-rewrite:disable SomeOtherRecipe
+                            }
+                            /*TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
+                            catch (Exception e) {
+                                handleException(e);
+                            }
                         }
-                        /*TODO: Catch specific not Exception. Suppress: // cui-rewrite:disable InvalidExceptionUsageRecipe*/
-                        catch (Exception e) {
-                            handleException(e);
-                        }
+                    
+                        void doSomething() {}
+                        void handleException(Exception e) {}
                     }
-
-                    void doSomething() {}
-                    void handleException(Exception e) {}
-                }
-                """
+                    """
             )
         );
     }
@@ -254,20 +254,20 @@ class InvalidExceptionUsageRecipeSuppressionTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                class Test {
-                    void method() {
-                        try {
-                            doSomething();
-                        // cui-rewrite:disable InvalidExceptionUsageRecipe
-                        } catch (Exception e) {
-                            handleException(e);
+                    class Test {
+                        void method() {
+                            try {
+                                doSomething();
+                            // cui-rewrite:disable InvalidExceptionUsageRecipe
+                            } catch (Exception e) {
+                                handleException(e);
+                            }
                         }
+                    
+                        void doSomething() {}
+                        void handleException(Exception e) {}
                     }
-
-                    void doSomething() {}
-                    void handleException(Exception e) {}
-                }
-                """
+                    """
             )
         );
     }
