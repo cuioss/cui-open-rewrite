@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 CUI-OpenSource-Software (info@cuioss.de)
+ * Copyright © 2022 CUI-OpenSource-Software (info@cuioss.de)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,20 +46,20 @@ class LombokAnnotationFormatTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                import lombok.experimental.UtilityClass;
-                
-                @UtilityClass public class Constants {
-                    public static final String VALUE = "test";
-                }
-                """,
+                    import lombok.experimental.UtilityClass;
+                    
+                    @UtilityClass public class Constants {
+                        public static final String VALUE = "test";
+                    }
+                    """,
                 """
-                import lombok.experimental.UtilityClass;
-                
-                @UtilityClass
-                public class Constants {
-                    public static final String VALUE = "test";
-                }
-                """
+                    import lombok.experimental.UtilityClass;
+                    
+                    @UtilityClass
+                    public class Constants {
+                        public static final String VALUE = "test";
+                    }
+                    """
             )
         );
     }
@@ -68,89 +68,89 @@ class LombokAnnotationFormatTest implements RewriteTest {
         return Stream.of(
             Arguments.of(
                 """
-                import lombok.Data;
-
-                @Data public class Person {
-                    private String name;
-                    private int age;
-                }
-                """,
-                """
-                import lombok.Data;
-
-                @Data
-                public class Person {
-                    private String name;
-                    private int age;
-                }
-                """
-            ),
-            Arguments.of(
-                """
-                import lombok.Data;
-                import lombok.Builder;
-                import lombok.NoArgsConstructor;
-                import lombok.AllArgsConstructor;
-
-                @Data @Builder @NoArgsConstructor @AllArgsConstructor public class Person {
-                    private String name;
-                    private int age;
-                }
-                """,
-                """
-                import lombok.Data;
-                import lombok.Builder;
-                import lombok.NoArgsConstructor;
-                import lombok.AllArgsConstructor;
-
-                @Data
-                @Builder
-                @NoArgsConstructor
-                @AllArgsConstructor
-                public class Person {
-                    private String name;
-                    private int age;
-                }
-                """
-            ),
-            Arguments.of(
-                """
-                import lombok.extern.slf4j.Slf4j;
-
-                @Slf4j public class LoggingService {
-                    public void doSomething() {
-                        log.info("Doing something");
+                    import lombok.Data;
+                    
+                    @Data public class Person {
+                        private String name;
+                        private int age;
                     }
-                }
-                """,
+                    """,
                 """
-                import lombok.extern.slf4j.Slf4j;
-
-                @Slf4j
-                public class LoggingService {
-                    public void doSomething() {
-                        log.info("Doing something");
+                    import lombok.Data;
+                    
+                    @Data
+                    public class Person {
+                        private String name;
+                        private int age;
                     }
-                }
-                """
+                    """
             ),
             Arguments.of(
                 """
-                import lombok.Data;
-
-                @Data @Deprecated public class OldPerson {
-                    private String name;
-                }
-                """,
+                    import lombok.Data;
+                    import lombok.Builder;
+                    import lombok.NoArgsConstructor;
+                    import lombok.AllArgsConstructor;
+                    
+                    @Data @Builder @NoArgsConstructor @AllArgsConstructor public class Person {
+                        private String name;
+                        private int age;
+                    }
+                    """,
                 """
-                import lombok.Data;
-
-                @Data
-                @Deprecated
-                public class OldPerson {
-                    private String name;
-                }
+                    import lombok.Data;
+                    import lombok.Builder;
+                    import lombok.NoArgsConstructor;
+                    import lombok.AllArgsConstructor;
+                    
+                    @Data
+                    @Builder
+                    @NoArgsConstructor
+                    @AllArgsConstructor
+                    public class Person {
+                        private String name;
+                        private int age;
+                    }
+                    """
+            ),
+            Arguments.of(
                 """
+                    import lombok.extern.slf4j.Slf4j;
+                    
+                    @Slf4j public class LoggingService {
+                        public void doSomething() {
+                            log.info("Doing something");
+                        }
+                    }
+                    """,
+                """
+                    import lombok.extern.slf4j.Slf4j;
+                    
+                    @Slf4j
+                    public class LoggingService {
+                        public void doSomething() {
+                            log.info("Doing something");
+                        }
+                    }
+                    """
+            ),
+            Arguments.of(
+                """
+                    import lombok.Data;
+                    
+                    @Data @Deprecated public class OldPerson {
+                        private String name;
+                    }
+                    """,
+                """
+                    import lombok.Data;
+                    
+                    @Data
+                    @Deprecated
+                    public class OldPerson {
+                        private String name;
+                    }
+                    """
             )
         );
     }
@@ -168,16 +168,16 @@ class LombokAnnotationFormatTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                import lombok.Data;
-                import lombok.Builder;
-                
-                @Data
-                @Builder
-                public class Person {
-                    private String name;
-                    private int age;
-                }
-                """
+                    import lombok.Data;
+                    import lombok.Builder;
+                    
+                    @Data
+                    @Builder
+                    public class Person {
+                        private String name;
+                        private int age;
+                    }
+                    """
             )
         );
     }

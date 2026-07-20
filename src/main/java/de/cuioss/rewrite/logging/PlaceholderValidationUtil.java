@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 CUI-OpenSource-Software (info@cuioss.de)
+ * Copyright © 2022 CUI-OpenSource-Software (info@cuioss.de)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,7 +104,7 @@ public final class PlaceholderValidationUtil {
         StringBuilder result = new StringBuilder();
         while (matcher.find()) {
             String directive = matcher.group();
-            String replacement = ("%%".equals(directive) || CORRECT_PLACEHOLDER.equals(directive))
+            String replacement = "%%".equals(directive) || CORRECT_PLACEHOLDER.equals(directive)
                 ? directive
                 : CORRECT_PLACEHOLDER;
             matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 CUI-OpenSource-Software (info@cuioss.de)
+ * Copyright © 2022 CUI-OpenSource-Software (info@cuioss.de)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -167,6 +167,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
                     // produce a duplicate field. Flag it instead of generating invalid code.
                     String message = RecipeMarkerUtil.createTaskMessage(
                         "Rename logger to LOGGER (name already in use)", RECIPE_NAME);
+                    RecipeMarkerUtil.logFinding(vd, message, RECIPE_NAME, getCursor(),
+                        RecipeMarkerUtil.hasSearchResultMarker(vd, message));
                     return vd.withMarkers(vd.getMarkers().addIfAbsent(new SearchResult(Tree.randomId(), message)));
                 }
                 // Delegate the rename to RenameVariable so that every reference form
@@ -285,7 +287,21 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
             // Check for System.out/err usage
             mi = checkSystemStreams(mi);
-            if (RecipeMarkerUtil.hasSearchResultMarker(mi)) {
+            if (RecipeMarkerUtil.hasSearchResultMarker(mi, RECIPE_NAME)) {
+                // A logger-method finding flagged on a previous run carries its marker into this
+                // one; the logger validation below is short-circuited for already-marked calls, so
+                // report the pre-existing finding here. System.out/err findings were already
+                // reported inside checkSystemStreams, so they are excluded to avoid a double line.
+                // The description is filtered to this recipe's own markers so a foreign marker
+                // (added by another recipe on the same LST) is never logged as our finding.
+                if (!isSystemOutOrErr(mi)) {
+                    J.MethodInvocation marked = mi;
+                    marked.getMarkers().findFirst(SearchResult.class)
+                        .map(SearchResult::getDescription)
+                        .filter(description -> description != null && description.contains(RECIPE_NAME))
+                        .ifPresent(description -> RecipeMarkerUtil.logFinding(
+                            marked, description, RECIPE_NAME, getCursor(), true));
+                }
                 return mi;
             }
 
@@ -300,6 +316,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         private J.MethodInvocation checkSystemStreams(J.MethodInvocation mi) {
             if (isSystemOutOrErr(mi)) {
                 String message = RecipeMarkerUtil.createTaskMessage("Use CuiLogger", RECIPE_NAME);
+                RecipeMarkerUtil.logFinding(mi, message, RECIPE_NAME, getCursor(),
+                    RecipeMarkerUtil.hasSearchResultMarker(mi, message));
                 return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(Tree.randomId(), message)));
             }
             return mi;
@@ -318,7 +336,7 @@ public class CuiLoggerStandardsRecipe extends Recipe {
 
             // Validate parameter count
             mi = validateParameterCount(mi, context);
-            if (RecipeMarkerUtil.hasSearchResultMarker(mi)) {
+            if (RecipeMarkerUtil.hasSearchResultMarker(mi, RECIPE_NAME)) {
                 return mi;
             }
 
@@ -401,6 +419,8 @@ public class CuiLoggerStandardsRecipe extends Recipe {
             if (placeholderCount != paramCount) {
                 String action = "%d placeholders, %d params".formatted(placeholderCount, paramCount);
                 String message = RecipeMarkerUtil.createTaskMessage(action, RECIPE_NAME);
+                RecipeMarkerUtil.logFinding(mi, message, RECIPE_NAME, getCursor(),
+                    RecipeMarkerUtil.hasSearchResultMarker(mi, message));
                 return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(Tree.randomId(), message)));
             }
 
@@ -476,12 +496,14 @@ public class CuiLoggerStandardsRecipe extends Recipe {
         }
 
 
-        private record LoggerCallContext(@Nullable Expression messageArg, int messageArgIndex,
-                                         @Nullable String message) {
+        private record LoggerCallContext(@Nullable
+            Expression messageArg, int messageArgIndex,
+        @Nullable
+        String message) {
         }
 
         private record ExceptionPosition(int index, @Nullable
-            Expression exception) {
+        Expression exception) {
 
             static ExceptionPosition notFound() {
                 return new ExceptionPosition(-1, null);

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 CUI-OpenSource-Software (info@cuioss.de)
+ * Copyright © 2022 CUI-OpenSource-Software (info@cuioss.de)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,9 @@
  */
 package de.cuioss.rewrite.util;
 
+import de.cuioss.test.juli.LogAsserts;
+import de.cuioss.test.juli.TestLogLevel;
+import de.cuioss.test.juli.junit5.EnableTestLogger;
 import org.junit.jupiter.api.Test;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.java.JavaIsoVisitor;
@@ -25,11 +28,18 @@ import org.openrewrite.marker.SearchResult;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
+@EnableTestLogger
 class RecipeMarkerUtilTest {
+
+    /**
+     * Source whose {@code throw} statement starts at line 3, column 9 (8 spaces of indentation
+     * precede the {@code throw} keyword). Explicit {@code \n} and spaces are used instead of a text
+     * block so the derived line/column is unambiguous.
+     */
+    private static final String THROW_SOURCE =
+        "class A {\n    void m() {\n        throw new RuntimeException();\n    }\n}\n";
 
     private final JavaParser parser = JavaParser.fromJavaVersion().build();
 
@@ -74,6 +84,82 @@ class RecipeMarkerUtilTest {
 
         assertTrue(foundWithoutMarker.get());
         assertTrue(foundWithMarker.get());
+    }
+
+    @Test
+    void shouldScopeSearchResultMarkerToOwningRecipe() {
+        // Arrange: an element carrying a marker whose description belongs to recipe A only.
+        String source = """
+            public class Test {
+                void method() {
+                    System.out.println("test");
+                }
+            }
+            """;
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+        String recipeAMessage = "TODO: RecipeA finding. Suppress: // cui-rewrite:disable RecipeA";
+        String recipeBMessage = "TODO: RecipeB finding. Suppress: // cui-rewrite:disable RecipeB";
+
+        AtomicBoolean matchesRecipeA = new AtomicBoolean(false);
+        AtomicBoolean matchesRecipeB = new AtomicBoolean(true);
+
+        // Act: scope the check to each recipe's own message.
+        new JavaIsoVisitor<ExecutionContext>() {
+            @Override
+            public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
+                if ("println".equals(method.getSimpleName())) {
+                    J.MethodInvocation withMarker = method.withMarkers(
+                        method.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), recipeAMessage))
+                    );
+                    matchesRecipeA.set(RecipeMarkerUtil.hasSearchResultMarker(withMarker, recipeAMessage));
+                    matchesRecipeB.set(RecipeMarkerUtil.hasSearchResultMarker(withMarker, recipeBMessage));
+                }
+                return super.visitMethodInvocation(method, ctx);
+            }
+        }.visit(cu, null);
+
+        // Assert: recipe A's marker is its own pre-existing finding; recipe B must not see it.
+        assertTrue(matchesRecipeA.get());
+        assertFalse(matchesRecipeB.get());
+    }
+
+    @Test
+    void shouldMatchSearchResultMarkerBySubstring() {
+        // Arrange: a full task message embedding the recipe name; a scoped check by recipe name
+        // (a substring of the description) must still match its own marker.
+        String source = """
+            public class Test {
+                void method() {
+                    System.out.println("test");
+                }
+            }
+            """;
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(source).findFirst().orElseThrow();
+        String recipeName = "CuiLoggerStandardsRecipe";
+        String fullMessage = "TODO: Use CuiLogger. Suppress: // cui-rewrite:disable " + recipeName;
+
+        AtomicBoolean matchesByRecipeName = new AtomicBoolean(false);
+        AtomicBoolean matchesForeignRecipeName = new AtomicBoolean(true);
+
+        // Act
+        new JavaIsoVisitor<ExecutionContext>() {
+            @Override
+            public J.MethodInvocation visitMethodInvocation(J.MethodInvocation method, ExecutionContext ctx) {
+                if ("println".equals(method.getSimpleName())) {
+                    J.MethodInvocation withMarker = method.withMarkers(
+                        method.getMarkers().addIfAbsent(new SearchResult(UUID.randomUUID(), fullMessage))
+                    );
+                    matchesByRecipeName.set(RecipeMarkerUtil.hasSearchResultMarker(withMarker, recipeName));
+                    matchesForeignRecipeName.set(
+                        RecipeMarkerUtil.hasSearchResultMarker(withMarker, "InvalidExceptionUsageRecipe"));
+                }
+                return super.visitMethodInvocation(method, ctx);
+            }
+        }.visit(cu, null);
+
+        // Assert
+        assertTrue(matchesByRecipeName.get());
+        assertFalse(matchesForeignRecipeName.get());
     }
 
     @Test
@@ -324,5 +410,41 @@ class RecipeMarkerUtilTest {
         }.visit(cu, null);
 
         assertTrue(found.get());
+    }
+
+    @Test
+    void shouldLogNewlyDetectedFindingWithPositionAndContent() {
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(THROW_SOURCE).findFirst().orElseThrow();
+        String taskMessage = "TODO: Throw specific not RuntimeException";
+
+        new JavaIsoVisitor<ExecutionContext>() {
+            @Override
+            public J.Throw visitThrow(J.Throw thrown, ExecutionContext ctx) {
+                RecipeMarkerUtil.logFinding(thrown, taskMessage, "TestRecipe", getCursor(), false);
+                return super.visitThrow(thrown, ctx);
+            }
+        }.visit(cu, null);
+
+        String expected = "Finding detected at " + cu.getSourcePath() + ":3:9 by TestRecipe: " + taskMessage;
+        LogAsserts.assertSingleLogMessagePresentContaining(TestLogLevel.WARN, expected);
+        LogAsserts.assertNoLogMessagePresent(TestLogLevel.WARN, "Finding pre-existing");
+    }
+
+    @Test
+    void shouldLogPreExistingFindingWithDistinguishableWording() {
+        J.CompilationUnit cu = (J.CompilationUnit) parser.parse(THROW_SOURCE).findFirst().orElseThrow();
+        String taskMessage = "TODO: Throw specific not RuntimeException";
+
+        new JavaIsoVisitor<ExecutionContext>() {
+            @Override
+            public J.Throw visitThrow(J.Throw thrown, ExecutionContext ctx) {
+                RecipeMarkerUtil.logFinding(thrown, taskMessage, "TestRecipe", getCursor(), true);
+                return super.visitThrow(thrown, ctx);
+            }
+        }.visit(cu, null);
+
+        String expected = "Finding pre-existing at " + cu.getSourcePath() + ":3:9 by TestRecipe: " + taskMessage;
+        LogAsserts.assertSingleLogMessagePresentContaining(TestLogLevel.WARN, expected);
+        LogAsserts.assertNoLogMessagePresent(TestLogLevel.WARN, "Finding detected");
     }
 }

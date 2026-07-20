@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 CUI-OpenSource-Software (info@cuioss.de)
+ * Copyright © 2022 CUI-OpenSource-Software (info@cuioss.de)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,11 +45,11 @@ class AnnotationSuppressionLoggingTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                // cui-rewrite:disable
-                @Deprecated @SuppressWarnings("all") public class TestClass {
-                    public static final String VALUE = "test";
-                }
-                """
+                    // cui-rewrite:disable
+                    @Deprecated @SuppressWarnings("all") public class TestClass {
+                        public static final String VALUE = "test";
+                    }
+                    """
             )
         );
 
@@ -66,13 +66,13 @@ class AnnotationSuppressionLoggingTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                public class TestClass {
-                    // cui-rewrite:disable
-                    @Override @Deprecated public String toString() {
-                        return "test";
+                    public class TestClass {
+                        // cui-rewrite:disable
+                        @Override @Deprecated public String toString() {
+                            return "test";
+                        }
                     }
-                }
-                """
+                    """
             )
         );
 
@@ -89,11 +89,11 @@ class AnnotationSuppressionLoggingTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                public class TestClass {
-                    // cui-rewrite:disable
-                    @Deprecated @SuppressWarnings("unused") private String field;
-                }
-                """
+                    public class TestClass {
+                        // cui-rewrite:disable
+                        @Deprecated @SuppressWarnings("unused") private String field;
+                    }
+                    """
             )
         );
 
@@ -110,17 +110,17 @@ class AnnotationSuppressionLoggingTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                @Deprecated @SuppressWarnings("all") public class TestClass {
-                    public static final String VALUE = "test";
-                }
-                """,
+                    @Deprecated @SuppressWarnings("all") public class TestClass {
+                        public static final String VALUE = "test";
+                    }
+                    """,
                 """
-                @Deprecated
-                @SuppressWarnings("all")
-                public class TestClass {
-                    public static final String VALUE = "test";
-                }
-                """
+                    @Deprecated
+                    @SuppressWarnings("all")
+                    public class TestClass {
+                        public static final String VALUE = "test";
+                    }
+                    """
             )
         );
 
@@ -138,9 +138,9 @@ class AnnotationSuppressionLoggingTest implements RewriteTest {
         rewriteRun(
             java(
                 """
-                // cui-rewrite:disable
-                @Deprecated public class TestClass {}
-                """
+                    // cui-rewrite:disable
+                    @Deprecated public class TestClass {}
+                    """
             )
         );
 
