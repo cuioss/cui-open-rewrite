@@ -17,6 +17,7 @@ package de.cuioss.rewrite.logging;
 
 import de.cuioss.rewrite.util.BaseSuppressionVisitor;
 import de.cuioss.rewrite.util.PathExclusionVisitor;
+import de.cuioss.rewrite.util.RecipeMarkerUtil;
 import org.openrewrite.ExecutionContext;
 import org.openrewrite.Preconditions;
 import org.openrewrite.Recipe;
@@ -145,6 +146,8 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                 case INFO, WARN, ERROR, FATAL:
                     if (!usesLogRecord) {
                         String message = "TODO: " + level + " needs LogRecord" + SUPPRESSION_HINT;
+                        RecipeMarkerUtil.logFinding(mi, message, RECIPE_NAME, getCursor(),
+                            RecipeMarkerUtil.hasSearchResultMarker(mi));
                         return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(mi.getId(), message)));
                     }
                     break;
@@ -152,6 +155,8 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                 case DEBUG, TRACE:
                     if (usesLogRecord) {
                         String message = "TODO: " + level + " no LogRecord" + SUPPRESSION_HINT;
+                        RecipeMarkerUtil.logFinding(mi, message, RECIPE_NAME, getCursor(),
+                            RecipeMarkerUtil.hasSearchResultMarker(mi));
                         return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(mi.getId(), message)));
                     }
                     break;
@@ -452,8 +457,10 @@ public class CuiLogRecordPatternRecipe extends Recipe {
                         mi.getMarkers().findFirst(SearchResult.class)
                             .filter(sr -> message.equals(sr.getDescription()))
                             .isPresent()) {
+                        RecipeMarkerUtil.logFinding(mi, message, RECIPE_NAME, getCursor(), true);
                         return mi;
                     }
+                    RecipeMarkerUtil.logFinding(mi, message, RECIPE_NAME, getCursor(), false);
                     // Use the original method's ID for stable marker identification across cycles
                     return mi.withMarkers(mi.getMarkers().addIfAbsent(new SearchResult(original.getId(), message)));
                 }

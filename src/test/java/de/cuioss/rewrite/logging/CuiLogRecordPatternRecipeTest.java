@@ -15,6 +15,9 @@
  */
 package de.cuioss.rewrite.logging;
 
+import de.cuioss.test.juli.LogAsserts;
+import de.cuioss.test.juli.TestLogLevel;
+import de.cuioss.test.juli.junit5.EnableTestLogger;
 import org.junit.jupiter.api.Test;
 import org.openrewrite.java.JavaParser;
 import org.openrewrite.java.marker.JavaSourceSet;
@@ -26,6 +29,7 @@ import java.util.List;
 import static org.openrewrite.java.Assertions.java;
 
 // cui-rewrite:disable CuiLogRecordPatternRecipe
+@EnableTestLogger
 @SuppressWarnings("java:S2699") // OpenRewrite tests use implicit assertions via the RewriteTest framework
 class CuiLogRecordPatternRecipeTest implements RewriteTest {
 
@@ -992,5 +996,137 @@ class CuiLogRecordPatternRecipeTest implements RewriteTest {
                 """
             )
         );
+    }
+
+    // --- WARN build-log visibility (issue #116) ---
+
+    @Test
+    void shouldLogWarnForMissingLogRecordNewAndPreExisting() {
+        rewriteRun(
+            spec -> spec.cycles(2).expectedCyclesThatMakeChanges(1),
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+
+                    void method() {
+                        String username = "john";
+                        LOGGER.info("User %s logged in", username);
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+
+                    void method() {
+                        String username = "john";
+                        /*~~(TODO: INFO needs LogRecord. Suppress: // cui-rewrite:disable CuiLogRecordPatternRecipe)~~>*/LOGGER.info("User %s logged in", username);
+                    }
+                }
+                """
+            )
+        );
+
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Finding detected at");
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Finding pre-existing at");
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN,
+            "by CuiLogRecordPatternRecipe: TODO: INFO needs LogRecord");
+    }
+
+    @Test
+    void shouldLogWarnForForbiddenLogRecordNewAndPreExisting() {
+        rewriteRun(
+            spec -> spec.cycles(2).expectedCyclesThatMakeChanges(1),
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+                import de.cuioss.tools.logging.LogRecordModel;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                    private static final LogRecord DEBUG_MESSAGE = LogRecordModel.builder()
+                        .template("Debug: %s")
+                        .build();
+
+                    void method() {
+                        LOGGER.debug(DEBUG_MESSAGE.format("value"));
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+                import de.cuioss.tools.logging.LogRecordModel;
+
+                class Test {
+                    private static final CuiLogger LOGGER = new CuiLogger(Test.class);
+                    private static final LogRecord DEBUG_MESSAGE = LogRecordModel.builder()
+                        .template("Debug: %s")
+                        .build();
+
+                    void method() {
+                        /*~~(TODO: DEBUG no LogRecord. Suppress: // cui-rewrite:disable CuiLogRecordPatternRecipe)~~>*/LOGGER.debug(DEBUG_MESSAGE.format("value"));
+                    }
+                }
+                """
+            )
+        );
+
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Finding detected at");
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Finding pre-existing at");
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN,
+            "by CuiLogRecordPatternRecipe: TODO: DEBUG no LogRecord");
+    }
+
+    @Test
+    void shouldLogWarnForStringConcatenationNewAndPreExisting() {
+        rewriteRun(
+            spec -> spec.cycles(2).expectedCyclesThatMakeChanges(1),
+            java(
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+
+                class BadgeGenerator {
+                    private static final CuiLogger LOGGER = new CuiLogger(BadgeGenerator.class);
+
+                    static class INFO {
+                        static final LogRecord GENERATING_REPORTS = null;
+                    }
+
+                    void generateBadges(String perfBadgePath) {
+                        LOGGER.info(INFO.GENERATING_REPORTS, "Performance badge written to " + perfBadgePath);
+                    }
+                }
+                """,
+                """
+                import de.cuioss.tools.logging.CuiLogger;
+                import de.cuioss.tools.logging.LogRecord;
+
+                class BadgeGenerator {
+                    private static final CuiLogger LOGGER = new CuiLogger(BadgeGenerator.class);
+
+                    static class INFO {
+                        static final LogRecord GENERATING_REPORTS = null;
+                    }
+
+                    void generateBadges(String perfBadgePath) {
+                        /*~~(TODO: String concatenation with LogRecord parameter is always wrong. Use separate parameters instead. Suppress: // cui-rewrite:disable CuiLogRecordPatternRecipe)~~>*/LOGGER.info(INFO.GENERATING_REPORTS, "Performance badge written to " + perfBadgePath);
+                    }
+                }
+                """
+            )
+        );
+
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Finding detected at");
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN, "Finding pre-existing at");
+        LogAsserts.assertLogMessagePresentContaining(TestLogLevel.WARN,
+            "by CuiLogRecordPatternRecipe: TODO: String concatenation with LogRecord parameter is always wrong");
     }
 }
