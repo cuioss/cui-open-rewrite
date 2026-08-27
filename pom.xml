@@ -11,6 +11,10 @@
     <artifactId>cui-open-rewrite</artifactId>
     <version>1.4.1-SNAPSHOT</version>
     <packaging>jar</packaging>
+    <!-- Must be declared: <inceptionYear> is inherited, and the license plugin binds
+         the copyright ${year} to it. Without this, this project would report
+         cui-parent-pom's 2022 and restamp every header on each -Ppre-commit run. -->
+    <inceptionYear>2025</inceptionYear>
     <name>cui open-rewrite</name>
     <description>OpenRewrite recipes for cuioss projects.</description>
     <url>https://github.com/cuioss/cui-open-rewrite/</url>
