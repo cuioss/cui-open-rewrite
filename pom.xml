@@ -9,7 +9,7 @@
     </parent>
     <groupId>de.cuioss.rewrite</groupId>
     <artifactId>cui-open-rewrite</artifactId>
-    <version>1.4.1</version>
+    <version>1.4.2-SNAPSHOT</version>
     <packaging>jar</packaging>
     <!-- Must be declared: <inceptionYear> is inherited, and the license plugin binds
          the copyright ${year} to it. Without this, this project would report
@@ -22,7 +22,7 @@
         <url>https://github.com/cuioss/cui-open-rewrite/</url>
         <connection>scm:git:https://github.com/cuioss/cui-open-rewrite.git</connection>
         <developerConnection>scm:git:https://github.com/cuioss/cui-open-rewrite.git</developerConnection>
-        <tag>1.4.1</tag>
+        <tag>HEAD</tag>
     </scm>
     <issueManagement>
         <url>https://github.com/cuioss/cui-open-rewrite/issues</url>
