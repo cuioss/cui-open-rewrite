@@ -508,4 +508,106 @@ class AnnotationNewlineFormatTest implements RewriteTest {
         );
     }
 
+    /**
+     * A TYPE_USE {@code @Nullable} stub. The downstream defect was observed on JSpecify's
+     * annotation, whose {@code TYPE_USE} target is what places it directly on the component's
+     * type — so the stub reproduces that target rather than a declaration annotation.
+     */
+    private static final String NULLABLE_STUB = """
+        package org.jspecify.annotations;
+
+        import java.lang.annotation.ElementType;
+        import java.lang.annotation.Target;
+
+        @Target(ElementType.TYPE_USE)
+        public @interface Nullable {}
+        """;
+
+    @Test
+    void shouldNotBreakAnnotatedRecordComponents() {
+        // A record component is a J.VariableDeclarations hanging off the class declaration's
+        // primaryConstructor, with no enclosing method and no class-body block. It is a
+        // parameter, not a field, so no newline may be inserted before its type.
+        // Supplying only `before` asserts no change.
+        rewriteRun(
+            spec -> spec.parser(JavaParser.fromJavaVersion().dependsOn(NULLABLE_STUB)),
+            java(
+                """
+                    import org.jspecify.annotations.Nullable;
+
+                    public record Redemption(@Nullable String token, boolean known) {
+                    }
+                    """
+            )
+        );
+    }
+
+    @Test
+    void shouldNotBreakMultipleAnnotatedRecordComponents() {
+        // The multi-component shape is what made the defect visible downstream: every annotated
+        // component was broken onto its own line, and the continuation indent then drifted on
+        // each subsequent run because it is derived from the element's own (already-rewritten)
+        // prefix. Supplying only `before` asserts no change.
+        rewriteRun(
+            spec -> spec.parser(JavaParser.fromJavaVersion().dependsOn(NULLABLE_STUB)),
+            java(
+                """
+                    import org.jspecify.annotations.Nullable;
+
+                    import java.time.Instant;
+
+                    public record StoredToken(String accessToken, @Nullable String refreshToken,
+                            @Nullable String idToken, @Nullable Instant expiresAt) {
+                    }
+                    """
+            )
+        );
+    }
+
+    @Test
+    void shouldNotFormatAnnotatedLocalsInInitializerBlocks() {
+        // A local declared in an instance or static initializer reaches the class declaration
+        // through the initializer's own block, not the class body, so it is not a field.
+        // Supplying only `before` asserts no change.
+        rewriteRun(
+            java(
+                """
+                    public class TestClass {
+                        static {
+                            @Deprecated @SuppressWarnings("all") String fromStatic = "";
+                            System.out.println(fromStatic);
+                        }
+
+                        {
+                            @Deprecated @SuppressWarnings("all") String fromInstance = "";
+                            System.out.println(fromInstance);
+                        }
+                    }
+                    """
+            )
+        );
+    }
+
+    @Test
+    void shouldStillFormatFieldsInsideARecordBody() {
+        // The record carve-out is scoped to the component list only: a real field declared in
+        // the record's BODY still lives inside the class-body block and stays in scope.
+        rewriteRun(
+            java(
+                """
+                    public record Redemption(String token) {
+                        @Deprecated @SuppressWarnings("all") static String CACHE = "";
+                    }
+                    """,
+                """
+                    public record Redemption(String token) {
+                        @Deprecated
+                        @SuppressWarnings("all")
+                        static String CACHE = "";
+                    }
+                    """
+            )
+        );
+    }
+
 }

@@ -494,13 +494,30 @@ public class AnnotationNewlineFormat extends Recipe {
         private boolean isFieldDeclaration() {
             // Navigate up the cursor tree to find the actual parent element
             Cursor cursor = getCursor();
+            J.Block enclosingBlock = null;
             while (cursor != null) {
                 Object value = cursor.getValue();
 
                 if (value instanceof J.MethodDeclaration) {
                     return false;
-                } else if (value instanceof J.ClassDeclaration) {
-                    return true;
+                } else if (value instanceof J.Block block) {
+                    // Remember the INNERMOST enclosing block: only that one can be the class body.
+                    if (enclosingBlock == null) {
+                        enclosingBlock = block;
+                    }
+                } else if (value instanceof J.ClassDeclaration classDecl) {
+                    // A field is declared directly in the class BODY block. Two other shapes reach
+                    // the class declaration and are NOT fields:
+                    //
+                    // - a record component, which hangs off primaryConstructor with no enclosing
+                    //   block at all. Components are parameters: inserting a newline before the
+                    //   type splits the component list, and the continuation indent is then
+                    //   recomputed from the element's own rewritten prefix on the next run, so the
+                    //   recipe never reaches a fixed point;
+                    // - a local declared in an instance or static initializer, whose innermost
+                    //   block is the initializer rather than the body.
+                    return enclosingBlock != null
+                        && enclosingBlock.getId().equals(classDecl.getBody().getId());
                 }
                 cursor = cursor.getParent();
             }
