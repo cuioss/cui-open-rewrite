@@ -565,6 +565,30 @@ class AnnotationNewlineFormatTest implements RewriteTest {
     }
 
     @Test
+    void shouldNotFormatAnnotatedLocalsInInitializerBlocks() {
+        // A local declared in an instance or static initializer reaches the class declaration
+        // through the initializer's own block, not the class body, so it is not a field.
+        // Supplying only `before` asserts no change.
+        rewriteRun(
+            java(
+                """
+                    public class TestClass {
+                        static {
+                            @Deprecated @SuppressWarnings("all") String fromStatic = "";
+                            System.out.println(fromStatic);
+                        }
+
+                        {
+                            @Deprecated @SuppressWarnings("all") String fromInstance = "";
+                            System.out.println(fromInstance);
+                        }
+                    }
+                    """
+            )
+        );
+    }
+
+    @Test
     void shouldStillFormatFieldsInsideARecordBody() {
         // The record carve-out is scoped to the component list only: a real field declared in
         // the record's BODY still lives inside the class-body block and stays in scope.
