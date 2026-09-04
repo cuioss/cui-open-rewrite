@@ -123,8 +123,7 @@ gh pr create --repo cuioss/cui-open-rewrite --base main \
 ```
 
 The **`skip-bot-review` label is required** on the release PR — apply it at creation time
-as shown. Use the project commit convention: `Co-Authored-By: Claude <noreply@anthropic.com>`
-(no model name, no "Generated with Claude Code" footer).
+as shown.
 
 ### Step 7 — Wait for PR checks (~5–8 min)
 
@@ -284,4 +283,3 @@ dependency PRs were collapsed/removed during note reformatting.
   then apply it at PR creation.
 - Never merge a red PR; fix and re-wait.
 - Temporary files go under `.plan/temp/`.
-- Commit trailer: `Co-Authored-By: Claude <noreply@anthropic.com>`; no PR footer line.
