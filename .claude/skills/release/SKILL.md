@@ -240,7 +240,7 @@ gh release edit <version> --repo cuioss/cui-open-rewrite --notes-file .plan/temp
    gh pr view <n> --repo cuioss/cui-open-rewrite --json body --jq .body | head -6
    ```
 6. **Keep OpenRewrite core bumps** — unlike downstream consumer projects, OpenRewrite itself
-   (`rewrite-maven-plugin`, `rewrite-core`, `rewrite-java`, `openrewrite.version`) is a
+   (`rewrite-maven-plugin`, `rewrite-core`, `rewrite-java`, `version.openrewrite`) is a
    **primary dependency** of this project and belongs under `### Infra`. Do **not** drop it.
 7. **Remove internal tooling churn** — drop PRs that only touch dev/build orchestration with
    no user-facing effect: `marshal.json`/plan-marshall config migrations, plan-marshall build

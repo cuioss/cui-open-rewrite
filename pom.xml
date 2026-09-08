@@ -31,29 +31,14 @@
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
         <maven.jar.plugin.automatic.module.name>de.cuioss.rewrite</maven.jar.plugin.automatic.module.name>
-        <openrewrite.version>8.90.4</openrewrite.version>
+        <version.openrewrite>8.90.4</version.openrewrite>
     </properties>
-    <dependencyManagement>
-        <dependencies>
-            <!-- Align JUnit Platform versions with JUnit Jupiter 6.x from parent -->
-            <dependency>
-                <groupId>org.junit.platform</groupId>
-                <artifactId>junit-platform-launcher</artifactId>
-                <version>${version.junit.jupiter}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.platform</groupId>
-                <artifactId>junit-platform-engine</artifactId>
-                <version>${version.junit.jupiter}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     <dependencies>
         <!-- OpenRewrite Core -->
         <dependency>
             <groupId>org.openrewrite</groupId>
             <artifactId>rewrite-java</artifactId>
-            <version>${openrewrite.version}</version>
+            <version>${version.openrewrite}</version>
         </dependency>
 
         <!-- Runtime parser for JDK 21. The Java 25 parser is added on JDK 25+ via the
@@ -62,7 +47,7 @@
         <dependency>
             <groupId>org.openrewrite</groupId>
             <artifactId>rewrite-java-21</artifactId>
-            <version>${openrewrite.version}</version>
+            <version>${version.openrewrite}</version>
             <scope>runtime</scope>
         </dependency>
 
@@ -82,7 +67,7 @@
         <dependency>
             <groupId>org.openrewrite</groupId>
             <artifactId>rewrite-test</artifactId>
-            <version>${openrewrite.version}</version>
+            <version>${version.openrewrite}</version>
             <scope>test</scope>
         </dependency>
 
@@ -120,7 +105,7 @@
                 <dependency>
                     <groupId>org.openrewrite</groupId>
                     <artifactId>rewrite-java-25</artifactId>
-                    <version>${openrewrite.version}</version>
+                    <version>${version.openrewrite}</version>
                     <scope>runtime</scope>
                 </dependency>
             </dependencies>
