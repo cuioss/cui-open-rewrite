@@ -258,5 +258,8 @@
     },
     "provisioned_version": "0.1.1137",
     "config_seed_fingerprint": "37df1a33"
+  },
+  "extension_defaults": {
+    "build.maven.profiles.mutating": "pre-commit"
   }
 }
