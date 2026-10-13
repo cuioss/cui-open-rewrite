@@ -78,9 +78,7 @@
           "auto_rebase_threshold": "no_overlap_only",
           "lane": "off"
         },
-        "default:finalize-step-simplify": {
-          "lane": "auto"
-        },
+        "default:finalize-step-simplify": {},
         "default:finalize-step-security-audit": {
           "lane": "off"
         },
@@ -96,7 +94,6 @@
           "re_review_on_timeout": "ask",
           "review_rate_window_await": false,
           "review_rate_window_timeout_seconds": 3600,
-          "lane": "auto",
           "required_bots": "",
           "optional_bots": "",
           "bot_lists_provenance": "never_asked"
@@ -107,9 +104,7 @@
         "default:architecture-refresh": {
           "lane": "off"
         },
-        "default:pre-push-quality-gate": {
-          "lane": "auto"
-        },
+        "default:pre-push-quality-gate": {},
         "default:push": {
           "lane": "minimal"
         },
@@ -120,7 +115,6 @@
           "lane": "minimal"
         },
         "default:sonar-roundtrip": {
-          "lane": "auto",
           "touched_file_cleanup": "new_code_only",
           "do_transition": false,
           "ce_wait_timeout_seconds": 600
@@ -150,9 +144,7 @@
         "default:record-metrics": {
           "lane": "minimal"
         },
-        "default:finalize-step-print-phase-breakdown": {
-          "lane": "auto"
-        },
+        "default:finalize-step-print-phase-breakdown": {},
         "default:archive-plan": {
           "lane": "minimal"
         }
