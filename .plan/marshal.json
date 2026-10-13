@@ -1,4 +1,7 @@
 {
+  "extension_defaults": {
+    "build.maven.profiles.mutating": "pre-commit"
+  },
   "plan": {
     "effort": "level-3",
     "open_in_ide": true,
@@ -62,7 +65,8 @@
       "effort": {
         "default": "level-4",
         "verification-feedback": "level-3"
-      }
+      },
+      "worktree_setup_commands": []
     },
     "phase-6-finalize": {
       "max_iterations": 3,
@@ -74,15 +78,14 @@
           "auto_rebase_threshold": "no_overlap_only",
           "lane": "off"
         },
-        "default:pre-push-quality-gate": {
-          "lane": "auto"
+        "default:finalize-step-simplify": {},
+        "default:finalize-step-security-audit": {
+          "lane": "off"
         },
-        "default:pre-submission-self-review": {
-          "drop_review_on_scope_gate": false,
-          "lane": "auto"
+        "default:functional-review": {
+          "lane": "standard"
         },
         "plan-marshall:automatic-review": {
-          "enabled_bots": "coderabbit,sourcery,gemini",
           "review_bot_buffer_seconds": 180,
           "review_completion_poll_timeout_seconds": 600,
           "re_review_on_loopback": false,
@@ -91,17 +94,17 @@
           "re_review_on_timeout": "ask",
           "review_rate_window_await": false,
           "review_rate_window_timeout_seconds": 3600,
-          "lane": "auto"
+          "required_bots": "cuioss-review-bot,coderabbit",
+          "optional_bots": "sourcery",
+          "bot_lists_provenance": "answered"
         },
-        "default:finalize-step-simplify": {
-          "lane": "auto"
+        "default:code-review": {
+          "lane": "standard"
         },
         "default:architecture-refresh": {
           "lane": "off"
         },
-        "default:finalize-step-security-audit": {
-          "lane": "off"
-        },
+        "default:pre-push-quality-gate": {},
         "default:push": {
           "lane": "minimal"
         },
@@ -112,13 +115,9 @@
           "lane": "minimal"
         },
         "default:sonar-roundtrip": {
-          "lane": "auto",
           "touched_file_cleanup": "new_code_only",
           "do_transition": false,
           "ce_wait_timeout_seconds": 600
-        },
-        "default:lessons-capture": {
-          "lane": "minimal"
         },
         "default:adr-propose": {
           "lane": "off"
@@ -135,6 +134,9 @@
           "pre_merge_comment_barrier": "fail_into_loopback",
           "lane": "minimal"
         },
+        "default:lessons-capture": {
+          "lane": "minimal"
+        },
         "default:finalize-step-preference-emitter": {
           "preference_min_recurrence": 2,
           "lane": "off"
@@ -142,9 +144,7 @@
         "default:record-metrics": {
           "lane": "minimal"
         },
-        "default:finalize-step-print-phase-breakdown": {
-          "lane": "auto"
-        },
+        "default:finalize-step-print-phase-breakdown": {},
         "default:archive-plan": {
           "lane": "minimal"
         }
@@ -155,6 +155,12 @@
         "post-run-review": "level-4"
       }
     }
+  },
+  "orchestrator": {
+    "auto_emit": false,
+    "effort": {},
+    "parallelization_scope": 1,
+    "use_worktree": false
   },
   "build": {
     "queue": {
@@ -187,6 +193,7 @@
       ]
     }
   },
+  "interaction_mode": "advanced",
   "project": {
     "default_base_branch": "main",
     "working_prefixes": [
@@ -196,7 +203,8 @@
     ],
     "pr_strategy": "compact",
     "pr_compact_max_changed_files": 150,
-    "merge_queue_managed_externally": true
+    "merge_queue_managed_externally": true,
+    "user_language": "auto"
   },
   "providers": [
     {
@@ -254,12 +262,13 @@
       "logs_days": 1,
       "archived_plans_days": 5,
       "lessons_superseded_days": 0,
-      "temp_on_maintenance": true
+      "temp_on_maintenance": true,
+      "no_plan_body_days": 7,
+      "build_results_days": 5,
+      "plugin_cache_keep_versions": 5,
+      "plugin_cache_keep_days": 3
     },
-    "provisioned_version": "0.1.1137",
-    "config_seed_fingerprint": "37df1a33"
-  },
-  "extension_defaults": {
-    "build.maven.profiles.mutating": "pre-commit"
+    "provisioned_version": "0.1.1916",
+    "config_seed_fingerprint": "a2efc4ac"
   }
 }
