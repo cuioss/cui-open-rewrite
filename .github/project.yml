@@ -33,8 +33,3 @@ dependency-propagation:
   group-id: de.cuioss.rewrite
   artifact-id: cui-open-rewrite
   scope: dependency
-
-cuioss-review-bot:
-  enabled: true
-  packs: [java]
-  additional_rules: []
